@@ -126,7 +126,9 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          sparse-checkout: .github
+          sparse-checkout: |  # .kit is here only after eject
+            .github
+            .kit
           persist-credentials: false
       # kit-fetch-start
       - name: Fetch the kit at this workflow's version
