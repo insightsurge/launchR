@@ -19,7 +19,8 @@ on:
 
 name: test-coverage
 
-permissions: read-all
+permissions:
+  contents: read  # the most this workflow can use; a job that needs more asks for it itself
 
 jobs:
   test-coverage:

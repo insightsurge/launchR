@@ -17,7 +17,8 @@ on:
 
 name: off-cran-tests
 
-permissions: read-all
+permissions:
+  contents: read  # the most this workflow can use; a job that needs more asks for it itself
 
 jobs:
   platforms:
