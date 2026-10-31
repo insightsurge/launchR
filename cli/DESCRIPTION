@@ -1,6 +1,6 @@
 Package: rpkgkit
 Title: Set Up R Packages
-Version: 0.0.1
+Version: 0.0.3
 Authors@R: 
     person("Harsh", "Verma", role = c("aut", "cre", "cph"))
 Description: Creates R packages with CI, GitHub setup and checklists. Written
