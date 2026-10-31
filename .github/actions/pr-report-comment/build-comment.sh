@@ -48,7 +48,7 @@ while IFS= read -r workflow; do
   # may still be running.
   # Each job: its status, conclusion, name, link and the first step that failed ("-" when none).
   jobs=$(gh api --paginate "repos/${repo}/actions/runs/${id}/jobs" \
-    --jq ".jobs[] | select(.name != \"${report_job}\") |
+    --jq ".jobs[] | select((.name | split(\" / \") | last) != \"${report_job}\") |
       [.status, (.conclusion // \"-\"), .name, .html_url,
        ([.steps[]? | select(.conclusion == \"failure\") | .name][0] // \"-\")] | @tsv")
   pending=$(printf '%s\n' "${jobs}" | awk -F '\t' '$1 != "" && $1 != "completed"' | wc -l)
@@ -80,7 +80,7 @@ while IFS= read -r workflow; do
     else
       line="[${job_name}](${job_url}) (${workflow%.*}): failed at \"${job_step}\""
     fi
-    if printf '%s\n' "${summary_jobs}" | grep -qxF -- "${job_name}"; then
+    if printf '%s\n' "${summary_jobs}" | grep -qxF -- "${job_name##* / }"; then
       summary_failures+=("${line}")
     else
       run_failures+=("${line}")
