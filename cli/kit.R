@@ -1,9 +1,9 @@
 #!/usr/bin/env Rscript
-# r-pkg-kit's command line. All the work is in the functions under R/; this file only starts them.
+# launchR's command line. All the work is in the functions under R/; this file only starts them.
 #
 #   Rscript cli/kit.R new mypkg     create a package; asks its questions, or use --recommended
 #   Rscript cli/kit.R gate [mode]   run the quality gate in the current package
-#   Rscript cli/kit.R github        show, then make, the GitHub changes (--dry-run, --yes)
+#   Rscript cli/kit.R github        show, then make, the GitHub changes (--dry-run, --yes, --repo owner/name)
 #   Rscript cli/kit.R eject         copy the kit's CI into the current package
 
 script <- sub("^--file=", "", grep("^--file=", commandArgs(FALSE), value = TRUE)[1])

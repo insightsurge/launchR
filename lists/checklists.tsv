@@ -1,28 +1,35 @@
-# Stage checklists. kind: file (path exists), placeholder (text gone from path), manual. section groups boxes under a heading. release: cran or any.
-stage	section	kind	target	release	text
-Before public	Repository	file	LICENSE	any	Licence is in place
-Before public	Repository	file	.github/CONTRIBUTING.md	any	Contributor guide is in place
-Before public	Repository	placeholder	R/say_hello.R|say_hello	any	Example function replaced with your own
-Before public	Repository	manual		any	Search the history for secrets before going public
-Before public	Settings	manual		any	Squash merge only, and delete branches after merge
-Before public	Settings	manual		any	Secret scanning and push protection on
-Before public	Settings	manual		any	Workflow token set to read-only
-After public	CI	manual		any	Add Windows and Mac to `platforms` in `r-cmd-check.yaml`
-After public	CI	manual		any	Block force pushes and deleting `main` with a ruleset
-After public	Launch	manual		any	Hex logo and favicons
-After public	Launch	manual		any	Link preview image
-After public	Launch	manual		any	Repository description and topics
-After public	Launch	manual		any	README badges
-After public	Launch	manual		any	Codecov set up
-Before CRAN	Checks	manual		cran	Time the tests with CRAN's settings
-Before CRAN	Checks	manual		cran	The gate's `full` mode passes
-Before CRAN	Checks	manual		cran	urlchecker and spelling report nothing
-Before CRAN	Checks	manual		cran	win-builder and mac-builder are clean
-Before CRAN	Wording	placeholder	DESCRIPTION|First version	cran	Description says what only this package does
-Before CRAN	Wording	file	cran-comments.md	cran	cran-comments.md is ready
-After acceptance	Launch	manual		cran	CRAN status and downloads badges
-After acceptance	Launch	manual		cran	R-universe set up
-After acceptance	Launch	manual		cran	GitHub release published
-Next release	Release	manual		any	Look at what's new in the kit
-Next release	Release	manual		any	NEWS.md is up to date
-Next release	Release	manual		any	Version set with `usethis::use_version()`
+# Stage checklists. kind: file (path exists), placeholder (file|text that must be gone), setting (endpoint|jq that prints true or false), ci (latest check runs on the default branch pass), site (website answers), cran (package is on CRAN), manual (a person ticks it).
+# id is the box's permanent name in the issue. needs: a path the package must have for the box to appear. release: cran boxes are left out for internal packages. where, link and pick: the settings page, its address ({repo}, {owner}, {branch} are filled in) and the value to choose.
+# Keep every row at 11 tab-separated cells, and no hash sign inside a cell (lists treat it as a comment).
+id	stage	section	kind	target	release	needs	text	where	link	pick
+licence	Before public	Repository	file	LICENSE	any		Licence is in place			
+contributing	Before public	Repository	file	.github/CONTRIBUTING.md	any		Contributor guide is in place			
+example	Before public	Repository	placeholder	R/say_hello.R|say_hello	any		Example function replaced with your own			
+history	Before public	Repository	manual		any		Search the history for secrets before going public			
+ci-main	Before public	CI	ci		any	.github/workflows	CI is green on the default branch			
+squash	Before public	Settings	setting	repos/{repo}|if .allow_squash_merge == null then null else (.allow_squash_merge == true and .allow_merge_commit == false and .allow_rebase_merge == false and .delete_branch_on_merge == true) end	any		Squash merge only, and delete branches after merge	Settings, General	https://github.com/{repo}/settings	under Pull Requests tick Allow squash merging and Automatically delete head branches, and untick Allow merge commits and Allow rebase merging
+secrets	Before public	Settings	setting	repos/{repo}|if .security_and_analysis == null then null else (.security_and_analysis.secret_scanning.status == "enabled" and .security_and_analysis.secret_scanning_push_protection.status == "enabled") end	any		Secret scanning and push protection on	Settings, Advanced Security	https://github.com/{repo}/settings/security_analysis	switch on Secret Protection, then Secret scanning and Push protection
+token	Before public	Settings	setting	repos/{repo}/actions/permissions/workflow|.default_workflow_permissions == "read"	any		Workflow token set to read-only	Settings, Actions, General	https://github.com/{repo}/settings/actions	under Workflow permissions choose Read repository contents and packages permissions
+platforms	After public	CI	manual		any	.github/workflows/r-cmd-check.yaml	Add Windows and Mac to `platforms` in `r-cmd-check.yaml`			
+ruleset	After public	CI	setting	repos/{repo}/rules/branches/{branch}|([.[].type] | (index("deletion") != null and index("non_fast_forward") != null))	any		Block force pushes and deleting the default branch with a ruleset	Settings, Rules, New branch ruleset	https://github.com/{repo}/settings/rules/new?target=branch	set enforcement to Active, target the default branch, and tick Restrict deletions and Block force pushes
+pages	After public	Launch	setting	repos/{repo}/pages|.build_type == "workflow"	any	_pkgdown.yml	The website is published from GitHub Actions	Settings, Pages	https://github.com/{repo}/settings/pages	under Build and deployment set Source to GitHub Actions
+site	After public	Launch	site		any	_pkgdown.yml	The website is live			
+logo	After public	Launch	manual		any		Hex logo and favicons			
+preview	After public	Launch	manual		any		Link preview image			upload it under Social preview
+topics	After public	Launch	setting	repos/{repo}|if .name == null then null else ((.description // "") != "" and ((.topics // []) | length) > 0) end	any		Repository description and topics	the repository's home page	https://github.com/{repo}	use the gear beside About to add a description and topics
+badges	After public	Launch	manual		any		README badges			
+codecov	After public	Launch	manual		any	.github/workflows/coverage.yaml	Codecov set up	Codecov	https://app.codecov.io/gh/{repo}	add the repository and its upload token as a secret
+ci-main-cran	Before CRAN	CI	ci		cran	.github/workflows	CI is green on the default branch			
+timing	Before CRAN	Checks	manual		cran		Time the tests with CRAN's settings			
+gate-full	Before CRAN	Checks	manual		cran		The gate's `full` mode passes			
+urls	Before CRAN	Checks	manual		cran		urlchecker and spelling report nothing			
+builders	Before CRAN	Checks	manual		cran		win-builder and mac-builder are clean			
+description	Before CRAN	Wording	placeholder	DESCRIPTION|First version	cran		Description says what only this package does			
+cran-comments	Before CRAN	Wording	file	cran-comments.md	cran		cran-comments.md is ready			
+on-cran	Before CRAN	Submission	cran		cran		The package is on CRAN			
+cran-badges	After acceptance	Launch	manual		cran		CRAN status and downloads badges			
+runiverse	After acceptance	Launch	manual		cran		R-universe set up			
+release	After acceptance	Launch	manual		cran		GitHub release published			
+kit-news	Next release	Release	manual		any		Look at what's new in the kit			
+news	Next release	Release	manual		any		NEWS.md is up to date			
+version	Next release	Release	manual		any		Version set with `usethis::use_version()`			

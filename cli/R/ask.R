@@ -1,8 +1,17 @@
 # The questions, kept apart from the functions that do the work.
+# In an R console (RStudio, Positron) readline() reads what the person types; run as a script, the answers come from stdin.
+read_answer <- function(label) {
+  if (interactive()) {
+    return(readline(label))
+  }
+  if (is.null(getOption("kit.stdin"))) options(kit.stdin = file("stdin", "r"))
+  cat(label)
+  readLines(getOption("kit.stdin"), n = 1)
+}
+
 ask <- function(question, default = "") {
   label <- if (nzchar(default)) sprintf("%s [%s]: ", question, default) else sprintf("%s: ", question)
-  cat(label)
-  answer <- trimws(readLines(getOption("kit.stdin"), n = 1))
+  answer <- trimws(read_answer(label))
   if (length(answer) == 0 || !nzchar(answer)) default else answer
 }
 
@@ -17,7 +26,6 @@ ask_choice <- function(question, options) {
 }
 
 ask_choices <- function(choices) {
-  options(kit.stdin = file("stdin", "r"))
   choices$title <- ask("One-line title, in title case")
   author <- strsplit(ask("Your name"), " +")[[1]]
   choices$given <- author[1]

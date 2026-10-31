@@ -1,0 +1,3 @@
+#!/bin/sh
+# A stand-in for gh that keeps its "GitHub" in the folder named by FAKE_GH_DIR, so the CLI can be tested with no network.
+exec Rscript "$(dirname "$0")/fake-gh.R" "$@"

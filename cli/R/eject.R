@@ -24,7 +24,7 @@ cmd_eject <- function(args) {
   eject_copy(kit_path("cli"), file.path(".kit", "cli"))
   eject_copy(kit_path("lists"), file.path(".kit", "lists"))
   file.copy(kit_path(".github", "pr-report.json"), file.path(".kit", ".github", "pr-report.json"), overwrite = TRUE)
-  pattern <- "uses: insightsurge/r-pkg-kit/\\.github/workflows/([a-z-]+)\\.yaml@v[0-9.]+"
+  pattern <- "uses: insightsurge/launchR/\\.github/workflows/([a-z-]+)\\.yaml@v[0-9.]+"
   changed <- character()
   for (file in list.files(workflows, pattern = "[.]yaml$", full.names = TRUE)) {
     text <- read_text(file)
@@ -36,7 +36,10 @@ cmd_eject <- function(args) {
     changed <- c(changed, basename(file))
   }
   ignore <- ".Rbuildignore"
-  if (file.exists(ignore) && !any(grepl("\\.kit", readLines(ignore)))) write("^\\.kit$", ignore, append = TRUE)
+  if (file.exists(ignore) && !any(grepl("\\.kit", readLines(ignore, warn = FALSE)))) {
+    # write_text keeps the file's \n line endings; write() would add \r\n on Windows.
+    write_text(paste0(sub("\n*$", "\n", read_text(ignore)), "^\\.kit$\n"), ignore)
+  }
   cat("Copied the kit's CI into .kit/ and .github/workflows/. Files now independent of the kit:\n")
   cat(paste0("  ", changed), sep = "\n")
   0L

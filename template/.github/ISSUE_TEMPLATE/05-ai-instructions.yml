@@ -1,0 +1,31 @@
+name: AI instructions change
+description: Improve the instructions in AGENTS.md or CLAUDE.md.
+labels: [chore]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This form is for the repository's public instructions to AI tools. If an instruction fails or gives a wrong result, use Bug report so the version and a minimal example are included.
+        Search existing issues first. Cite only repository-relative files and public examples. Leave out personal configuration, credentials, private data, machine paths, private links and conversation transcripts.
+  - type: input
+    id: location
+    attributes:
+      label: Instruction file and section
+      description: Name AGENTS.md or CLAUDE.md and the section. For a missing instruction, say where it belongs.
+    validations:
+      required: true
+  - type: textarea
+    id: change
+    attributes:
+      label: What instruction should change, and why?
+      description: Give a short public example of the ambiguity, the missing guidance or the proposed rule. Suggested wording is optional.
+    validations:
+      required: true
+  - type: textarea
+    id: done
+    attributes:
+      label: Done when
+      description: One checklist item showing how someone could check that the instruction is clear and agrees with the contributor guide.
+      placeholder: "- [ ] The instruction explains ..."
+    validations:
+      required: true

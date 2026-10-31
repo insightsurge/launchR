@@ -1,6 +1,6 @@
 # How CI works here
 
-Each file in this folder is one check. The check itself lives in the r-pkg-kit repository and this file only says when
+Each file in this folder is one check. The check itself lives in the launchR repository and this file only says when
 and where it runs, so it stays short. Nothing needs installing: GitHub runs these by itself.
 
 | File | What it does |

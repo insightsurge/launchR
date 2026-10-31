@@ -19,7 +19,7 @@ permissions:
 
 jobs:
   check:
-    uses: insightsurge/r-pkg-kit/.github/workflows/coverage.yaml@v{{kit_version}}
+    uses: insightsurge/launchR/.github/workflows/coverage.yaml@v{{kit_version}}
     # To send results to Codecov, add a CODECOV_TOKEN secret and uncomment these lines at job level:
     # secrets:
     #   CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

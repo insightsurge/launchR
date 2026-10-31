@@ -1,23 +1,47 @@
-name: Bug
-description: Something doesn't work as documented.
+name: Bug report
+description: Something is broken or behaves differently from the documentation.
 labels: [bug]
 body:
+  - type: markdown
+    attributes:
+      value: |
+        Search existing issues first. Use made-up or bundled data. Remove private data, credentials, machine paths and private links from examples, output and screenshots.
+        This form also covers faults in the docs, the website and CI. A short example is enough; you do not need to diagnose the cause.
   - type: textarea
-    id: what
+    id: behaviour
     attributes:
       label: What happened, and what did you expect?
+      description: One or two sentences. Include the relevant error message, if there is one. A screenshot is optional.
     validations:
       required: true
   - type: textarea
-    id: example
+    id: reprex
     attributes:
-      label: A small example that shows it
+      label: Minimal reproducible example (reprex)
+      description: |
+        Paste the smallest runnable R example that shows the fault. Use reprex::reprex() if you have it; it is not required.
+        For a docs, website or CI fault, give the public page or repository-relative file, a small example and the exact steps. Use fenced code blocks for code.
       render: r
     validations:
       required: true
   - type: input
     id: version
     attributes:
-      label: Package version
+      label: '{{package}} version'
+      description: 'Use packageVersion("{{package}}"). Add the commit if you installed from GitHub. For a repository or website report without an installed package, write "Not installed".'
+    validations:
+      required: true
+  - type: textarea
+    id: session
+    attributes:
+      label: Environment details (optional)
+      description: 'Paste sessionInfo() or sessioninfo::session_info() if you can. For a problem in a browser, add the browser and its version. Remove private details and paths before posting; a short summary is fine.'
+      render: text
+  - type: textarea
+    id: done
+    attributes:
+      label: Done when
+      description: One short checklist item describing the result that would count as fixed.
+      placeholder: "- [ ] The example produces the expected result."
     validations:
       required: true
