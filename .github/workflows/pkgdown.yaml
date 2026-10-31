@@ -7,7 +7,8 @@ on:
 
 name: pkgdown
 
-permissions: read-all
+permissions:
+  contents: read  # the most this workflow can use; a job that needs more asks for it itself
 
 jobs:
   pkgdown:
@@ -45,7 +46,7 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::pkgdown, local::.
+          extra-packages: any::pkgdown, any::checkmate, any::cli, local::.
           needs: website
 
       - name: Check the site configuration

@@ -15,6 +15,7 @@ on:
 
 permissions:
   contents: read
+  actions: read   # lets CI read the other checks' results for its report
   pull-requests: write   # lets CI post its report on the PR
 
 jobs:

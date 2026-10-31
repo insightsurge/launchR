@@ -9,7 +9,8 @@ on:
 
 name: check-no-suggests
 
-permissions: read-all
+permissions:
+  contents: read  # the most this workflow can use; a job that needs more asks for it itself
 
 jobs:
   check-no-suggests:
@@ -74,3 +75,59 @@ jobs:
             echo "The no-Suggests check was skipped, so nothing was checked."
             exit 1
           fi
+
+      - name: Write the report
+        if: always()
+        env:
+          STATUS: ${{ job.status }}
+          OUT: ${{ runner.temp }}/report-part.md
+        run: |
+          case "${STATUS}" in
+            success) echo "✅ **Without Suggests:** passed." > "${OUT}" ;;
+            cancelled) echo "⏹️ **Without Suggests:** cancelled." > "${OUT}" ;;
+            *) echo "❌ **Without Suggests:** failed (see the run's log)." > "${OUT}" ;;
+          esac
+
+      - name: Keep the report
+        if: always()
+        uses: ./.kit/.github/actions/pr-report-part
+        with:
+          name: tests-3-no-suggests
+          file: ${{ runner.temp }}/report-part.md
+
+  # Rewrites the pull request's CI report comment (.github/actions/pr-report-comment). Pull requests from forks and
+  # from Dependabot get the job summary only: their token can't write to the pull request.
+  report:
+    needs: check-no-suggests
+    if: >-
+      always() && github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.user.login != 'dependabot[bot]'
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10  # a few API calls
+    permissions:
+      actions: read
+      contents: read
+      pull-requests: write
+    # One report job at a time per pull request, across the workflows that write the comment.
+    concurrency:
+      group: pr-report-${{ github.event.pull_request.number }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: |  # .kit is here only after eject
+            .github
+            .kit
+          persist-credentials: false
+      # kit-fetch-start
+      - name: Fetch the kit at this workflow's version
+        uses: actions/checkout@v7
+        with:
+          repository: insightsurge/launchR
+          ref: ${{ job.workflow_sha }}
+          path: .kit
+      # kit-fetch-end
+      - uses: ./.kit/.github/actions/pr-report-comment
+        with:
+          config: .kit/.github/pr-report.json

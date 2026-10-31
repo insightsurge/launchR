@@ -1,6 +1,6 @@
 # Writes the off-CRAN tests' part of the pull request's CI report, for one R version: the counts (with the tests in
 # browser, snapshot and extended files), the failing and skipped tests, the slowest test files and the files that got
-# slower than on main. Sourced by off-cran-tests.yaml's test step, which runs the tests with file_time_reporter and
+# slower than on main. Sourced by full-tests.yaml's test step, which runs the tests with file_time_reporter and
 # calls write_off_cran_report(results, reporter$seconds(), reporter$elapsed()) before it decides whether the job
 # fails.
 # Environment: R_LABEL (the matrix's R version), OUT (the Markdown part), TIMINGS (a CSV of seconds per file, kept

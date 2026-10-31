@@ -3,7 +3,7 @@
 # 70% when the field is missing), the same limit the gate uses. A pull request is held to the higher of its base
 # branch's limit and its own, so a pull request cannot lower the limit by editing DESCRIPTION; changes to this
 # workflow are reviewed like any other change. A push to main reads the checked-out DESCRIPTION. The browser and
-# snapshot tests skip here, as on CRAN (off-cran-tests.yaml runs them), and the example apps' detailed tests
+# snapshot tests skip here, as on CRAN (full-tests.yaml runs them), and the example apps' detailed tests
 # (test-*-extended.R) run: this is the coverage all the tests give without Chrome. A pull
 # request that changes only documentation starts the job and skips its steps (.github/scripts/r-changes.sh).
 # The coverage part of the pull request's CI report (.github/pr-report.json): the figure, the difference from main and
@@ -19,7 +19,8 @@ on:
 
 name: test-coverage
 
-permissions: read-all
+permissions:
+  contents: read  # the most this workflow can use; a job that needs more asks for it itself
 
 jobs:
   test-coverage:
@@ -147,7 +148,7 @@ jobs:
         if: always() && github.event_name == 'pull_request' && steps.changes.outputs.r == 'true'
         uses: ./.kit/.github/actions/main-baseline
         with:
-          workflow: test-coverage.yaml
+          workflow: coverage.yaml
           artifact: coverage-baseline
           path: ${{ runner.temp }}/coverage-baseline
 
@@ -224,7 +225,9 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          sparse-checkout: .github
+          sparse-checkout: |  # .kit is here only after eject
+            .github
+            .kit
           persist-credentials: false
       # kit-fetch-start
       - name: Fetch the kit at this workflow's version

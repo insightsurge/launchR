@@ -21,12 +21,14 @@ Your package may not have all of these. The kit's guides list them, and a missin
 - **Which systems and R versions:** edit `platforms` under `with:`.
 - **Turn a check off:** delete its file.
 - **Keep a check but run it only by hand:** keep only `workflow_dispatch:` under `on:`.
+- **Keep the `permissions:` block as it is:** a check that reports on pull requests needs what it lists, or it stops before it starts.
 
 Scheduled runs use the default branch only, and GitHub pauses them on public repositories after 60 days with no activity.
 
 ## Updates
 
-Dependabot opens a pull request when the kit has a new version, and changes only the `@v...` part of these files.
+Dependabot opens a pull request when the kit has a new version, and changes only the `@v...` part of these files. It
+waits 3 days after a release by default; a `cooldown` block in `.github/dependabot.yml` changes that.
 
 - To decline one version, close the pull request.
 - To stop for good, comment `@dependabot ignore this dependency` on it, or delete `.github/dependabot.yml`.

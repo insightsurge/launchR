@@ -33,6 +33,11 @@ failures=()
 summary_jobs=$(jq -r '.summary_jobs // [] | .[]' "${CONFIG}")
 mkdir -p "${work}/parts"
 while IFS= read -r workflow; do
+  # A check is on when its caller file exists. One that's off, or has no pull_request trigger, never reports here.
+  caller=".github/workflows/${workflow}"
+  if [ ! -f "${caller}" ] || ! grep -Eq '^[[:space:]]*pull_request:' "${caller}"; then
+    continue
+  fi
   # The newest run for this commit and this pull request: two pull requests can share a commit.
   run=$(gh api "repos/${repo}/actions/workflows/${workflow}/runs?head_sha=${HEAD_SHA}&event=pull_request&per_page=20" \
     --jq "[.workflow_runs[] | select(any(.pull_requests[]; .number == ${PR_NUMBER}))][0] // empty |
@@ -48,7 +53,7 @@ while IFS= read -r workflow; do
   # may still be running.
   # Each job: its status, conclusion, name, link and the first step that failed ("-" when none).
   jobs=$(gh api --paginate "repos/${repo}/actions/runs/${id}/jobs" \
-    --jq ".jobs[] | select(.name != \"${report_job}\") |
+    --jq ".jobs[] | select((.name | split(\" / \") | last) != \"${report_job}\") |
       [.status, (.conclusion // \"-\"), .name, .html_url,
        ([.steps[]? | select(.conclusion == \"failure\") | .name][0] // \"-\")] | @tsv")
   pending=$(printf '%s\n' "${jobs}" | awk -F '\t' '$1 != "" && $1 != "completed"' | wc -l)
@@ -80,7 +85,7 @@ while IFS= read -r workflow; do
     else
       line="[${job_name}](${job_url}) (${workflow%.*}): failed at \"${job_step}\""
     fi
-    if printf '%s\n' "${summary_jobs}" | grep -qxF -- "${job_name}"; then
+    if printf '%s\n' "${summary_jobs}" | grep -qxF -- "${job_name##* / }"; then
       summary_failures+=("${line}")
     else
       run_failures+=("${line}")
