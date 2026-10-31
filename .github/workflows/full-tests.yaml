@@ -78,7 +78,7 @@ jobs:
       - name: Fetch the kit at this workflow's version
         uses: actions/checkout@v7
         with:
-          repository: insightsurge/r-pkg-kit
+          repository: insightsurge/launchR
           ref: ${{ job.workflow_sha }}
           path: .kit
       # kit-fetch-end
@@ -259,7 +259,7 @@ jobs:
       - name: Fetch the kit at this workflow's version
         uses: actions/checkout@v7
         with:
-          repository: insightsurge/r-pkg-kit
+          repository: insightsurge/launchR
           ref: ${{ job.workflow_sha }}
           path: .kit
       # kit-fetch-end
