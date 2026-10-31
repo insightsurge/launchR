@@ -1,0 +1,51 @@
+# One row per template file. part: when the file is included. check: the CI check that needs it. release: cran or any.
+path	part	check	release
+.Rbuildignore	skeleton		any
+.gitattributes	skeleton		any
+.github/CODE_OF_CONDUCT.md	github		any
+.github/CONTRIBUTING.md	github		any
+.github/ISSUE_TEMPLATE/01-bug.yml	github		any
+.github/ISSUE_TEMPLATE/02-feature.yml	github		any
+.github/ISSUE_TEMPLATE/03-idea.yml	github		any
+.github/ISSUE_TEMPLATE/config.yml	github		any
+.github/SECURITY.md	github		any
+.github/dependabot.yml	ci		any
+.github/pull_request_template.md	github		any
+.github/release.yml	github		any
+.github/workflows/README.md	ci		any
+.github/workflows/coverage.yaml	ci	coverage	any
+.github/workflows/extended-tests.yaml	ci	extended-tests	any
+.github/workflows/full-tests.yaml	ci	full-tests	any
+.github/workflows/kit-setup.yaml	github		any
+.github/workflows/lint.yaml	ci	lint	any
+.github/workflows/no-suggests.yaml	ci	no-suggests	any
+.github/workflows/pkgdown.yaml	website		any
+.github/workflows/r-cmd-check.yaml	ci	r-cmd-check	any
+.github/workflows/secret-scan.yaml	ci	secret-scan	any
+.gitignore	skeleton		any
+.lintr	skeleton		any
+AGENTS.md	ai		any
+CLAUDE.md	ai		any
+DESCRIPTION	skeleton		any
+LICENSE	skeleton		any
+LICENSE.md	skeleton		any
+NAMESPACE	skeleton		any
+NEWS.md	skeleton		any
+R/say_hello.R	skeleton		any
+R/{{package}}-package.R	skeleton		any
+README.md	skeleton		any
+_pkgdown.yml	website		any
+air.toml	skeleton		any
+biome.json	frontend		any
+cran-comments.md	skeleton		cran
+inst/WORDLIST	skeleton		any
+inst/www/demo.html	frontend		any
+inst/www/{{package}}.css	frontend		any
+inst/www/{{package}}.js	frontend		any
+man/say_hello.Rd	skeleton		any
+man/{{package}}-package.Rd	skeleton		any
+pkgdown/extra.css	website		any
+tests/testthat.R	skeleton		any
+tests/testthat/test-browser.R	frontend		any
+tests/testthat/test-say_hello.R	skeleton		any
+{{package}}.Rproj	skeleton		any

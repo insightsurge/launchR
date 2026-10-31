@@ -1,0 +1,26 @@
+# Runs every test, including browser and snapshot tests that CRAN skips.
+# How this file works: see README.md in this folder.
+name: full-tests
+
+on:
+{{c_full_tests_pr}}  pull_request:
+{{c_full_tests_pr}}    branches: [{{branches}}]   # PRs that merge into these branches
+    # Example: branches: [main, develop, "release/**"]
+{{c_full_tests_push}}  push:
+{{c_full_tests_push}}    branches: [{{branches}}]   # pushes to these branches
+{{c_full_tests_weekly}}  schedule:
+{{c_full_tests_weekly}}    - cron: "{{cron_full_tests}}"   # times are UTC; runs from the default branch only
+    # Examples: "0 5 * * *" every day at 05:00, "0 5 1 * *" the 1st of every month at 05:00
+{{c_full_tests_manual}}  workflow_dispatch:   # adds a "Run workflow" button on GitHub
+
+permissions:
+  contents: read
+  pull-requests: write   # lets CI post its report on the PR
+
+jobs:
+  check:
+    uses: insightsurge/r-pkg-kit/.github/workflows/full-tests.yaml@v{{kit_version}}
+    with:
+      # One entry per run, as system/R version, comma separated. System: ubuntu, windows, macos.
+      # R version: release, devel, oldrel-1, or a number such as 4.1. R 4.1 on macos may fail: it has no ready-built packages.
+      platforms: {{platforms_full_tests}}

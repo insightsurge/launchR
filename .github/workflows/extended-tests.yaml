@@ -1,0 +1,96 @@
+# R CMD check with the extended tests on macOS and Windows, weekly and on demand (.github/workflows/README.md). A
+# workflow of its own, so a failure here leaves R-CMD-check and its badge alone. macOS runs R release only: R 4.1 there
+# has no ready-built packages, and building them from source broke on the runner's OpenSSL.
+on:
+  workflow_call:
+    inputs:
+      platforms:
+        description: Systems and R versions, as system/R version, comma separated
+        type: string
+        default: macos/release, windows/release, windows/4.1
+
+name: extended-tests
+
+permissions: read-all
+
+jobs:
+  platforms:
+    # Turns the `platforms` input, such as "ubuntu/release, windows/4.1", into the job matrix.
+    runs-on: ubuntu-26.04
+    outputs:
+      config: ${{ steps.parse.outputs.config }}
+    steps:
+      - id: parse
+        env:
+          PLATFORMS: ${{ inputs.platforms }}
+        run: |
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json, os, sys
+          runners = {"ubuntu": "ubuntu-26.04", "windows": "windows-latest", "macos": "macos-latest"}
+          config = []
+          for entry in os.environ["PLATFORMS"].replace(chr(10), ",").split(","):
+              entry = entry.strip()
+              if not entry:
+                  continue
+              system, _, r = entry.partition("/")
+              if system not in runners or not r:
+                  sys.exit(f"Can't read platform '{entry}'. Write system/R version, such as ubuntu/release.")
+              row = {"os": runners[system], "r": r}
+              if r == "devel":
+                  row["http-user-agent"] = "release"
+              config.append(row)
+          if not config:
+              sys.exit("The platforms input is empty.")
+          print("config=" + json.dumps(config))
+          PY
+
+  check:
+    needs: platforms
+    runs-on: ${{ matrix.config.os }}
+    timeout-minutes: 120  # as R-CMD-check: installing R 4.1 and building packages from source can be slow
+    name: ${{ matrix.config.os }} (${{ matrix.config.r }})
+
+    strategy:
+      fail-fast: false
+      matrix:
+        config: ${{ fromJSON(needs.platforms.outputs.config) }}
+
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      R_KEEP_PKG_SOURCE: yes
+
+    steps:
+      - uses: actions/checkout@v7
+      # kit-fetch-start
+      - name: Fetch the kit at this workflow's version
+        uses: actions/checkout@v7
+        with:
+          repository: insightsurge/r-pkg-kit
+          ref: ${{ job.workflow_sha }}
+          path: .kit
+      # kit-fetch-end
+
+      - uses: r-lib/actions/setup-pandoc@v2
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: ${{ matrix.config.r }}
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::rcmdcheck
+          needs: check
+
+      - uses: r-lib/actions/check-r-package@v2
+        env:
+          _R_CHECK_CRAN_INCOMING_REMOTE_: false
+          # As CRAN, apart from the extended tests: the browser tests skip.
+          NOT_CRAN: false
+          EXTENDED_TESTS: true
+          _R_CHECK_TESTS_NLINES_: 0
+        with:
+          args: 'c("--no-manual", "--as-cran")'
+          # The extended tests make the check slower than CRAN's: only errors and warnings count here.
+          error-on: '"warning"'
+          build_args: 'c("--no-manual", "--compact-vignettes=gs+qpdf")'

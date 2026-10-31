@@ -1,0 +1,11 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Contributor guide
+    url: https://github.com/{{owner}}/{{package}}/blob/main/.github/CONTRIBUTING.md
+    about: Read how to open an issue, work on it and submit a pull request.
+  - name: Ask a question
+    url: https://github.com/{{owner}}/{{package}}/discussions
+    about: Ask how to use {{package}}, or share what you made, in Discussions rather than in an issue.
+  - name: Report a security vulnerability
+    url: https://github.com/{{owner}}/{{package}}/security/advisories/new
+    about: Report a vulnerability privately. Please do not open a public issue for it.

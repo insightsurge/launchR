@@ -1,0 +1,35 @@
+---
+import '../styles.css';
+
+const { title, description, schema } = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonical} />
+    {schema && <script type="application/ld+json" set:html={JSON.stringify(schema)} />}
+  </head>
+  <body>
+    <header class="top">
+      <a class="brand" href="/">r-pkg-kit</a>
+      <nav aria-label="Main">
+        <a href="/start">Start a package</a>
+        <a href="/guides/r-cmd-check-on-github-actions">Guides</a>
+      </nav>
+    </header>
+    <main><slot /></main>
+    <footer class="bottom">
+      <p>r-pkg-kit is open source under the MIT licence. Nothing you type here leaves your browser.</p>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,22 @@
+Package: {{package}}
+Title: {{title}}
+Version: 0.0.0.9000
+Authors@R: 
+    person("{{given}}", "{{family}}", email = "{{email}}", role = c("aut", "cre", "cph"))
+Description: {{description}}
+License: MIT + file LICENSE
+{{url_line}}
+{{bugreports_line}}
+Depends: 
+    R (>= 4.1.0)
+Suggests: 
+{{chromote_line}}
+    testthat (>= 3.1.7)
+Config/quality-gate/coverage: 70
+{{target_line}}
+Config/testthat/edition: 3
+Config/testthat/parallel: true
+Encoding: UTF-8
+Language: en-GB
+Roxygen: list(markdown = TRUE)
+Config/roxygen2/version: 8.1.0

@@ -1,0 +1,13 @@
+# Labels created on GitHub.
+name	color	description
+bug	d73a4a	Something doesn't work as documented
+enhancement	a2eeef	A new or better feature
+documentation	0075ca	Docs only
+chore	cfd3d7	Tests, CI and tidy-ups
+idea	d876e3	Worth talking about, not ready to build
+epic	5319e7	A parent issue for a topic
+priority: high	b60205	Do this next
+priority: low	fbca04	Can wait
+status: blocked	e99695	Waiting on something
+breaking-change	b60205	Changes behaviour users rely on
+skip-release-notes	ededed	Leave out of the release notes

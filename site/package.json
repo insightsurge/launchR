@@ -1,0 +1,15 @@
+{
+  "name": "r-pkg-kit-site",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "bundle": "node scripts/bundle-kit.mjs",
+    "dev": "npm run bundle && astro dev",
+    "build": "npm run bundle && astro build"
+  },
+  "dependencies": {
+    "@astrojs/sitemap": "^3.7.4",
+    "astro": "^7.4.4",
+    "jszip": "^3.10.2"
+  }
+}

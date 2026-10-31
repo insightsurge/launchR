@@ -1,0 +1,28 @@
+# Stage checklists. kind: file (path exists), placeholder (text gone from path), manual. section groups boxes under a heading. release: cran or any.
+stage	section	kind	target	release	text
+Before public	Repository	file	LICENSE	any	Licence is in place
+Before public	Repository	file	.github/CONTRIBUTING.md	any	Contributor guide is in place
+Before public	Repository	placeholder	R/say_hello.R|say_hello	any	Example function replaced with your own
+Before public	Repository	manual		any	Search the history for secrets before going public
+Before public	Settings	manual		any	Squash merge only, and delete branches after merge
+Before public	Settings	manual		any	Secret scanning and push protection on
+Before public	Settings	manual		any	Workflow token set to read-only
+After public	CI	manual		any	Add Windows and Mac to `platforms` in `r-cmd-check.yaml`
+After public	CI	manual		any	Block force pushes and deleting `main` with a ruleset
+After public	Launch	manual		any	Hex logo and favicons
+After public	Launch	manual		any	Link preview image
+After public	Launch	manual		any	Repository description and topics
+After public	Launch	manual		any	README badges
+After public	Launch	manual		any	Codecov set up
+Before CRAN	Checks	manual		cran	Time the tests with CRAN's settings
+Before CRAN	Checks	manual		cran	The gate's `full` mode passes
+Before CRAN	Checks	manual		cran	urlchecker and spelling report nothing
+Before CRAN	Checks	manual		cran	win-builder and mac-builder are clean
+Before CRAN	Wording	placeholder	DESCRIPTION|First version	cran	Description says what only this package does
+Before CRAN	Wording	file	cran-comments.md	cran	cran-comments.md is ready
+After acceptance	Launch	manual		cran	CRAN status and downloads badges
+After acceptance	Launch	manual		cran	R-universe set up
+After acceptance	Launch	manual		cran	GitHub release published
+Next release	Release	manual		any	Look at what's new in the kit
+Next release	Release	manual		any	NEWS.md is up to date
+Next release	Release	manual		any	Version set with `usethis::use_version()`

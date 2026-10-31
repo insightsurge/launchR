@@ -1,0 +1,140 @@
+# Runs the gate's lint mode (the quality gate): Air formatting, Biome on JS/CSS in inst/, docs in
+# sync with roxygen, lintr, \value on exported functions, spelling. R CMD check doesn't cover these.
+# lintr's findings show inline in a pull request's "Files changed"; the result is the Code style part of the pull
+# request's CI report (.github/pr-report.json).
+on:
+  workflow_call:
+    inputs:
+      js-css-tests:
+        description: Also check the style of the JavaScript and CSS in inst/ with Biome
+        type: boolean
+        default: false
+
+name: lint
+
+permissions: read-all
+
+jobs:
+  lint:
+    runs-on: ubuntu-26.04  # pinned, like the repo's other workflows
+    timeout-minutes: 45  # Air, Biome and lintr (about a minute), plus room for a slow package mirror (installing R
+    # alone once took 22 min here)
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - uses: actions/checkout@v7
+      # kit-fetch-start
+      - name: Fetch the kit at this workflow's version
+        uses: actions/checkout@v7
+        with:
+          repository: insightsurge/r-pkg-kit
+          ref: ${{ job.workflow_sha }}
+          path: .kit
+      # kit-fetch-end
+
+      - uses: posit-dev/setup-air@cf390573ff4fe0f198f35df3a642b1409328d859 # v1.0.1
+        with:
+          version: "0.11.0"   # keep in step with the local install (air --version)
+
+      # Biome's version comes from the package's own biome.json, so a kit update can't clash with it.
+      - name: Read Biome's version
+        id: biome
+        if: inputs.js-css-tests
+        run: echo "version=$(sed -n 's|.*schemas/\([0-9.]*\)/schema.json.*|\1|p' biome.json)" >> "$GITHUB_OUTPUT"
+
+      - uses: biomejs/setup-biome@4c91541eaada48f67d7dbd7833600ce162b68f51 # v2.7.1
+        if: inputs.js-css-tests
+        with:
+          version: ${{ steps.biome.outputs.version }}
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::devtools, any::roxygen2, any::lintr, any::spelling, any::checkmate, any::cli
+          needs: lint
+
+      - name: Gate (lint mode)
+        id: gate
+        # The run folder in a known place, so the report can read the gate's results (gate.json).
+        run: Rscript .kit/quality-gate/quality-gate.R lint --out "${RUNNER_TEMP}/gate"
+
+      - name: Write the lint report
+        if: always()
+        env:
+          OUTCOME: ${{ steps.gate.outcome }}
+          GATE_DIR: ${{ runner.temp }}/gate
+          OUT: ${{ runner.temp }}/lint-part.md
+        run: |
+          case "${OUTCOME}" in
+            success) echo "✅ **Lint:** passed (Air, Biome, lintr, docs in sync, spelling)." > "${OUT}" ;;
+            cancelled) echo "⏹️ **Lint:** cancelled before the gate finished." > "${OUT}" ;;
+            failure)
+              # The gate's failed steps, by name, with the first line of what each found (gate.json in its run folder).
+              json=$(ls "${GATE_DIR}"/*/gate.json 2>/dev/null | head -n 1 || true)
+              failed=""
+              if [ -n "${json}" ]; then
+                failed=$(jq -r '.steps[] | select(.status == "FAIL") | "- `\(.step)`: \(.detail | split("\n")[0] | .[0:200])"' "${json}")
+              fi
+              if [ -n "${failed}" ]; then
+                {
+                  echo "❌ **Lint:** failed: $(jq -r '[.steps[] | select(.status == "FAIL") | .step] | join(", ")' "${json}"). lintr's findings are also shown inline in Files changed."
+                  echo
+                  echo "<details open>"
+                  echo "<summary>What each failed step found</summary>"
+                  echo
+                  echo "${failed}"
+                  echo
+                  echo "</details>"
+                } > "${OUT}"
+              else
+                echo "❌ **Lint:** failed. lintr's findings are shown inline in Files changed; the gate's FAIL lines in the run's log name the other steps." > "${OUT}"
+              fi
+              ;;
+            *) echo "❌ **Lint:** did not run: the job failed while setting up (see the run's log)." > "${OUT}" ;;
+          esac
+
+      - name: Keep the lint report
+        if: always()
+        uses: ./.kit/.github/actions/pr-report-part
+        with:
+          name: style-1-lint
+          file: ${{ runner.temp }}/lint-part.md
+
+  # Rewrites the pull request's CI report comment (.github/actions/pr-report-comment). Pull requests from forks and
+  # from Dependabot get the job summary only: their token can't write to the pull request.
+  report:
+    needs: lint
+    if: >-
+      always() && github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.user.login != 'dependabot[bot]'
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10  # a few API calls
+    permissions:
+      actions: read
+      contents: read
+      pull-requests: write
+    # One report job at a time per pull request, across the workflows that write the comment.
+    concurrency:
+      group: pr-report-${{ github.event.pull_request.number }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: .github
+          persist-credentials: false
+      # kit-fetch-start
+      - name: Fetch the kit at this workflow's version
+        uses: actions/checkout@v7
+        with:
+          repository: insightsurge/r-pkg-kit
+          ref: ${{ job.workflow_sha }}
+          path: .kit
+      # kit-fetch-end
+      - uses: ./.kit/.github/actions/pr-report-comment
+        with:
+          config: .kit/.github/pr-report.json

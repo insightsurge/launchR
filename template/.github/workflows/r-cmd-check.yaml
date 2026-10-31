@@ -1,0 +1,27 @@
+# R CMD check, the core check; for CRAN packages it runs as CRAN does.
+# How this file works: see README.md in this folder.
+name: R-CMD-check
+
+on:
+{{c_r_cmd_check_pr}}  pull_request:
+{{c_r_cmd_check_pr}}    branches: [{{branches}}]   # PRs that merge into these branches
+    # Example: branches: [main, develop, "release/**"]
+{{c_r_cmd_check_push}}  push:
+{{c_r_cmd_check_push}}    branches: [{{branches}}]   # pushes to these branches
+{{c_r_cmd_check_weekly}}  schedule:
+{{c_r_cmd_check_weekly}}    - cron: "{{cron_r_cmd_check}}"   # times are UTC; runs from the default branch only
+    # Examples: "0 5 * * *" every day at 05:00, "0 5 1 * *" the 1st of every month at 05:00
+{{c_r_cmd_check_manual}}  workflow_dispatch:   # adds a "Run workflow" button on GitHub
+
+permissions:
+  contents: read
+  pull-requests: write   # lets CI post its report on the PR
+
+jobs:
+  check:
+    uses: insightsurge/r-pkg-kit/.github/workflows/r-cmd-check.yaml@v{{kit_version}}
+    with:
+      # One entry per run, as system/R version, comma separated. System: ubuntu, windows, macos.
+      # R version: release, devel, oldrel-1, or a number such as 4.1. R 4.1 on macos may fail: it has no ready-built packages.
+      platforms: {{platforms_r_cmd_check}}
+      test-time-limit: 180   # longest test run allowed in seconds, on ubuntu with R release; 0 turns it off

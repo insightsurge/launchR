@@ -1,0 +1,21 @@
+# The "Run workflow" button: creates labels, the root issue and the checklists. Safe to run again.
+# Repository settings can't be changed from here: the checklists link to them.
+name: Set up this repository
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Only show what would change
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  setup:
+    uses: insightsurge/r-pkg-kit/.github/workflows/github-setup.yaml@v{{kit_version}}
+    with:
+      dry_run: ${{ inputs.dry_run }}

@@ -1,0 +1,31 @@
+linters: linters_with_defaults(
+    line_length_linter = line_length_linter(120),
+    object_name_linter = object_name_linter(
+      styles = c("snake_case", "symbols")
+    ),
+    undesirable_function_linter = undesirable_function_linter(
+      fun = c(
+        library = "declare the package in DESCRIPTION and call pkg::fn() (house rule; CRAN: no library() in package code)",
+        require = "use requireNamespace() or rlang::check_installed() (CRAN)",
+        attach = "don't attach anything to the search path (CRAN: no changes to the user's session)",
+        setwd = "use withr::local_dir() or a path argument (CRAN: restore the working directory)",
+        Sys.setenv = "use withr::local_envvar() (CRAN: restore the user's session)",
+        source = "put code in R/ (house rule)",
+        browser = "remove debugging code",
+        debug = "remove debugging code",
+        debugonce = "remove debugging code",
+        print = "use cli for messages (CRAN Cookbook: no print()/cat() for messages); a print() method may use # nolint",
+        cat = "use cli for messages (CRAN Cookbook: no print()/cat() for messages)",
+        set.seed = "take a seed argument instead (CRAN Cookbook: no fixed seeds in functions)"
+      ),
+      symbol_is_undesirable = FALSE
+    ),
+    undesirable_operator_linter = undesirable_operator_linter()
+  )
+exclusions: list(
+    "dev",
+    "renv",
+    # Tests may print, set seeds and load packages; helpers live in helper files object_usage_linter can't follow.
+    "tests" = list(object_usage_linter = Inf, undesirable_function_linter = Inf)
+  )
+encoding: "UTF-8"

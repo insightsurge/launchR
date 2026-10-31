@@ -1,0 +1,10 @@
+name: Idea
+description: Something worth talking about, not ready to build.
+labels: [idea]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: The idea
+    validations:
+      required: true

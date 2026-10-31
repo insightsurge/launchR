@@ -1,0 +1,25 @@
+# Measures how much code your tests run; the limit is in DESCRIPTION. Linux only.
+# How this file works: see README.md in this folder.
+name: coverage
+
+on:
+{{c_coverage_pr}}  pull_request:
+{{c_coverage_pr}}    branches: [{{branches}}]   # PRs that merge into these branches
+    # Example: branches: [main, develop, "release/**"]
+{{c_coverage_push}}  push:
+{{c_coverage_push}}    branches: [{{branches}}]   # pushes to these branches
+{{c_coverage_weekly}}  schedule:
+{{c_coverage_weekly}}    - cron: "{{cron_coverage}}"   # times are UTC; runs from the default branch only
+    # Examples: "0 5 * * *" every day at 05:00, "0 5 1 * *" the 1st of every month at 05:00
+{{c_coverage_manual}}  workflow_dispatch:   # adds a "Run workflow" button on GitHub
+
+permissions:
+  contents: read
+  pull-requests: write   # lets CI post its report on the PR
+
+jobs:
+  check:
+    uses: insightsurge/r-pkg-kit/.github/workflows/coverage.yaml@v{{kit_version}}
+    # To send results to Codecov, add a CODECOV_TOKEN secret and uncomment these lines at job level:
+    # secrets:
+    #   CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

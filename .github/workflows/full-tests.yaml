@@ -1,0 +1,268 @@
+# Runs the tests CRAN skips, with NOT_CRAN=true and Chrome, on R release and R 4.1: the browser tests (shinytest2 and
+# chromote, in tests/testthat/test-*-browser.R), the snapshot tests (test-*-snap.R) and the detailed tests of the
+# example apps (test-*-extended.R). R CMD check skips all three, as CRAN does; the coverage job and the weekly
+# extended-tests.yaml run the extended tests too. One line per test file as it finishes shows the
+# progress while the job runs, and a failing test prints in full. A pull request that changes only documentation
+# starts the jobs and skips their steps (.github/scripts/r-changes.sh).
+# Each R version writes its part of the pull request's CI report (.github/pr-report.json): counts, failing and skipped
+# tests, the slowest files and the files slower than on main, in the job summary and, through the report job, in the
+# comment.
+on:
+  workflow_call:
+    inputs:
+      platforms:
+        description: Systems and R versions, as system/R version, comma separated
+        type: string
+        default: ubuntu/release, ubuntu/4.1
+
+name: off-cran-tests
+
+permissions: read-all
+
+jobs:
+  platforms:
+    # Turns the `platforms` input, such as "ubuntu/release, windows/4.1", into the job matrix.
+    runs-on: ubuntu-26.04
+    outputs:
+      config: ${{ steps.parse.outputs.config }}
+    steps:
+      - id: parse
+        env:
+          PLATFORMS: ${{ inputs.platforms }}
+        run: |
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json, os, sys
+          runners = {"ubuntu": "ubuntu-26.04", "windows": "windows-latest", "macos": "macos-latest"}
+          config = []
+          for entry in os.environ["PLATFORMS"].replace(chr(10), ",").split(","):
+              entry = entry.strip()
+              if not entry:
+                  continue
+              system, _, r = entry.partition("/")
+              if system not in runners or not r:
+                  sys.exit(f"Can't read platform '{entry}'. Write system/R version, such as ubuntu/release.")
+              row = {"os": runners[system], "r": r}
+              if r == "devel":
+                  row["http-user-agent"] = "release"
+              config.append(row)
+          if not config:
+              sys.exit("The platforms input is empty.")
+          print("config=" + json.dumps(config))
+          PY
+
+  tests:
+    needs: platforms
+    runs-on: ${{ matrix.config.os }}
+    name: off-cran (${{ matrix.config.r }})
+    timeout-minutes: 120  # room for a cold cache and a slow package mirror (R CMD check on R 4.1 once took 42 min
+    # here); the time goes into installing R and the packages, the tests themselves are few so far
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # R 4.1 too: code that runs only inside the browser tests' Shiny apps (a separate R process) or the extended
+        # tests meets the oldest R the package supports only here.
+        config: ${{ fromJSON(needs.platforms.outputs.config) }}
+
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      # Everything CRAN skips: browser (the runner has Chrome), snapshot and extended tests.
+      NOT_CRAN: true
+      EXTENDED_TESTS: true
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 2  # a pull request's merge commit and its base, for r-changes.sh
+      # kit-fetch-start
+      - name: Fetch the kit at this workflow's version
+        uses: actions/checkout@v7
+        with:
+          repository: insightsurge/r-pkg-kit
+          ref: ${{ job.workflow_sha }}
+          path: .kit
+      # kit-fetch-end
+
+      - name: Find out whether the R steps are needed
+        id: changes
+        run: bash .kit/.github/scripts/r-changes.sh
+
+      - uses: r-lib/actions/setup-pandoc@v2
+        if: steps.changes.outputs.r == 'true'
+
+      - uses: r-lib/actions/setup-r@v2
+        if: steps.changes.outputs.r == 'true'
+        with:
+          r-version: ${{ matrix.config.r }}
+          use-public-rspm: true
+          # The R option Ncpus for every R session (setup-r's default is 1). testthat starts that many processes for
+          # the test files (Config/testthat/parallel in DESCRIPTION): two, as in R CMD check and on CRAN.
+          Ncpus: 2
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        if: steps.changes.outputs.r == 'true'
+        with:
+          extra-packages: local::.
+          needs: check
+
+      - name: Get main's test times (pull requests)
+        id: baseline
+        if: github.event_name == 'pull_request' && steps.changes.outputs.r == 'true'
+        uses: ./.kit/.github/actions/main-baseline
+        with:
+          workflow: off-cran-tests.yaml
+          artifact: off-cran-timings-${{ matrix.config.r }}
+          path: ${{ runner.temp }}/off-cran-baseline
+
+      - name: Run the tests with Chrome
+        if: steps.changes.outputs.r == 'true'
+        shell: Rscript {0}
+        env:
+          R_LABEL: ${{ matrix.config.r }}
+          OUT: ${{ runner.temp }}/off-cran-part.md
+          TIMINGS: ${{ runner.temp }}/off-cran-timings.csv
+          BASELINE_DIR: ${{ runner.temp }}/off-cran-baseline
+          BASELINE_FOUND: ${{ steps.baseline.outputs.found }}
+          BASELINE_SHA: ${{ steps.baseline.outputs.sha }}
+        run: |
+          chrome <- chromote::find_chrome()
+          if (is.null(chrome)) stop("No Chrome on this runner: the browser tests would all skip.", call. = FALSE)
+          message("Chrome: ", system2(chrome, "--version", stdout = TRUE))
+          library(testthat)
+          # The package's name from DESCRIPTION, so the workflow names no package.
+          package <- read.dcf("DESCRIPTION", fields = "Package")[[1]]
+          library(package, character.only = TRUE)
+          # The kinds of test file CRAN skips (tests/README.md); test-helper-layout.R keeps them apart.
+          files <- list.files("tests/testthat", "^test-.*-(browser|snap|extended)[.]R$")
+          message(length(files), " files with browser, snapshot or extended tests: ", paste(files, collapse = ", "))
+          # A line per file when it finishes, with its time, and a status line when one starts (update_interval = Inf:
+          # no progress spinner in between); failures in full. The reporter also keeps each file's time for the report.
+          source(".kit/.github/scripts/off-cran-report.R")
+          reporter <- file_time_reporter$new(show_praise = FALSE)
+          reporter$update_interval <- Inf  # testthat's parallel reporter sets 0.05 in its constructor
+          results <- testthat::test_dir(
+            "tests/testthat",
+            filter = "-(browser|snap|extended)$",
+            package = package,
+            load_package = "installed",
+            reporter = reporter,
+            stop_on_failure = FALSE
+          )
+          # These files hold only the tests CRAN skips, so any skip fails the job: a Chrome that keeps stopping, a
+          # missing package (shinytest2, chromote, bslib, knitr) or NOT_CRAN not reaching the tests ("On CRAN").
+          skips <- unique(unlist(lapply(results, function(test) {
+            vapply(Filter(function(e) inherits(e, "expectation_skip"), test$results), conditionMessage, character(1))
+          })))
+          # A browser or extended file starts with its skip, which skips the whole file and reports no test at all, so a
+          # file that reports nothing has skipped too.
+          silent <- setdiff(files, unique(as.data.frame(results)$file))
+          if (length(silent) > 0L) skips <- c(skips, paste("no test ran in", silent))
+          if (length(skips) > 0L) message("Skipped: ", paste(skips, collapse = "; "))
+          # The report part for the CI report; a fault in the report must not decide the job, the tests do.
+          tryCatch(write_off_cran_report(results, reporter$seconds(), reporter$elapsed(), silent), error = function(e) {
+            message("::warning::The off-CRAN test report failed: ", conditionMessage(e))
+            writeLines(
+              sprintf("\u26a0\ufe0f **Off-CRAN tests, R %s:** the report failed (%s); the job's log has the results.",
+                Sys.getenv("R_LABEL"), conditionMessage(e)),
+              Sys.getenv("OUT")
+            )
+          })
+          failed <- as.data.frame(results)
+          if (any(failed$failed > 0L | failed$error) || length(skips) > 0L) {
+            stop("Tests failed or were skipped; see above.", call. = FALSE)
+          }
+
+      # What the failing tests saved (tests/testthat/_problems/), to download from the run's page.
+      - name: Keep what the failing tests saved
+        if: failure() && steps.changes.outputs.r == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: off-cran-test-problems-${{ matrix.config.r }}
+          path: tests/testthat/_problems
+          if-no-files-found: ignore
+
+      # When the tests didn't report: a documentation-only change, or a failure before the tests finished.
+      - name: Write the report (when the tests didn't)
+        if: always()
+        env:
+          R_STEPS: ${{ steps.changes.outputs.r }}
+          R_LABEL: ${{ matrix.config.r }}
+          JOB_STATUS: ${{ job.status }}
+          OUT: ${{ runner.temp }}/off-cran-part.md
+        run: |
+          if [ -s "${OUT}" ]; then exit 0; fi
+          if [ "${JOB_STATUS}" = "cancelled" ]; then
+            echo "⏹️ **Off-CRAN tests, R ${R_LABEL}:** the job was cancelled before the tests finished." > "${OUT}"
+          elif [ "${R_STEPS}" = "false" ]; then
+            echo "⏭️ **Off-CRAN tests, R ${R_LABEL}:** not run: this pull request changes only documentation." > "${OUT}"
+          else
+            echo "❌ **Off-CRAN tests, R ${R_LABEL}:** the job failed before the tests finished (see the run's log)." > "${OUT}"
+          fi
+
+      - name: Keep the report
+        if: always()
+        uses: ./.kit/.github/actions/pr-report-part
+        with:
+          name: tests-2-off-cran-${{ matrix.config.r }}
+          file: ${{ runner.temp }}/off-cran-part.md
+
+      # The test times pull requests are compared with.
+      - name: Keep main's test times
+        if: success() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v7
+        with:
+          name: off-cran-timings-${{ matrix.config.r }}
+          path: ${{ runner.temp }}/off-cran-timings.csv
+          retention-days: 90
+          overwrite: true
+
+  # One stable check name that sums up the jobs above (a branch ruleset could require it): it fails unless the job
+  # above succeeded on every R version.
+  off-cran-tests:
+    needs: tests
+    if: always()
+    runs-on: ubuntu-26.04
+    name: off-cran-tests
+    timeout-minutes: 5  # only reads the matrix result
+    steps:
+      - name: Require every matrix job to succeed
+        env:
+          RESULT: ${{ needs.tests.result }}
+        run: |
+          echo "Matrix result: ${RESULT}"
+          test "${RESULT}" = "success"
+
+  # Rewrites the pull request's CI report comment (.github/actions/pr-report-comment). Pull requests from forks and
+  # from Dependabot get the job summaries only: their token can't write to the pull request.
+  report:
+    needs: [tests, off-cran-tests]  # after the summary job too, so the run counts as finished
+    if: >-
+      always() && github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.user.login != 'dependabot[bot]'
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10  # a few API calls
+    permissions:
+      actions: read
+      contents: read
+      pull-requests: write
+    # One report job at a time per pull request, across the workflows that write the comment.
+    concurrency:
+      group: pr-report-${{ github.event.pull_request.number }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: .github
+          persist-credentials: false
+      # kit-fetch-start
+      - name: Fetch the kit at this workflow's version
+        uses: actions/checkout@v7
+        with:
+          repository: insightsurge/r-pkg-kit
+          ref: ${{ job.workflow_sha }}
+          path: .kit
+      # kit-fetch-end
+      - uses: ./.kit/.github/actions/pr-report-comment
+        with:
+          config: .kit/.github/pr-report.json

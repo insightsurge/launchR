@@ -1,0 +1,354 @@
+/* The look of the pkgdown site: one still teal glow in the top-right corner, opaque reading surfaces,
+   prose capped at 64 characters per line, and the same colour tokens (--m-*) for light and dark.
+   The ground, ink and accent are also set in _pkgdown.yml (Bootstrap makes its tints from them): change both.
+   Every text colour is at least 7.2:1 on the plain ground and 5.8:1 at the strongest point of the glow.
+   Fonts: self-hosted latin subsets (SIL Open Font License 1.1; texts in fonts/OFL-*.txt). */
+
+:root {
+  --m-ground: #f5fafc;
+  --m-strong: #c8e7e8;
+  --m-ink: #172e36;
+  --m-muted: #3c5861;
+  --m-accent: #145c68;
+  --m-accent-rgb: 20, 92, 104;
+  --m-rule: color-mix(in srgb, var(--m-ink) 20%, var(--m-ground));
+}
+[data-bs-theme="dark"] {
+  --m-ground: #101e22;
+  --m-strong: #163f43;
+  --m-ink: #e7f3f5;
+  --m-muted: #b5c9cd;
+  --m-accent: #8ce1e4;
+  --m-accent-rgb: 140, 225, 228;
+  --m-rule: color-mix(in srgb, var(--m-ink) 20%, var(--m-ground));
+}
+
+/* Bootstrap consumes the same tokens as the page components. */
+:root,
+[data-bs-theme="dark"] {
+  --bs-body-bg: var(--m-ground);
+  --bs-body-color: var(--m-ink);
+  --bs-emphasis-color: var(--m-ink);
+  --bs-secondary-color: var(--m-muted);
+  --bs-tertiary-color: var(--m-muted);
+  --bs-secondary-bg: var(--m-ground);
+  --bs-tertiary-bg: var(--m-ground);
+  --bs-border-color: var(--m-rule);
+  --bs-link-color: var(--m-accent);
+  --bs-link-hover-color: var(--m-accent);
+  --bs-link-color-rgb: var(--m-accent-rgb);
+  --bs-link-hover-color-rgb: var(--m-accent-rgb);
+  --bs-primary: var(--m-accent);
+  --bs-primary-rgb: var(--m-accent-rgb);
+  --bs-code-color: var(--m-ink);
+}
+html {
+  background: var(--m-ground, #f5fafc);
+}
+body {
+  isolation: isolate;
+  background: var(--m-ground, #f5fafc);
+  color: var(--m-ink, #172e36);
+  font-family: "Hanken Grotesk", sans-serif;
+  font-size: 1rem;
+  line-height: 1.65;
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: "Hanken Grotesk", sans-serif;
+  font-weight: 650;
+  color: var(--m-ink);
+  overflow-wrap: anywhere;
+}
+h1 {
+  letter-spacing: -0.025em;
+}
+h2 {
+  margin-top: 2.5rem;
+}
+main,
+aside,
+.row > * {
+  min-width: 0;
+}
+main :is(p, ul, ol, dd) {
+  max-width: 64ch;
+  overflow-wrap: anywhere;
+}
+main :is(p, ul, ol) {
+  line-height: 1.65;
+}
+main :is(img, svg, video, iframe) {
+  max-width: 100%;
+}
+main :is(img, video) {
+  height: auto;
+}
+main :is(a, code),
+aside a {
+  overflow-wrap: anywhere;
+}
+main a,
+aside a {
+  color: var(--m-accent);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+main a:hover,
+aside a:hover {
+  color: var(--m-accent);
+  text-decoration-thickness: 2px;
+}
+main a.anchor {
+  text-decoration: none;
+}
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 3px solid var(--m-accent);
+  outline-offset: 3px;
+}
+/* Opaque navigation keeps its contrast independent of the gradient. */
+nav.navbar {
+  background: var(--m-ground) !important;
+  border-bottom: 1px solid var(--m-rule);
+  backdrop-filter: none;
+  --bs-navbar-color: var(--m-muted);
+  --bs-navbar-hover-color: var(--m-ink);
+  --bs-navbar-active-color: var(--m-ink);
+  --bs-navbar-brand-color: var(--m-ink);
+  --bs-navbar-brand-hover-color: var(--m-ink);
+}
+.navbar .nav-link {
+  color: var(--m-muted);
+}
+/* pkgdown marks the current page on the list item, not on its link. */
+.navbar .nav-link:is(:hover, :focus),
+.navbar .nav-item.active > .nav-link {
+  color: var(--m-ink);
+}
+.navbar .nav-item.active > .nav-link {
+  text-decoration: underline;
+  text-underline-offset: 0.4em;
+}
+.navbar-toggler {
+  color: var(--m-accent);
+  border-color: var(--m-accent);
+}
+.dropdown-menu {
+  --bs-dropdown-bg: var(--m-ground);
+  --bs-dropdown-color: var(--m-ink);
+  --bs-dropdown-link-color: var(--m-ink);
+  --bs-dropdown-link-hover-color: var(--m-ink);
+  --bs-dropdown-link-hover-bg: var(--m-strong);
+  --bs-dropdown-link-active-color: var(--m-ink);
+  --bs-dropdown-link-active-bg: var(--m-strong);
+  border-color: var(--m-rule);
+}
+.form-control,
+#search-input {
+  color: var(--m-ink);
+  background-color: var(--m-ground);
+  border-color: var(--m-accent);
+}
+.form-control::placeholder,
+#search-input::placeholder {
+  color: var(--m-muted);
+  opacity: 1;
+}
+.form-control:focus {
+  color: var(--m-ink);
+  background-color: var(--m-ground);
+  border-color: var(--m-accent);
+}
+.btn-primary {
+  --bs-btn-color: var(--m-ground);
+  --bs-btn-bg: var(--m-accent);
+  --bs-btn-border-color: var(--m-accent);
+  --bs-btn-hover-color: var(--m-ground);
+  --bs-btn-hover-bg: var(--m-accent);
+  --bs-btn-hover-border-color: var(--m-accent);
+  --bs-btn-active-color: var(--m-ground);
+  --bs-btn-active-bg: var(--m-accent);
+  --bs-btn-active-border-color: var(--m-accent);
+}
+/* pkgdown hyphenates all text on phones; code and function names must never break with a hyphen. */
+code,
+pre {
+  font-family: "JetBrains Mono", monospace;
+  font-variant-ligatures: none;
+  hyphens: none;
+}
+main :not(pre) > code {
+  color: var(--m-ink);
+  background: var(--m-ground);
+  border: 1px solid var(--m-rule);
+  border-radius: 0.25rem;
+  padding: 0.08em 0.25em;
+  font-size: 0.88em;
+}
+main div.sourceCode,
+main pre {
+  max-width: 100%;
+  min-width: 0;
+  background: var(--m-ground);
+  border: 1px solid var(--m-rule);
+  border-radius: 0.6rem;
+  margin-block: 1.5rem;
+}
+main div.sourceCode {
+  border-top: 3px solid var(--m-accent);
+}
+main pre {
+  overflow-x: auto;
+  padding: 1.1rem;
+  font-size: 0.875rem;
+  line-height: 1.65;
+  color: var(--m-ink);
+}
+main div.sourceCode > pre {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  padding-right: 4.5rem;
+}
+main pre code {
+  color: var(--m-ink);
+  background: transparent;
+  overflow-wrap: normal;
+}
+/* Restrained syntax palette: every token uses a measured text colour. */
+:root pre code span {
+  color: var(--m-ink);
+}
+:root pre code span:is(.co, .cv, .do, .an, .in) {
+  color: var(--m-muted);
+}
+:root pre code span:is(.kw, .cf, .cn, .st, .ss, .ch, .fu, .im, .dv, .fl, .bn) {
+  color: var(--m-accent);
+}
+main pre a {
+  color: var(--m-accent);
+  text-decoration: none;
+  overflow-wrap: normal;
+}
+main pre a:hover {
+  text-decoration: underline;
+}
+main .btn-copy-ex {
+  background: var(--m-ground);
+  color: var(--m-accent);
+  border: 1px solid var(--m-accent);
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+}
+.card {
+  background: var(--m-ground);
+  color: var(--m-ink);
+  border-color: var(--m-rule);
+}
+.card {
+  border-radius: 0.8rem;
+  box-shadow: none;
+}
+main table {
+  --bs-table-color: var(--m-ink);
+  --bs-table-bg: var(--m-ground);
+  --bs-table-striped-color: var(--m-ink);
+  --bs-table-striped-bg: var(--m-ground);
+  --bs-table-hover-color: var(--m-ink);
+  --bs-table-hover-bg: var(--m-strong);
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  background: var(--m-ground);
+  color: var(--m-ink);
+}
+main table :is(th, td) {
+  padding: 0.65rem;
+  border-color: var(--m-rule);
+}
+main table thead {
+  background: var(--m-ground);
+}
+main dl {
+  min-width: 0;
+}
+main dt {
+  overflow-wrap: anywhere;
+}
+main dd,
+.text-muted,
+aside,
+footer {
+  color: var(--m-muted) !important;
+}
+aside h2 {
+  color: var(--m-ink);
+  font-size: 1rem;
+}
+aside {
+  align-self: flex-start;
+}
+#toc .nav-link {
+  color: var(--m-muted);
+  background: transparent;
+}
+#toc .nav-link.active {
+  color: var(--m-ink);
+  background: transparent;
+  border-left: 3px solid var(--m-accent);
+  text-decoration: underline;
+}
+footer {
+  border-top: 1px solid var(--m-rule);
+  background: var(--m-ground);
+}
+footer a {
+  color: var(--m-accent);
+  text-decoration: underline;
+}
+/* Bootstrap still owns navbar collapse and the column breakpoints. */
+@media (max-width: 767.98px) {
+  body > .container,
+  nav.navbar > .container {
+    padding-inline: 1rem;
+  }
+  main {
+    width: 100%;
+  }
+  main pre {
+    font-size: 0.875rem;
+    padding: 1rem;
+  }
+  aside {
+    margin-top: 2rem;
+  }
+  .navbar .form-inline,
+  .navbar form {
+    max-width: 100%;
+  }
+}
+
+/* One bounded glow; solid endpoint colours bound every possible blend. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(ellipse 45rem 32rem at 100% 0, var(--m-strong), var(--m-ground) 100%);
+}
+@media print {
+  body::before {
+    display: none;
+  }
+  body,
+  .card,
+  main pre,
+  main div.sourceCode {
+    background: var(--m-ground);
+  }
+}

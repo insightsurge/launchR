@@ -1,0 +1,17 @@
+name: Feature
+description: Something new the package should do.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do?
+    validations:
+      required: true
+  - type: textarea
+    id: done
+    attributes:
+      label: Done when
+      description: How will we know this is finished?
+    validations:
+      required: true

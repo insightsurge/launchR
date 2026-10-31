@@ -1,0 +1,9 @@
+# CI checks. events: pr, push, weekly, manual, comma separated. platforms is empty for Linux-only checks.
+key	check	label	starter	everything	events	cron	platforms_public	platforms_private
+r_cmd_check	r-cmd-check	R CMD check, the core check	yes	yes	pr,push,weekly,manual	0 5 * * 1	ubuntu/release, windows/release, macos/release	ubuntu/release, ubuntu/oldrel-1
+lint	lint	Check style, docs in sync and spelling	yes	yes	pr,push,manual	0 5 * * 1		
+no_suggests	no-suggests	Check the package works without its optional packages	no	yes	pr,push,manual	0 5 * * 1		
+secret_scan	secret-scan	Catch passwords and tokens committed by mistake	yes	yes	pr,push	0 5 * * 1		
+coverage	coverage	Measure how much code your tests run	yes	yes	pr,push,manual	0 5 * * 1		
+full_tests	full-tests	Run every test, including browser and snapshot tests that CRAN skips	no	yes	pr,push,weekly,manual	0 5 * * 1	ubuntu/release, ubuntu/4.1	ubuntu/release
+extended_tests	extended-tests	Every Monday, run a full check on Mac and Windows, including any detailed tests you have marked	no	yes	weekly,manual	0 5 * * 1	macos/release, windows/release, windows/4.1	ubuntu/release

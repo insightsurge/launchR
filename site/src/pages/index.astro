@@ -1,0 +1,38 @@
+---
+import Base from '../layouts/Base.astro';
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'r-pkg-kit',
+  description: 'Start an R package with tests, CI and GitHub set up, or add ready-made CI to one you have.',
+};
+---
+<Base
+  title="r-pkg-kit: start an R package ready for CRAN"
+  description="Start an R package with tests, CI and GitHub set up, or add ready-made CI to one you have. Free and open source."
+  schema={schema}
+>
+  <h1>An R package, set up properly from the first commit</h1>
+  <p>Answer a few questions and download your package with tests, CI and GitHub files. It's an ordinary R package with nothing to delete, and it never needs this site again.</p>
+  <div class="doors">
+    <section class="door">
+      <h2>Start a package</h2>
+      <p>Get a zip with everything in place, then follow the next steps. No terminal needed.</p>
+      <a class="button" href="/start">Start a package</a>
+    </section>
+    <section class="door">
+      <h2>Add the CI to my package</h2>
+      <p>Already have a package? Use the same checks instead of writing your own.</p>
+      <a class="button" href="/guides/r-cmd-check-on-github-actions">Read how</a>
+    </section>
+  </div>
+  <h2>What you get</h2>
+  <ul>
+    <li>A package that passes its checks on day one, with an example function and tests.</li>
+    <li>CI that runs by itself on GitHub, and that you can change one file at a time.</li>
+    <li>Issue forms, a PR template, labels and checklists for each stage up to release.</li>
+  </ul>
+  <h2>What can go wrong</h2>
+  <p>Your first real pull request may fail on spelling or a missing <code>@returns</code>. That's the checks doing their job: the report says what to fix.</p>
+</Base>

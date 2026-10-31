@@ -1,0 +1,55 @@
+# Downloads an artifact from the latest successful run of a workflow on a push to the default branch: the figures a
+# pull request is compared with (coverage, test times). When there is none (expired, or never uploaded), `found` is
+# false and the job goes on. Generic: no repository-specific code.
+name: main-baseline
+description: Download an artifact from the latest successful default-branch run of a workflow.
+
+inputs:
+  workflow:
+    description: The workflow file name, such as test-coverage.yaml.
+    required: true
+  artifact:
+    description: The artifact's name.
+    required: true
+  path:
+    description: The folder to download into.
+    required: true
+  github-token:
+    description: A token that can read the repository's actions.
+    default: ${{ github.token }}
+
+outputs:
+  found:
+    description: true when the artifact was downloaded.
+    value: ${{ steps.download.outputs.found }}
+  sha:
+    description: The commit that run was for.
+    value: ${{ steps.download.outputs.sha }}
+
+runs:
+  using: composite
+  steps:
+    - id: download
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        WORKFLOW: ${{ inputs.workflow }}
+        ARTIFACT: ${{ inputs.artifact }}
+        DEST: ${{ inputs.path }}
+        BRANCH: ${{ github.event.repository.default_branch }}
+      run: |
+        mkdir -p "${DEST}"
+        run=$(gh run list -R "${GITHUB_REPOSITORY}" --workflow "${WORKFLOW}" --branch "${BRANCH}" --event push \
+          --status success --limit 1 --json databaseId,headSha --jq '.[0] | "\(.databaseId) \(.headSha)"' || true)
+        id=${run%% *}
+        sha=${run#* }
+        if [ -n "${id}" ] && [ "${id}" != "null" ] &&
+          gh run download -R "${GITHUB_REPOSITORY}" "${id}" -n "${ARTIFACT}" -D "${DEST}"; then
+          echo "Downloaded ${ARTIFACT} from run ${id} (commit ${sha})."
+          echo "found=true" >> "${GITHUB_OUTPUT}"
+          echo "sha=${sha}" >> "${GITHUB_OUTPUT}"
+        else
+          echo "No ${ARTIFACT} from a successful ${WORKFLOW} run on ${BRANCH}."
+          echo "found=false" >> "${GITHUB_OUTPUT}"
+          echo "sha=" >> "${GITHUB_OUTPUT}"
+        fi

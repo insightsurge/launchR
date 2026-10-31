@@ -1,0 +1,18 @@
+# Builds the website and publishes it to GitHub Pages. In the repository's settings, set Pages to "GitHub Actions".
+name: pkgdown
+
+on:
+  push:
+    branches: [{{branches}}]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  site:
+    uses: insightsurge/r-pkg-kit/.github/workflows/pkgdown.yaml@v{{kit_version}}
+    permissions:
+      contents: read
+      pages: write
+      id-token: write

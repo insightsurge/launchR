@@ -1,0 +1,44 @@
+# Rewrites one comment on the pull request from the report parts (pr-report-part) of the workflows named in a
+# config file. Run it from a small job of its own at the end of each producing workflow: the only job with
+# pull-requests: write. The parts are copied in as Markdown and never run. Generic: no repository-specific code.
+#
+# The config file (JSON):
+#   {"title": "CI report", "header": "ci-report", "report_job": "report",
+#    "workflows": ["test-coverage.yaml", "lint.yaml"],
+#    "sections": [{"key": "tests", "title": "Tests"}, {"key": "style", "title": "Code style"}]}
+# A part named tests-1-coverage goes in the section with the key "tests"; parts sort by name within a section.
+# report_job is the name of the jobs that run this action: a run whose other jobs are done counts as finished.
+# summary_jobs (optional) names jobs that sum up their matrix's result; the comment's list of failed jobs shows one
+# only when it failed on its own, not when it repeats a matrix job's failure.
+name: pr-report-comment
+description: Gather the report parts of a pull request's workflow runs into one comment, edited on every run.
+
+inputs:
+  config:
+    description: The JSON config file (title, header, workflows, sections).
+    required: true
+  github-token:
+    description: A token with actions read and pull-requests write.
+    default: ${{ github.token }}
+
+runs:
+  using: composite
+  steps:
+    - name: Build the comment
+      id: build
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        CONFIG: ${{ inputs.config }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
+        HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        OUT: ${{ runner.temp }}/pr-report-comment.md
+      run: bash "${GITHUB_ACTION_PATH}/build-comment.sh"
+
+    - name: Post or edit the comment
+      if: steps.build.outputs.post == 'true'
+      uses: marocchino/sticky-pull-request-comment@5770ad5eb8f42dd2c4f34da00c94c5381e49af88 # v3.0.5
+      with:
+        header: ${{ steps.build.outputs.header }}
+        path: ${{ runner.temp }}/pr-report-comment.md
+        GITHUB_TOKEN: ${{ inputs.github-token }}

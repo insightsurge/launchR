@@ -1,0 +1,5 @@
+# Values the CLI and the app share.
+key	value
+kit_version	0.0.1
+preset	everything
+branches	main

@@ -1,0 +1,44 @@
+# Saves one part of the pull request report: a short Markdown file that a job writes about its results. The part is
+# added to the job's summary (shown on the run page, for every run) and, on pull requests, uploaded as the artifact
+# pr-report-<name>, which pr-report-comment gathers into the one comment. Generic: no repository-specific code.
+name: pr-report-part
+description: Add a Markdown part to the job summary and keep it for the pull request's report comment.
+
+inputs:
+  name:
+    description: >-
+      The part's name: the report section's key, a dash, then a name that sorts the parts within the section
+      (tests-1-coverage goes in the section with the key "tests"). Letters, digits, dots and dashes.
+    required: true
+  file:
+    description: The Markdown file with the part.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Add the part to the job summary
+      shell: bash
+      env:
+        NAME: ${{ inputs.name }}
+        FILE: ${{ inputs.file }}
+      run: |
+        if ! [[ "${NAME}" =~ ^[A-Za-z0-9]+-[A-Za-z0-9.-]+$ ]]; then
+          echo "::error::pr-report-part: the name '${NAME}' is not <section>-<name> (letters, digits, dots, dashes)."
+          exit 1
+        fi
+        if [ ! -s "${FILE}" ]; then
+          echo "::error::pr-report-part: ${FILE} is missing or empty."
+          exit 1
+        fi
+        cat "${FILE}" >> "${GITHUB_STEP_SUMMARY}"
+
+    - name: Keep the part for the report comment
+      if: github.event_name == 'pull_request'
+      uses: actions/upload-artifact@v7
+      with:
+        name: pr-report-${{ inputs.name }}
+        path: ${{ inputs.file }}
+        retention-days: 7  # the comment is rebuilt from the parts of the pull request's latest commit
+        if-no-files-found: error
+        overwrite: true  # a re-run job replaces its part

@@ -1,0 +1,31 @@
+---
+import Base from './Base.astro';
+
+const { frontmatter } = Astro.props;
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'TechArticle',
+      headline: frontmatter.title,
+      description: frontmatter.description,
+      dateModified: frontmatter.updated,
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Guides', item: new URL('/guides/', Astro.site).href },
+        { '@type': 'ListItem', position: 2, name: frontmatter.title },
+      ],
+    },
+  ],
+};
+---
+<Base title={frontmatter.title} description={frontmatter.description} schema={schema}>
+  <article class="prose">
+    <p class="crumb">Guides</p>
+    <h1>{frontmatter.title}</h1>
+    <slot />
+    <p class="updated">Last updated {frontmatter.updated}</p>
+  </article>
+</Base>

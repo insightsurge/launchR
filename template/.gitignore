@@ -1,0 +1,28 @@
+# Session files
+.Rproj.user/
+.Rhistory
+.RData
+.Renviron
+
+# Operating system files
+.DS_Store
+
+# Local working notes, not shared
+dev/
+
+# Local tool settings stay out of git
+.claude/settings.local.json
+.codex/
+
+# Local development libraries and startup files
+renv/
+renv.lock
+.Rprofile
+
+# Package build and check output
+*.Rcheck/
+{{package}}_*.tar.gz
+
+# Generated site and temporary files
+site/
+.*.md.hold

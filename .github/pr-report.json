@@ -1,0 +1,11 @@
+{
+  "title": "CI report",
+  "header": "ci-report",
+  "report_job": "report",
+  "summary_jobs": ["R-CMD-check", "off-cran-tests"],
+  "workflows": ["R-CMD-check.yaml", "test-coverage.yaml", "off-cran-tests.yaml", "lint.yaml"],
+  "sections": [
+    {"key": "tests", "title": "Tests"},
+    {"key": "style", "title": "Code style"}
+  ]
+}
