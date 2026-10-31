@@ -30,7 +30,7 @@ permissions:
 
 jobs:
   check:
-    uses: insightsurge/r-pkg-kit/.github/workflows/r-cmd-check.yaml@v0.0.1
+    uses: insightsurge/launchR/.github/workflows/r-cmd-check.yaml@v0.0.1
     with:
       platforms: ubuntu/release, windows/release, macos/release
 ```

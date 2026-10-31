@@ -200,7 +200,7 @@ function stepNext() {
             <pre>usethis::use_git()
 usethis::use_github(private = ${c.visibility === 'private' ? 'TRUE' : 'FALSE'})</pre></li>
           <li>Set up labels and checklists:
-            <pre>source("https://raw.githubusercontent.com/insightsurge/r-pkg-kit/v${lists.settings.kit_version}/cli/setup-github.R")</pre></li>
+            <pre>source("https://raw.githubusercontent.com/insightsurge/launchR/v${lists.settings.kit_version}/cli/setup-github.R")</pre></li>
         </ol>
       </section>
       <p class="or">OR</p>
