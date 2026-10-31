@@ -6,7 +6,7 @@ description: Download an artifact from the latest successful default-branch run 
 
 inputs:
   workflow:
-    description: The workflow file name, such as test-coverage.yaml.
+    description: The workflow file name, such as coverage.yaml.
     required: true
   artifact:
     description: The artifact's name.

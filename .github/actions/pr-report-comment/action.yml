@@ -4,7 +4,7 @@
 #
 # The config file (JSON):
 #   {"title": "CI report", "header": "ci-report", "report_job": "report",
-#    "workflows": ["test-coverage.yaml", "lint.yaml"],
+#    "workflows": ["coverage.yaml", "lint.yaml"],
 #    "sections": [{"key": "tests", "title": "Tests"}, {"key": "style", "title": "Code style"}]}
 # A part named tests-1-coverage goes in the section with the key "tests"; parts sort by name within a section.
 # report_job is the name of the jobs that run this action: a run whose other jobs are done counts as finished. In a

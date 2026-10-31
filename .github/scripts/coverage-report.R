@@ -1,4 +1,4 @@
-# Writes the coverage part of the pull request's CI report (test-coverage.yaml): the figure and its limit, the
+# Writes the coverage part of the pull request's CI report (coverage.yaml): the figure and its limit, the
 # difference from main, and on a pull request the added R/ lines that the job's tests don't run. The untested lines
 # are a report only: the gate's new_lines step is the check, run locally. The job's tests skip the browser and
 # snapshot tests, so a line listed here may still be run by one of them.

@@ -111,7 +111,7 @@ jobs:
         if: github.event_name == 'pull_request' && steps.changes.outputs.r == 'true'
         uses: ./.kit/.github/actions/main-baseline
         with:
-          workflow: off-cran-tests.yaml
+          workflow: full-tests.yaml
           artifact: off-cran-timings-${{ matrix.config.r }}
           path: ${{ runner.temp }}/off-cran-baseline
 
@@ -134,8 +134,17 @@ jobs:
           package <- read.dcf("DESCRIPTION", fields = "Package")[[1]]
           library(package, character.only = TRUE)
           # The kinds of test file CRAN skips (tests/README.md); test-helper-layout.R keeps them apart.
-          files <- list.files("tests/testthat", "^test-.*-(browser|snap|extended)[.]R$")
+          files <- list.files("tests/testthat", "^test-(.*-)?(browser|snap|extended)[.]R$")
           message(length(files), " files with browser, snapshot or extended tests: ", paste(files, collapse = ", "))
+          # A package need not have any: nothing to run isn't a failure.
+          if (length(files) == 0L) {
+            writeLines(
+              sprintf("\u23ed\ufe0f **Off-CRAN tests, R %s:** this package has no browser, snapshot or extended test files.",
+                Sys.getenv("R_LABEL")),
+              Sys.getenv("OUT")
+            )
+            quit(save = "no", status = 0L)
+          }
           # A line per file when it finishes, with its time, and a status line when one starts (update_interval = Inf:
           # no progress spinner in between); failures in full. The reporter also keeps each file's time for the report.
           source(".kit/.github/scripts/off-cran-report.R")
@@ -143,7 +152,7 @@ jobs:
           reporter$update_interval <- Inf  # testthat's parallel reporter sets 0.05 in its constructor
           results <- testthat::test_dir(
             "tests/testthat",
-            filter = "-(browser|snap|extended)$",
+            filter = "(^|-)(browser|snap|extended)$",
             package = package,
             load_package = "installed",
             reporter = reporter,

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# The R CMD check times for the pull request's CI report (R-CMD-check.yaml). Plain bash, so it runs on every runner
+# The R CMD check times for the pull request's CI report (r-cmd-check.yaml). Plain bash, so it runs on every runner
 # (Windows included) and in the summary job, which has no R.
 #
 #   check-times.sh note    In each check job, after R CMD check: writes one line (platform, result, tests' elapsed
