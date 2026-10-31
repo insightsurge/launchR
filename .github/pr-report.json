@@ -3,7 +3,7 @@
   "header": "ci-report",
   "report_job": "report",
   "summary_jobs": ["R-CMD-check", "off-cran-tests"],
-  "workflows": ["r-cmd-check.yaml", "coverage.yaml", "full-tests.yaml", "lint.yaml"],
+  "workflows": ["r-cmd-check.yaml", "coverage.yaml", "full-tests.yaml", "no-suggests.yaml", "secret-scan.yaml", "lint.yaml"],
   "sections": [
     {"key": "tests", "title": "Tests"},
     {"key": "style", "title": "Code style"}

@@ -33,6 +33,11 @@ failures=()
 summary_jobs=$(jq -r '.summary_jobs // [] | .[]' "${CONFIG}")
 mkdir -p "${work}/parts"
 while IFS= read -r workflow; do
+  # A check is on when its caller file exists. One that's off, or has no pull_request trigger, never reports here.
+  caller=".github/workflows/${workflow}"
+  if [ ! -f "${caller}" ] || ! grep -Eq '^[[:space:]]*pull_request:' "${caller}"; then
+    continue
+  fi
   # The newest run for this commit and this pull request: two pull requests can share a commit.
   run=$(gh api "repos/${repo}/actions/workflows/${workflow}/runs?head_sha=${HEAD_SHA}&event=pull_request&per_page=20" \
     --jq "[.workflow_runs[] | select(any(.pull_requests[]; .number == ${PR_NUMBER}))][0] // empty |
