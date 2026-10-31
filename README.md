@@ -1,7 +1,10 @@
-# r-pkg-kit (proof of concept)
+# launchR
 
-Sets up R packages, and offers ready-to-use CI with a quality gate. This is stage 1 of the proof of concept: everything
-runs on this computer.
+> **Early work: not ready to use.** Names, files and workflow inputs change without notice, nothing here is released,
+> and the shared workflows have only just started running on GitHub. Please don't depend on it yet.
+
+launchR sets up R packages, and offers ready-to-use CI with a quality gate: one short YAML caller file per check
+in your package, with the checks themselves kept here. This is the proof of concept.
 
 | Folder | What it holds |
 | --- | --- |
