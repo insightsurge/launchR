@@ -1,17 +1,29 @@
-name: Feature
-description: Something new the package should do.
+name: New feature
+description: Propose something {{package}} cannot do yet.
 labels: [enhancement]
 body:
-  - type: textarea
-    id: problem
+  - type: markdown
     attributes:
-      label: What are you trying to do?
+      value: |
+        Search existing issues first. Keep this short; a proposed outcome is enough to start a discussion.
+        Use public examples and made-up data. Leave out private data, credentials, machine paths and private links. What goes into a release is the maintainer's decision.
+  - type: textarea
+    id: goal
+    attributes:
+      label: What should a user be able to do, and why?
+      description: One short use case. Describe the outcome; a technical design is optional.
     validations:
       required: true
   - type: textarea
     id: done
     attributes:
       label: Done when
-      description: How will we know this is finished?
+      description: One or two checklist items showing how someone could tell it works. These can be refined during discussion.
+      placeholder: "- [ ] A user can ..."
     validations:
       required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Example or affected users (optional)
+      description: A small public example, a workaround you use now, or a related issue.

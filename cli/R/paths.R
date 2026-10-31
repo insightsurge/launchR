@@ -10,6 +10,7 @@ kit_path <- function(...) {
 read_list <- function(name) {
   utils::read.delim(
     kit_path("lists", name),
+    fileEncoding = "UTF-8",
     quote = "",
     comment.char = "#",
     stringsAsFactors = FALSE,
@@ -23,10 +24,11 @@ kit_setting <- function(key) {
   settings$value[settings$key == key]
 }
 
+# Reads a file as UTF-8 with \n line endings, so a clone checked out with Windows line endings builds the same files.
 read_text <- function(path) {
   text <- readChar(path, file.size(path), useBytes = TRUE)
   Encoding(text) <- "UTF-8"
-  text
+  gsub("\r\n", "\n", text, fixed = TRUE)
 }
 
 write_text <- function(text, path) {

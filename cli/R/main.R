@@ -6,6 +6,8 @@ flag_value <- function(args, name, default = "") {
 
 has_flag <- function(args, name) paste0("--", name) %in% args
 
+git_available <- function() nzchar(Sys.which("git"))
+
 git_name_is_ai <- function() {
   name <- suppressWarnings(tryCatch(system2("git", c("config", "user.name"), stdout = TRUE), error = function(e) ""))
   length(name) == 1 && grepl("claude|copilot|gemini|codex|cursor|\\bai\\b", name, ignore.case = TRUE)
@@ -39,21 +41,29 @@ cmd_new <- function(args) {
   }
   build_package(choices, out)
   cat("Created", out, "\n")
-  if (!has_flag(args, "no-git") && nzchar(Sys.which("git"))) {
-    if (git_name_is_ai()) {
-      message("Your git name looks like an AI tool, so the first commit was skipped.")
-      return(0L)
-    }
-    git <- function(...) system2("git", c("-C", shQuote(out), ...), stdout = FALSE, stderr = FALSE)
-    git("init", "-q", "-b", strsplit(choices$branches, ",")[[1]][1])
-    git("add", "-A")
-    git("commit", "-q", "-m", shQuote("feat: start the package"))
+  if (has_flag(args, "no-git")) {
+    return(0L)
+  }
+  if (!git_available()) {
+    message("git isn't installed, so the folder is not a repository yet. Install git, then run: git init")
+    return(0L)
+  }
+  if (git_name_is_ai()) {
+    message("Your git name looks like an AI tool, so the first commit was skipped.")
+    return(0L)
+  }
+  git <- function(...) system2("git", c("-C", quote_arg(out), ...), stdout = FALSE, stderr = FALSE)
+  git("init", "-q", "-b", strsplit(choices$branches, ",")[[1]][1])
+  git("add", "-A")
+  status <- git("commit", "-q", "-m", quote_arg("feat: start the package"))
+  if (status != 0L) {
+    message("The first commit failed. Set your name and email (git config --global user.name and user.email), then commit.")
   }
   0L
 }
 
 cmd_gate <- function(args) {
-  system2(file.path(R.home("bin"), "Rscript"), c(shQuote(kit_path("quality-gate", "quality-gate.R")), args))
+  system2(file.path(R.home("bin"), "Rscript"), c(quote_arg(kit_path("quality-gate", "quality-gate.R")), vapply(args, quote_arg, "")))
 }
 
 kit_main <- function(args) {

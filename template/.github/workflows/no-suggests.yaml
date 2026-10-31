@@ -18,4 +18,4 @@ permissions:
 
 jobs:
   check:
-    uses: insightsurge/r-pkg-kit/.github/workflows/no-suggests.yaml@v{{kit_version}}
+    uses: insightsurge/launchR/.github/workflows/no-suggests.yaml@v{{kit_version}}

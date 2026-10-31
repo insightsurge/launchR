@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   site:
-    uses: insightsurge/r-pkg-kit/.github/workflows/pkgdown.yaml@v{{kit_version}}
+    uses: insightsurge/launchR/.github/workflows/pkgdown.yaml@v{{kit_version}}
     permissions:
       contents: read
       pages: write

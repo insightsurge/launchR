@@ -19,6 +19,6 @@ permissions:
 
 jobs:
   check:
-    uses: insightsurge/r-pkg-kit/.github/workflows/lint.yaml@v{{kit_version}}
+    uses: insightsurge/launchR/.github/workflows/lint.yaml@v{{kit_version}}
     with:
       js-css-tests: {{js_css_tests}}   # also check the style of JavaScript and CSS in inst/ with Biome

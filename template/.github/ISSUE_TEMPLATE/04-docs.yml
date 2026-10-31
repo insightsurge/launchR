@@ -1,0 +1,31 @@
+name: Documentation change
+description: Suggest a clearer explanation, a missing guide or a correction.
+labels: [documentation]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Search existing issues first. For a failing example or a website fault you can reproduce, use Bug report instead.
+        Share only public links or repository-relative files. Leave out private data, credentials and machine paths.
+  - type: input
+    id: location
+    attributes:
+      label: Page, help topic or repository-relative file
+      description: Include the section if you know it, or say where a missing explanation would help.
+    validations:
+      required: true
+  - type: textarea
+    id: change
+    attributes:
+      label: What needs explaining or correcting?
+      description: Say what a reader needs to understand. Suggested wording is welcome but optional.
+    validations:
+      required: true
+  - type: textarea
+    id: done
+    attributes:
+      label: Done when
+      description: One checklist item describing what the reader should understand or be able to do.
+      placeholder: "- [ ] The page explains ..."
+    validations:
+      required: true

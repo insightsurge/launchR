@@ -1,0 +1,15 @@
+name: Idea
+description: Not planned yet; for discussion.
+labels: [idea]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Search existing issues first. Use public examples and made-up data; leave out private data, machine paths and private links.
+  - type: textarea
+    id: idea
+    attributes:
+      label: The idea
+      description: What, for whom, and why.
+    validations:
+      required: true

@@ -1,0 +1,29 @@
+name: Improve existing behaviour
+description: Make something {{package}} already does better.
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Search existing issues first. If existing behaviour is broken, use Bug report instead.
+        Use public examples and made-up data. Leave out private data, credentials, machine paths and private links. What goes into a release is the maintainer's decision.
+  - type: textarea
+    id: change
+    attributes:
+      label: What happens now, and what would help?
+      description: Name the existing function or behaviour and give a short use case for the improvement.
+    validations:
+      required: true
+  - type: textarea
+    id: done
+    attributes:
+      label: Done when
+      description: One or two checklist items describing the proposed result.
+      placeholder: "- [ ] A user can ..."
+    validations:
+      required: true
+  - type: textarea
+    id: compatibility
+    attributes:
+      label: Existing uses to consider (optional)
+      description: Could this change a default or break an example? Link a public example if you know one.

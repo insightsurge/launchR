@@ -19,7 +19,7 @@ permissions:
 
 jobs:
   check:
-    uses: insightsurge/r-pkg-kit/.github/workflows/r-cmd-check.yaml@v{{kit_version}}
+    uses: insightsurge/launchR/.github/workflows/r-cmd-check.yaml@v{{kit_version}}
     with:
       # One entry per run, as system/R version, comma separated. System: ubuntu, windows, macos.
       # R version: release, devel, oldrel-1, or a number such as 4.1. R 4.1 on macos may fail: it has no ready-built packages.

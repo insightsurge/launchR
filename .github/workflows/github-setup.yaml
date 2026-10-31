@@ -12,6 +12,7 @@ name: github-setup
 permissions:
   contents: read
   issues: write
+  checks: read
 
 jobs:
   setup:
