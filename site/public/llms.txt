@@ -1,11 +1,26 @@
 # launchR
 
-> Start an R package with tests, CI and GitHub set up, or add ready-made CI and a quality gate to an existing package.
+> launchR starts an R package with tests, CI and GitHub files in place, or adds ready-made CI and a quality gate to a package that already exists. It is free and open source (MIT), runs in the browser, and needs no terminal.
 
-## Tools
+launchR builds a zip in the visitor's browser. There is no account, and nothing typed into the form leaves the browser. It supports packages hosted on GitHub.
 
-- [launchR](https://launchr.example.com/): a form that builds a package zip in your browser.
+## Start a new R package
 
-## Articles
+- [Start your package](https://launch-r.web.app/#start): answer four questions and download a zip named after your package.
+- [How it works](https://launch-r.web.app/#kit): what the setup puts in place.
+
+## Add CI to an existing package
+
+- [Set up an existing package](https://launch-r.web.app/#yours): take the CI files only; `R/`, `tests/` and `DESCRIPTION` are left alone.
+
+## Use the source
+
+- [launchR on GitHub](https://github.com/insightsurge/launchR): the template, the shared workflows and a command line that makes the same package.
+
+## Learn
 
 - [R Engineering Playbook](https://insightsurge-dev.web.app/blog): articles on engineering practice for R packages.
+
+## Optional
+
+- [Full text for agents](https://launch-r.web.app/llms-full.txt): everything above in one file, with the checks and plans listed.

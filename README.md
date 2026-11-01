@@ -27,6 +27,18 @@ npm --prefix site run dev
 Rscript cli/kit.R new mypkg
 ```
 
+## Publish the site
+
+The site is at <https://launch-r.web.app>, on Firebase Hosting. Publishing is done by hand:
+
+```bash
+npm --prefix site run build
+firebase deploy --only hosting
+```
+
+Google Analytics loads only on that address, and only after a visitor accepts it in the cookie banner. See
+`site/src/consent.js`.
+
 ## Test it
 
 ```bash

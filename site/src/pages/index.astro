@@ -8,9 +8,14 @@ import Story from '../components/Story.astro';
 
 const schema = {
   '@context': 'https://schema.org',
-  '@type': 'WebSite',
+  '@type': 'SoftwareApplication',
   name: 'launchR',
+  url: 'https://launch-r.web.app/',
+  applicationCategory: 'DeveloperApplication',
+  operatingSystem: 'Any',
   description: 'Start an R package with tests, CI and GitHub set up, or add ready-made CI to one you have.',
+  isAccessibleForFree: true,
+  author: { '@type': 'Person', name: 'Harsh Verma' },
 };
 ---
 <Base
@@ -29,6 +34,7 @@ const schema = {
   <Notice />
   <noscript><p class="no-script">The form and the pictures need JavaScript. The command line tool in the launchR repository makes the same package.</p></noscript>
   <script>
+    import '../consent.js';
     import '../scene/page.js';
     import '../form/app.js';
   </script>

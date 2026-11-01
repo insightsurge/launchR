@@ -1,0 +1,13 @@
+{
+  "hosting": {
+    "site": "launch-r",
+    "public": "site/dist",
+    "ignore": ["firebase.json", "**/.*"],
+    "headers": [
+      {
+        "source": "/_astro/**",
+        "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+      }
+    ]
+  }
+}

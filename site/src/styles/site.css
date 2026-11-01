@@ -100,6 +100,7 @@ main { position: relative; }
 h1, h2, h3 { font-weight: var(--hw); letter-spacing: -0.02em; margin: 0; }
 h1 { font-size: clamp(2.15rem, 4.5vw, 4rem); line-height: 1.04; letter-spacing: -0.03em; }
 h2 { font-size: clamp(1.8rem, 3.2vw, 2.9rem); line-height: 1.08; }
+.privacy { margin: 14px 0 0; font-size: 14px; color: var(--soft); max-width: 34em; }
 .lede { margin: 22px 0 0; font-size: clamp(1rem, 1.35vw, 1.2rem); color: var(--soft); max-width: 34em; }
 .small { font-size: 15px; color: var(--soft); margin: 18px 0 0; max-width: 34em; }
 .cue { display: flex; align-items: center; gap: 12px; margin: 36px 0 0; font-size: 14px; color: var(--soft); }
@@ -179,21 +180,21 @@ h2 { font-size: clamp(1.8rem, 3.2vw, 2.9rem); line-height: 1.08; }
 .hub:active polygon { fill: var(--accent); }
 .hub:active span { color: var(--btn-ink); }
 
-/* privacy notice and style chooser */
+/* cookie choice and style chooser */
 .notice {
   position: fixed; left: var(--gut); bottom: 14px; z-index: 30; max-width: min(540px, calc(100% - var(--gut) - 72px));
-  display: flex; align-items: center; gap: 10px; padding: 10px 8px 10px 16px;
+  display: flex; align-items: center; gap: 10px; padding: 10px 10px 10px 16px;
   background: var(--surface); color: var(--ink); border-radius: 12px; border: 1px solid var(--line);
   box-shadow: 0 6px 24px rgb(0 0 0 / 22%);
 }
 .notice[hidden] { display: none; }
 .notice p { margin: 0; font-size: 14px; line-height: 1.4; }
+.notice-actions { flex: none; display: flex; gap: 8px; }
 .notice button {
-  flex: none; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%;
-  border: 0; background: transparent; color: var(--ink); cursor: pointer;
+  min-height: 34px; padding: 0 14px; border-radius: 8px; border: 1px solid var(--line);
+  background: transparent; color: var(--ink); font: inherit; font-size: 14px; cursor: pointer;
 }
 .notice button:hover { background: var(--bg); }
-.notice svg { width: 14px; height: 14px; }
 
 /* the form */
 dialog#setup {
@@ -313,7 +314,7 @@ fieldset.plans { border: 0; margin: 18px 0 0; padding: 0; display: grid; grid-te
   fieldset.plans { grid-template-columns: 1fr 1fr; gap: 8px; }
   .plan { padding: 10px; gap: 8px; }
   .setup-inner { padding: 64px var(--gut) 40px; place-items: start center; }
-  .notice { right: 62px; max-width: none; bottom: 10px; padding: 6px 4px 6px 12px; }
+  .notice { right: 62px; max-width: none; bottom: 10px; padding: 8px 8px 8px 12px; flex-wrap: wrap; }
   .notice p { font-size: 13px; }
   }
 @media (max-width: 420px) {

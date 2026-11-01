@@ -224,7 +224,6 @@ import { createHexes } from './hexes.js';
   $('#close').addEventListener('click', closeForm);
   dialog.addEventListener('cancel', (e) => { e.preventDefault(); closeForm(); });
   dialog.addEventListener('close', () => root.classList.remove('locked'));
-  $('#noticeClose').addEventListener('click', () => { $('#notice').hidden = true; });
 
   /* ---------- light and dark: follows the system until the visitor chooses ---------- */
   const themeBtn = $('#themeBtn'), system = matchMedia('(prefers-color-scheme: dark)');
