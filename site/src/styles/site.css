@@ -189,6 +189,7 @@ h2 { font-size: clamp(1.8rem, 3.2vw, 2.9rem); line-height: 1.08; }
 }
 .notice[hidden] { display: none; }
 .notice p { margin: 0; font-size: 14px; line-height: 1.4; }
+.why-hex { float: right; margin: 0 0 8px 16px; }
 .notice-actions { flex: none; display: flex; gap: 8px; }
 .notice button {
   min-height: 34px; padding: 0 14px; border-radius: 8px; border: 1px solid var(--line);

@@ -1,10 +1,7 @@
-# launchR
-
-> **Early work: not ready to use.** Names, files and workflow inputs change without notice, nothing here is released,
-> and the shared workflows have only just started running on GitHub. Please don't depend on it yet.
+# launchR <img src="site/public/logo-animated.svg" align="right" width="120" alt="launchR hex logo" />
 
 launchR sets up R packages, and offers ready-to-use CI with a quality gate: one short YAML caller file per check
-in your package, with the checks themselves kept here. This is the proof of concept.
+in your package, with the checks themselves kept here.
 
 | Folder | What it holds |
 | --- | --- |
