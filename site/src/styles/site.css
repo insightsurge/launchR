@@ -735,7 +735,7 @@ input { caret-color: var(--accent); }
 
 /* the phone menu */
 .top:has(.menu:not([hidden])) { z-index: 50; }
-.menu-btn, .menu { display: none; }
+.top .menu-btn, .menu { display: none; }
 .menu-btn .shut, .menu-btn[aria-expanded='true'] .open { display: none; }
 .menu-btn[aria-expanded='true'] .shut { display: block; }
 @media (max-width: 767px) {
