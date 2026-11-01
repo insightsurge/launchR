@@ -225,23 +225,12 @@ import { createHexes } from './hexes.js';
   dialog.addEventListener('cancel', (e) => { e.preventDefault(); closeForm(); });
   dialog.addEventListener('close', () => root.classList.remove('locked'));
 
-  /* ---------- the phone menu ---------- */
-  const menu = $('#menu'), menuBtn = $('#menuBtn');
-  const showMenu = (open) => { menu.hidden = !open; menuBtn.setAttribute('aria-expanded', String(open)); menuBtn.setAttribute('aria-label', open ? 'Close the menu' : 'Menu'); };
-  menuBtn.addEventListener('click', () => showMenu(menu.hidden));
-  menu.addEventListener('click', (e) => { if (e.target.closest('a')) showMenu(false); });
-  addEventListener('pointerdown', (e) => { if (!menu.hidden && !e.target.closest('#menu, #menuBtn')) showMenu(false); });
-  addEventListener('keydown', (e) => { if (e.key === 'Escape' && !menu.hidden) { showMenu(false); menuBtn.focus(); } });
-  $('#menuTheme').addEventListener('click', () => themeBtn.click());
-
   /* ---------- light and dark: follows the system until the visitor chooses ---------- */
   const themeBtn = $('#themeBtn'), system = matchMedia('(prefers-color-scheme: dark)');
   const systemPalette = () => (system.matches ? 'ember' : 'paper');
   function apply(palette) {
     root.dataset.palette = palette;
-    document.querySelector('link[rel="icon"][type="image/svg+xml"]').href = palette === 'ember' ? '/favicon-dark.svg' : '/favicon-light.svg';
     themeBtn.setAttribute('aria-label', `Switch to ${palette === 'ember' ? 'light' : 'dark'} mode`);
-    $('#menuTheme').setAttribute('aria-checked', String(palette === 'ember'));
     if (scene) scene.setPalette(PALETTES[palette], () => { wake = performance.now(); if (still && slots.length) draw(0); });
     wake = performance.now();
     if (still && slots.length) draw(0);
