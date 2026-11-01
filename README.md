@@ -9,7 +9,7 @@ in your package, with the checks themselves kept here. This is the proof of conc
 | Folder | What it holds |
 | --- | --- |
 | `cli/` | The command line: `kit.R`, with the work in functions under `R/` |
-| `site/` | The Astro app: landing page, form, guide. The form's logic is in `src/form/` |
+| `site/` | The Astro app: landing page and form. The form's logic is in `src/form/` |
 | `template/` | The package files, with `{{placeholders}}` |
 | `lists/` | Tab-separated lists read by both R and the app |
 | `quality-gate/` | The quality gate |
