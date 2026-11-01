@@ -14,18 +14,29 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <link rel="canonical" href={canonical} />
     <meta name="google-site-verification" content="iLp6tUqeX56umKhy9WtjJwA6dUzFqMUFqYcJfMq0zEA" />
     <link rel="sitemap" href="/sitemap-index.xml" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon-96x96.png" type="image/png" sizes="96x96" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="preload" href="/fonts/space-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
     <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={new URL('/card.gif', Astro.site)} />
+    <meta property="og:image" content={new URL('/og-image.png', Astro.site)} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="The launchR hex, a rocket on a launch pad beside a checklist tower, with the words: Start your R package the way good ones finish." />
+    <meta name="twitter:card" content="summary_large_image" />
     {schema && <script type="application/ld+json" set:html={JSON.stringify(schema)} />}
     <script is:inline>
       /* set before anything paints: the visitor's own choice, or else the system's */
       (function () {
         var saved = null;
         try { saved = localStorage.getItem('launchr-theme'); } catch (e) { /* private window */ }
-        document.documentElement.dataset.palette = saved === 'paper' || saved === 'ember' ? saved : matchMedia('(prefers-color-scheme: dark)').matches ? 'ember' : 'paper';
+        var palette = saved === 'paper' || saved === 'ember' ? saved : matchMedia('(prefers-color-scheme: dark)').matches ? 'ember' : 'paper';
+        document.documentElement.dataset.palette = palette;
+        document.querySelector('link[rel="icon"][type="image/svg+xml"]').href = palette === 'ember' ? '/favicon-dark.svg' : '/favicon-light.svg';
       }());
     </script>
   </head>

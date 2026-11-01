@@ -1,4 +1,4 @@
-# launchR
+# launchR <img src="site/public/logo-animated.svg" align="right" width="120" alt="launchR hex logo" />
 
 launchR sets up R packages, and offers ready-to-use CI with a quality gate: one short YAML caller file per check
 in your package, with the checks themselves kept here.
