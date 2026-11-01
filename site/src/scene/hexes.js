@@ -1,4 +1,4 @@
-/* launchR: nineteen whole hexagons, one for each file, and seven more for the checks. Each has a place, tilt and size on every page,
+/* Nineteen whole hexagons, one for each file, and seven more for the checks. Each has a place, tilt and size on every page,
    and the scroll carries it from one to the next. Nothing breaks up. Nothing here draws text. */
   const TAU = Math.PI * 2, PI = Math.PI, S3 = Math.sqrt(3), BASE = 19, N = 26, SPR = 200, BIG = 420;
   const c01 = (x) => Math.min(1, Math.max(0, x));
@@ -57,7 +57,7 @@
     });
   }
 
-  /* ---------- the hexagons themselves: Sample 1's three kinds, in dots, drawn once ---------- */
+  /* ---------- the hexagons themselves: three kinds, in dots, drawn once ---------- */
   const poly = (g, pts, close) => { g.beginPath(); pts.forEach((p, i) => g[i ? 'lineTo' : 'moveTo'](p[0], p[1])); if (close) g.closePath(); g.stroke(); };
   const circle = (g, x, y, r, a = 0, b = TAU) => { g.beginPath(); g.arc(x, y, r, a, b); g.stroke(); };
   const dot = (g, x, y, r) => { g.beginPath(); g.arc(x, y, r, 0, TAU); g.fill(); };

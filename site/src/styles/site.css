@@ -1,8 +1,7 @@
 /* launchR's one stylesheet: tokens first, then the page, the form and the small pages. */
 @font-face { font-family: 'Space Grotesk'; font-style: normal; font-weight: 300 700; font-display: swap; src: url('/fonts/space-grotesk-latin.woff2') format('woff2'); }
-/* Space Grotesk, SIL Open Font License (OFL-Space-Grotesk.txt). Inlined so no visitor's browser contacts a font service. */
+/* Space Grotesk, SIL Open Font License (public/fonts). Served from this site, so no visitor's browser contacts a font service. */
 
-/* launchR sample 1 */
 :root {
   --nav: 60px;
   --gut: clamp(16px, 4vw, 56px);
@@ -117,7 +116,7 @@ h2 { font-size: clamp(1.8rem, 3.2vw, 2.9rem); line-height: 1.08; }
 .plans-list span { color: var(--soft); margin-left: 10px; font-size: 15px; }
 
 .notes { margin: 26px 0 0; display: grid; gap: 16px; max-width: 34em; }
-.notes div { padding-left: 16px; border-left: 2px solid var(--accent); }
+.notes div { padding-left: 16px; border-left: 1px solid var(--accent); }
 .notes dt { font-weight: 500; }
 .notes dd { margin: 2px 0 0; color: var(--soft); font-size: 15.5px; }
 .tag { display: inline-block; margin-top: 6px; padding: 1px 10px; border: 1px solid var(--soft); border-radius: 99px; font-size: 13px; color: var(--ink); }
@@ -196,7 +195,7 @@ h2 { font-size: clamp(1.8rem, 3.2vw, 2.9rem); line-height: 1.08; }
 .notice button:hover { background: var(--bg); }
 .notice svg { width: 14px; height: 14px; }
 
-/* the mock form */
+/* the form */
 dialog#setup {
   position: fixed; inset: 0; width: 100%; height: 100%; max-width: none; max-height: none; margin: 0; padding: 0;
   border: 0; background: var(--bg); color: var(--ink); overflow: auto;
@@ -250,7 +249,7 @@ fieldset.plans { border: 0; margin: 18px 0 0; padding: 0; display: grid; grid-te
   padding: 13px 22px; border: 0; border-radius: 99px; font: inherit; font-weight: 600; font-size: 16px;
   background: var(--btn); color: var(--btn-ink); cursor: pointer; transition: box-shadow 200ms, transform 200ms;
 }
-.primary:hover { box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 30%, transparent), 0 0 24px color-mix(in srgb, var(--accent) 50%, transparent); }
+.primary:hover { box-shadow: 0 6px 18px color-mix(in srgb, var(--accent) 35%, transparent); }
 .primary:active { transform: translateY(1px); }
 .quiet {
   padding: 12px 20px; border-radius: 99px; font: inherit; font-weight: 500; font-size: 16px; cursor: pointer;
@@ -265,7 +264,7 @@ fieldset.plans { border: 0; margin: 18px 0 0; padding: 0; display: grid; grid-te
 .pv-hex svg { position: absolute; inset: 0; width: 100%; height: 100%; }
 .pv-hex polygon { fill: color-mix(in srgb, var(--pc) 22%, var(--surface)); stroke: var(--pc); stroke-width: 2.5; transition: fill 400ms, stroke 400ms; }
 .pv-hex span { position: relative; }
-.pv-hex.bump { animation: bump 420ms cubic-bezier(0.3, 1.5, 0.5, 1); }
+.pv-hex.bump { animation: bump 420ms cubic-bezier(0.22, 1, 0.36, 1); }
 @keyframes bump { 0% { transform: scale(0.82) rotate(-12deg); } 100% { transform: none; } }
 .pv-name { margin: 0; font-size: 20px; font-weight: 500; word-break: break-all; }
 .pv-plan { margin: 2px 0 14px; font-size: 14.5px; color: var(--soft); }
@@ -354,7 +353,7 @@ fieldset.plans { border: 0; margin: 18px 0 0; padding: 0; display: grid; grid-te
 .tree .no code { color: var(--soft); text-decoration: line-through; text-decoration-color: var(--no); }
 .tree .yes i { color: var(--ok); }
 .tree li.wide { grid-template-columns: 20px minmax(0, 1fr); }
-.risk { margin: 14px 0 0; padding: 0 0 0 14px; border-left: 2px solid var(--no); font-size: 15px; color: var(--ink); max-width: 36em; }
+.risk { margin: 14px 0 0; padding: 0 0 0 14px; border-left: 1px solid var(--no); font-size: 15px; color: var(--ink); max-width: 36em; }
 .good { border-left-color: var(--accent); }
 h2 { font-size: clamp(1.7rem, 2.8vw, 2.5rem); }
 #risk .lede, #kit .lede { margin-top: 10px; font-size: 16px; }
@@ -496,15 +495,8 @@ p { text-wrap: pretty; }
 .mod-body h4 { margin: 18px 0 8px; font-size: 14.5px; font-weight: 500; }
 .mod-body h4:first-child { margin-top: 2px; }
 .mod-body .field { margin: 0 0 12px; }
-.mod-body .hint { margin: 6px 0 0; font-size: 13.5px; color: var(--soft); }
 .rows { display: grid; }
-.tickbox { display: flex; align-items: center; gap: 9px; margin: 0; padding: 6px 0; font-weight: 400; font-size: 14.5px; cursor: pointer; min-height: 32px; }
-.tickbox.wide { display: grid; grid-template-columns: 20px 14.5ch minmax(0, 1fr); }
-.tickbox.wide span { color: var(--soft); }
-.tickbox code { font-size: 13px; }
-.tickbox:hover code, .tickbox:hover > span { color: var(--accent); }
-.tickbox input, .pick input, .routes input { accent-color: var(--accent); }
-.tickbox input { width: 16px; height: 16px; margin: 0; }
+.pick input, .routes input { accent-color: var(--accent); }
 .ticks { display: flex; flex-wrap: wrap; gap: 0 22px; }
 .sw { display: flex; align-items: flex-start; gap: 12px; margin: 12px 0 0; font-weight: 400; cursor: pointer; }
 .mod-body > .sw:first-child { margin-top: 2px; }
@@ -549,9 +541,6 @@ select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 @media (max-width: 860px) {
   #setup[data-view='modify'] .setup-grid { grid-template-columns: minmax(0, 1fr); }
   #setup[data-view='modify'] .preview { display: none; }
-  .tickbox.wide { grid-template-columns: 20px minmax(0, 1fr); padding: 8px 0; }
-  .tickbox.wide span { grid-column: 2; font-size: 13.5px; }
-  .tickbox { min-height: 44px; }
   .pick { grid-template-columns: minmax(0, 1fr); }
   .mod summary { flex-wrap: wrap; gap: 2px 12px; padding: 13px 0; min-height: 44px; }
   .mod summary span { order: 4; width: 100%; font-size: 13.5px; }
@@ -565,7 +554,7 @@ select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 /* Modify: every explanation sits behind a small info mark */
 .opt { display: inline-flex; align-items: center; gap: 7px; min-width: 0; }
 .opt .tag, h4 .tag { margin: 0; font-size: 12px; }
-.opt > .tickbox, .opt > .sw, .opt > label { margin: 0; }
+.opt > .sw, .opt > label { margin: 0; }
 .opt-word { color: var(--soft); font-weight: 400; }
 #modifyView .ticks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 20px; }
 #modifyView .sw { align-items: center; margin: 0; }
@@ -608,7 +597,6 @@ input.short.bad { border-color: var(--no); }
 
 /* Modify: tappable pills in place of checkboxes */
 #modifyView .ticks { display: flex; flex-wrap: wrap; gap: 8px; }
-.pills { display: inline-flex; flex-wrap: wrap; gap: 8px; margin-left: auto; }
 .pill { position: relative; display: inline-flex; margin: 0; font-weight: 400; cursor: pointer; }
 .pill input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; }
 .pill span { display: inline-flex; align-items: center; min-height: 34px; padding: 0 13px; font-size: 14.5px; color: var(--soft); border: 1.5px solid var(--line); border-radius: 99px; transition: color .15s, border-color .15s, background-color .15s; }
@@ -621,24 +609,16 @@ input.short.bad { border-color: var(--no); }
 .mod-body .rows .line { margin-top: 0; }
 @media (max-width: 860px) { .pill span { min-height: 44px; } }
 
-.sysline > span:first-child { min-width: 5em; }
-.sysline .pills { margin-left: 0; align-items: center; flex: 1; }
-.sysline input.short { margin-left: auto; }
 .fieldnote { min-height: 0; margin: 2px 0 0; font-size: 13.5px; color: var(--no); }
 .fieldnote:empty { display: none; }
 .pill:has(input:disabled) { opacity: 0.5; cursor: not-allowed; }
 .pill:has(input:disabled) input { cursor: not-allowed; }
 
-.sysline { flex-wrap: wrap; }
-.sysline .pills { flex: none; }
 .pill code { font-size: 13px; }
-.other { display: inline-flex; align-items: center; gap: 8px; margin-left: auto; }
-.other label { margin: 0; font-weight: 400; font-size: 14.5px; }
 .mod-body .pick { margin-bottom: 14px; }
 .opt .opt { display: contents; }
 .mod-body > .pick:last-child { margin-bottom: 0; }
 @media (max-width: 860px) { .other { margin-left: 5.8em; } }
-.sysline { justify-content: flex-start; }
 
 /* R versions by system, as a matrix */
 .rmatrix { border-collapse: collapse; width: min(100%, 420px); }
@@ -667,7 +647,7 @@ input.short.bad { border-color: var(--no); }
 #modifyView input[type='text'], #modifyView select { padding: 7px 10px; font-size: 14.5px; }
 #modifyView .field input[type='text'] { width: min(100%, 420px); }
 #modifyView .pill span { font-size: 14.5px; }
-#modifyView .pill code, .rmatrix code, #modifyView .tickbox code { font-size: 13px; }
+#modifyView .pill code, .rmatrix code { font-size: 13px; }
 #modifyView .soonline { font-size: 14.5px; }
 #modifyView .field-head { margin-bottom: 6px; }
 #modifyView .rows { gap: 8px; }
@@ -696,8 +676,6 @@ input.short.bad { border-color: var(--no); }
 #existingView h2 { font-size: clamp(1.6rem, 2.6vw, 2.2rem); outline: 0; }
 .quiet.small { padding: 9px 18px; font-size: 15px; }
 .quiet:disabled { opacity: 0.6; cursor: progress; }
-#existingView .hint { margin: 6px 0 0; font-size: 13.5px; color: var(--soft); }
-#existingView .hint:empty { display: none; }
 .routes.wide { display: flex; margin: 8px 0 18px; }
 .routes.wide legend { float: none; display: block; margin: 0 0 8px; }
 .ex-head { margin: 0 0 8px; font-size: 14.5px; font-weight: 500; }
@@ -748,3 +726,7 @@ html.plain { scroll-snap-type: none; }
   .cell:hover span { border-color: var(--soft); }
   .cell input:checked + span { border-color: var(--accent); }
 }
+
+/* the parts the browser would otherwise draw */
+html { scrollbar-color: color-mix(in srgb, var(--soft) 55%, transparent) transparent; }
+input { caret-color: var(--accent); }

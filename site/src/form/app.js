@@ -149,7 +149,7 @@ function view(name, focus) {
   focus?.focus({ preventScroll: true });
 }
 
-$('#modify').addEventListener('click', () => { $('#modPkg').textContent = pkg(); paint(); view('modify', $('#modTitle')); });
+$('#modify').addEventListener('click', () => { $('#modPkg').textContent = pkg(); $('#modDownload').textContent = `Download ${pkg()}.zip`; paint(); view('modify', $('#modTitle')); });
 $('#modBack').addEventListener('click', () => (mode === 'existing' ? view('existing', $('#exModify')) : view('main', $('#modify'))));
 $('#modReset').addEventListener('click', () => { S = recommended(); changed = false; paint(); });
 $('#plans').addEventListener('change', () => {
@@ -306,7 +306,7 @@ function paintExisting() {
 }
 $('#exRows').addEventListener('change', (e) => { add[e.target.dataset.part] = e.target.checked; S.website = add.website; paintExisting(); });
 $('#exPlans').addEventListener('change', (e) => { $(`input[name=plan][value=${e.target.value}]`).checked = true; S = recommended(); S.website = add.website; paint(); });
-$('#exModify').addEventListener('click', () => { $('#modPkg').textContent = 'your package'; paint(); view('modify', $('#modTitle')); });
+$('#exModify').addEventListener('click', () => { $('#modPkg').textContent = 'your package'; $('#modDownload').textContent = 'Download the files'; paint(); view('modify', $('#modTitle')); });
 
 function existingValid() {
   const name = nameProblem(v('exPkg'), 'Add the name in your DESCRIPTION file.');

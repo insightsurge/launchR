@@ -175,7 +175,7 @@ import { createHexes } from './hexes.js';
   hoverable(riskRows, (v) => { riskHover = v; });
   hoverable(checkRows, (v) => { hot = v; });
 
-  /* ---------- the mock form ---------- */
+  /* ---------- the form ---------- */
   const dialog = $('#setup');
   const routes = { a: ['After public', 'Before CRAN', 'After acceptance', 'Next release'], b: ['After public', 'Next release'], c: ['Before public', 'After public', 'Before CRAN', 'After acceptance', 'Next release'], d: [] };
   const releases = { a: 'Yes, up to CRAN and after', b: 'Yes, for GitHub or R-universe', c: 'Held until you go public', d: 'None. It stays private.' };
