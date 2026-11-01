@@ -1,3 +1,3 @@
-# {{package}} 0.0.0.9000
+# {{package}} 0.1.0
 
 * First version of the package.
