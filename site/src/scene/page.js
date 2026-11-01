@@ -230,7 +230,6 @@ import { createHexes } from './hexes.js';
   const systemPalette = () => (system.matches ? 'ember' : 'paper');
   function apply(palette) {
     root.dataset.palette = palette;
-    document.querySelector('link[rel="icon"][type="image/svg+xml"]').href = palette === 'ember' ? '/favicon-dark.svg' : '/favicon-light.svg';
     themeBtn.setAttribute('aria-label', `Switch to ${palette === 'ember' ? 'light' : 'dark'} mode`);
     if (scene) scene.setPalette(PALETTES[palette], () => { wake = performance.now(); if (still && slots.length) draw(0); });
     wake = performance.now();
