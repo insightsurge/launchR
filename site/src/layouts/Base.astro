@@ -22,10 +22,11 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
     <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={new URL('/card.gif', Astro.site)} />
     <meta property="og:image" content={new URL('/og-image.png', Astro.site)} />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="The launchR hex beside the words: Start your R package the way good ones finish." />
+    <meta property="og:image:alt" content="The launchR hex, a rocket on a launch pad beside a checklist tower, with the words: Start your R package the way good ones finish." />
     <meta name="twitter:card" content="summary_large_image" />
     {schema && <script type="application/ld+json" set:html={JSON.stringify(schema)} />}
     <script is:inline>
@@ -33,7 +34,9 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
       (function () {
         var saved = null;
         try { saved = localStorage.getItem('launchr-theme'); } catch (e) { /* private window */ }
-        document.documentElement.dataset.palette = saved === 'paper' || saved === 'ember' ? saved : matchMedia('(prefers-color-scheme: dark)').matches ? 'ember' : 'paper';
+        var palette = saved === 'paper' || saved === 'ember' ? saved : matchMedia('(prefers-color-scheme: dark)').matches ? 'ember' : 'paper';
+        document.documentElement.dataset.palette = palette;
+        document.querySelector('link[rel="icon"][type="image/svg+xml"]').href = palette === 'ember' ? '/favicon-dark.svg' : '/favicon-light.svg';
       }());
     </script>
   </head>

@@ -292,6 +292,9 @@ async function download() {
   $('#routes').hidden = mode === 'existing';
   steps();
   view('next', $('#nextTitle'));
+  /* a fresh address, so the launch plays from the start after every download */
+  $('#launchHex').src = `/logo-launch.svg?${Date.now()}`;
+  $('#launchHex').hidden = false;
 }
 $('#download').addEventListener('click', download);
 $('#modDownload').addEventListener('click', download);
