@@ -2,6 +2,8 @@
 placeholder_values <- function(choices) {
   checks <- read_list("checks.tsv")
   has_owner <- nzchar(choices$owner)
+  public <- choices$visibility == "public"
+  site_url <- kit_setting("site_url")
   owner <- if (has_owner) choices$owner else "your-github-name"
   author <- paste(choices$given, choices$family)
   frontend <- "frontend" %in% choices$parts
@@ -27,6 +29,8 @@ placeholder_values <- function(choices) {
     bugreports_line = if (has_owner) sprintf("BugReports: https://github.com/%s/%s/issues", owner, choices$package) else "",
     chromote_line = if (frontend) "    chromote," else "",
     target_line = if (choices$release == "internal") "Config/quality-gate/target: internal" else "",
+    credit_badge = if (public) sprintf("[![Set up with launchR](https://img.shields.io/badge/set%%20up%%20with-launchR-f6ab85)](%s)\n", site_url) else "",
+    credit_line = if (public) sprintf("\nSet up with [launchR](%s).", site_url) else "",
     js_css_tests = if (frontend) "true" else "false"
   )
   for (i in seq_len(nrow(checks))) {
