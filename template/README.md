@@ -1,5 +1,6 @@
 # {{package}}
 
+{{credit_badge}}
 {{title}}.
 
 ## Installation
@@ -15,3 +16,4 @@ pak::pak("{{owner_or_you}}/{{package}}")
 library({{package}})
 say_hello("world")
 ```
+{{credit_line}}

@@ -70,6 +70,8 @@ function manSeealso(urls, repository) {
 
 export function placeholderValues(choices, lists) {
   const hasOwner = choices.owner !== '';
+  const isPublic = choices.visibility === 'public';
+  const siteUrl = lists.settings.site_url;
   const owner = hasOwner ? choices.owner : 'your-github-name';
   const frontend = choices.parts.includes('frontend');
   const repository = `https://github.com/${owner}/${choices.package}`;
@@ -94,6 +96,8 @@ export function placeholderValues(choices, lists) {
     bugreports_line: hasOwner ? `BugReports: ${repository}/issues` : '',
     chromote_line: frontend ? '    chromote,' : '',
     target_line: choices.release === 'internal' ? 'Config/quality-gate/target: internal' : '',
+    credit_badge: isPublic ? `[![Set up with launchR](https://img.shields.io/badge/set%20up%20with-launchR-f6ab85)](${siteUrl})\n` : '',
+    credit_line: isPublic ? `\nSet up with [launchR](${siteUrl}).` : '',
     js_css_tests: frontend ? 'true' : 'false',
   };
   for (const row of lists.checks) {
