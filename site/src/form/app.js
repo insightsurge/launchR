@@ -1,6 +1,7 @@
 // The form: four questions, Modify, someone with a package already, and what to do after the download.
 // Choices live here; engine.js turns them into files, the same way the CLI does.
 import JSZip from 'jszip';
+import { countZip } from '../consent.js';
 import { buildPackage, checkPackageName, defaultChoices, readLists } from './engine.js';
 
 const $ = (q) => document.querySelector(q);
@@ -277,6 +278,7 @@ async function download() {
   buttons.forEach((b) => { b.disabled = true; });
   try {
     await saveZip();
+    countZip();
   } catch {
     fail('The zip could not be built. Press Download to try again.');
     return;

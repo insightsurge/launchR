@@ -1,0 +1,55 @@
+# Publishes the site to Firebase Hosting when main changes anything the site is built from. Signs in to Google
+# with a short-lived GitHub token, so no key is stored. Skipped until the repository variables are set.
+on:
+  push:
+    branches: [main]
+    paths:
+      - site/**
+      - template/**
+      - lists/**
+      - firebase.json
+      - .firebaserc
+      - .github/workflows/deploy-site.yaml
+  workflow_dispatch:
+
+name: deploy-site
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-site
+  cancel-in-progress: false
+
+env:
+  FIREBASE_TOOLS: firebase-tools@15.34.2
+
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/main' && vars.GCP_WORKLOAD_IDENTITY_PROVIDER != ''
+    runs-on: ubuntu-26.04
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+
+      - name: Build the site
+        run: |
+          npm --prefix site ci
+          npm --prefix site run build
+
+      - name: Sign in to Google
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
+
+      - name: Publish
+        run: npx --yes "$FIREBASE_TOOLS" deploy --only hosting --non-interactive

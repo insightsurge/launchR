@@ -27,6 +27,14 @@ npm --prefix site run dev
 Rscript cli/kit.R new mypkg
 ```
 
+## Publish the site
+
+The site is at <https://launch-r.web.app>, on Firebase Hosting. `.github/workflows/deploy-site.yaml` publishes it when
+a change to the site, `template/` or `lists/` reaches `main`, or when the workflow is started by hand.
+
+Google Analytics loads only on that address, and only after a visitor accepts it in the cookie banner. See
+`site/src/consent.js`.
+
 ## Test it
 
 ```bash
