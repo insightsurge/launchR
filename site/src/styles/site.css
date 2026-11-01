@@ -732,3 +732,37 @@ html.plain { scroll-snap-type: none; }
 /* the parts the browser would otherwise draw */
 html { scrollbar-color: color-mix(in srgb, var(--soft) 55%, transparent) transparent; }
 input { caret-color: var(--accent); }
+
+/* the phone menu */
+.top:has(.menu:not([hidden])) { z-index: 50; }
+.menu-btn, .menu { display: none; }
+.menu-btn .shut, .menu-btn[aria-expanded='true'] .open { display: none; }
+.menu-btn[aria-expanded='true'] .shut { display: block; }
+@media (max-width: 767px) {
+  .top nav > .icon:not(.menu-btn), .top .pb-about { display: none; }
+  .top .pb:not(.pb-about) { display: inline; font-size: 15px; margin-right: 4px; }
+  .pb-long { display: none; }
+  .top .menu-btn { display: grid; width: 44px; height: 44px; padding: 0; border: 0; background: none; cursor: pointer; }
+  .top .menu-btn svg { width: 24px; height: 24px; }
+  .menu:not([hidden]) {
+    display: block; position: absolute; left: 0; right: 0; top: 100%; z-index: 40; padding: 6px var(--gut) 10px;
+    background: var(--surface); color: var(--ink); border-bottom: 1px solid var(--line); border-radius: 0 0 16px 16px;
+    box-shadow: 0 18px 30px rgb(0 0 0 / 28%); animation: menu-in 200ms ease-out;
+  }
+  .menu-row {
+    display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: 52px; padding: 0;
+    border: 0; border-bottom: 1px solid var(--line); background: none; color: inherit; font: inherit; font-size: 17px; text-decoration: none; cursor: pointer;
+  }
+  .menu-icons { display: flex; gap: 8px; margin-left: -10px; padding: 6px 0; border-bottom: 1px solid var(--line); }
+  .menu-icons a { display: grid; place-items: center; width: 48px; height: 48px; color: var(--ink); }
+  .menu-icons svg { width: 23px; height: 23px; }
+  .menu-theme { border-bottom: 0; }
+  .menu-theme i { position: relative; flex: none; width: 46px; height: 27px; border-radius: 14px; background: var(--line); transition: background 160ms; }
+  .menu-theme i::after { content: ''; position: absolute; left: 3px; top: 3px; width: 21px; height: 21px; border-radius: 50%; background: var(--ink); transition: transform 160ms; }
+  .menu-theme[aria-checked='true'] i { background: var(--accent); }
+  .menu-theme[aria-checked='true'] i::after { transform: translateX(19px); background: var(--bg); }
+}
+@media (max-width: 420px) { .hub.plain { font-size: 12px; } }
+@media (max-width: 339px) { .top .pb:not(.pb-about) { display: none; } }
+@keyframes menu-in { from { opacity: 0; transform: translateY(-8px); } }
+@media (prefers-reduced-motion: reduce) { .menu:not([hidden]) { animation: none; } }
