@@ -1,11 +1,11 @@
 ---
-import '../styles.css';
+import '../styles/site.css';
 
-const { title, description, schema } = Astro.props;
+const { title, description, schema, plain = false } = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site);
 ---
 <!doctype html>
-<html lang="en">
+<html lang="en" class:list={{ plain }} data-palette="ember">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -13,23 +13,22 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
     <link rel="sitemap" href="/sitemap-index.xml" />
+    <link rel="preload" href="/fonts/space-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
     <meta property="og:url" content={canonical} />
     {schema && <script type="application/ld+json" set:html={JSON.stringify(schema)} />}
+    <script is:inline>
+      /* set before anything paints: the visitor's own choice, or else the system's */
+      (function () {
+        var saved = null;
+        try { saved = localStorage.getItem('launchr-theme'); } catch (e) { /* private window */ }
+        document.documentElement.dataset.palette = saved === 'paper' || saved === 'ember' ? saved : matchMedia('(prefers-color-scheme: dark)').matches ? 'ember' : 'paper';
+      }());
+    </script>
   </head>
   <body>
-    <header class="top">
-      <a class="brand" href="/">r-pkg-kit</a>
-      <nav aria-label="Main">
-        <a href="/start">Start a package</a>
-        <a href="/guides/r-cmd-check-on-github-actions">Guides</a>
-      </nav>
-    </header>
-    <main><slot /></main>
-    <footer class="bottom">
-      <p>r-pkg-kit is open source under the MIT licence. Nothing you type here leaves your browser.</p>
-    </footer>
+    <slot />
   </body>
 </html>
