@@ -1,0 +1,100 @@
+<dialog id="setup" aria-labelledby="setupTitle">
+    <div class="setup-inner">
+      <button type="button" class="close" id="close" aria-label="Close the form"><svg aria-hidden="true"><use href="#i-close" /></svg></button>
+      <div class="setup-grid">
+        <form id="form" onsubmit="return false" novalidate>
+          <h2 id="setupTitle">Set up your package</h2>
+          <p class="sub">Four questions. Nothing leaves your browser. <button type="button" class="reset" id="toExisting">Already have a package?</button></p>
+          <div class="field">
+            <label for="pkg">Package name</label>
+            <input id="pkg" type="text" autocomplete="off" spellcheck="false" placeholder="fooBarPkg" />
+            <p class="err" id="err-pkg"></p>
+          </div>
+          <div class="field">
+            <label for="what">What it does, in one line</label>
+            <input id="what" type="text" autocomplete="off" placeholder="Tools for clinical tables" />
+            <p class="err" id="err-what"></p>
+          </div>
+          <div class="field two">
+            <div><label for="first">Author first name</label><input id="first" type="text" autocomplete="off" /><p class="err" id="err-first"></p></div>
+            <div><label for="last">Author last name</label><input id="last" type="text" autocomplete="off" /><p class="err" id="err-last"></p></div>
+          </div>
+          <div class="field">
+            <div class="field-head"><label for="email">Email <span class="opt">(optional)</span></label><span class="tip" tabindex="0" aria-describedby="tip-email"><svg aria-hidden="true"><use href="#i-info" /></svg><span role="tooltip" id="tip-email">Goes in the DESCRIPTION file.</span></span></div>
+            <input id="email" type="email" autocomplete="off" aria-describedby="tip-email" />
+            <p class="err" id="err-email"></p>
+          </div>
+          <fieldset class="plans" id="plans">
+            <legend>What is the plan for this package?</legend>
+            <label class="plan p1"><input type="radio" name="plan" value="a" checked /><i class="chip c1"></i><span><b>Public, going to CRAN</b></span></label>
+            <label class="plan p2"><input type="radio" name="plan" value="b" /><i class="chip c2"></i><span><b>Public, not for CRAN</b><em>GitHub or R-universe</em></span></label>
+            <label class="plan p3"><input type="radio" name="plan" value="c" /><i class="chip c3"></i><span><b>Private for now</b><em>Public and CRAN later</em></span></label>
+            <label class="plan p4"><input type="radio" name="plan" value="d" /><i class="chip c4"></i><span><b>Private for good</b><em>Company or personal</em></span></label>
+          </fieldset>
+          <p class="plan-line" id="planLine" role="status"></p>
+          <div class="actions">
+            <button type="button" class="primary" id="download">Download <span id="dlName">fooBarPkg</span>.zip</button>
+            <button type="button" class="quiet" id="modify">Modify</button>
+          </div>
+          <p class="note" id="planNote" role="status"></p>
+                  </form>
+        <section id="modifyView" aria-labelledby="modTitle" hidden>
+          <button type="button" class="back" id="modBack"><svg aria-hidden="true" viewBox="0 0 16 16"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M10 3 5 8l5 5" /></svg>Back to the questions</button>
+          <h2 id="modTitle" tabindex="-1">Modify <span id="modPkg">fooBarPkg</span></h2>
+          <p class="sub">Already set up for your plan. Change only what you want. <button type="button" class="reset" id="modReset" hidden>Back to recommended</button></p>
+          <details class="mod" name="mod" open><summary><b>Checks on GitHub</b><span id="sumCi"></span></summary><div class="mod-body" id="bodyCi"></div></details>
+          <details class="mod" name="mod"><summary><b>Website</b><span id="sumSite"></span></summary><div class="mod-body" id="bodySite"></div></details>
+          <details class="mod new-only" name="mod"><summary><b>GitHub setup</b><span id="sumGit"></span></summary><div class="mod-body" id="bodyGit"></div></details>
+          <details class="mod new-only" name="mod"><summary><b>Extras</b><span id="sumMore"></span></summary><div class="mod-body" id="bodyMore"></div></details>
+          <div class="actions mod-actions"><button type="button" class="primary" id="modDownload">Download</button></div>
+        </section>
+        <section id="existingView" aria-labelledby="exTitle" hidden>
+          <button type="button" class="back" id="exBack"><svg aria-hidden="true" viewBox="0 0 16 16"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M10 3 5 8l5 5" /></svg>Start a new package instead</button>
+          <h2 id="exTitle" tabindex="-1">Add launchR to your package</h2>
+          <p class="sub">Choose what to add. R/, tests/ and DESCRIPTION are left alone.</p>
+          <div class="field two">
+            <div><label for="exPkg">Package name</label><input id="exPkg" type="text" autocomplete="off" spellcheck="false" /><p class="err" id="err-exPkg"></p></div>
+            <div><label for="exOwner">GitHub name <span class="opt">(optional)</span></label><input id="exOwner" type="text" autocomplete="off" spellcheck="false" /><p class="err" id="err-exOwner"></p></div>
+          </div>
+          <fieldset class="routes wide" id="exPlans">
+            <legend>Where is this package headed?</legend>
+            <label><input type="radio" name="explan" value="a" checked /><span>CRAN</span></label>
+            <label><input type="radio" name="explan" value="b" /><span>Public, not CRAN</span></label>
+            <label><input type="radio" name="explan" value="c" /><span>Private, public later</span></label>
+            <label><input type="radio" name="explan" value="d" /><span>Private for good</span></label>
+          </fieldset>
+          <h3 class="ex-head">What to add</h3>
+          <div class="exrows" id="exRows"></div>
+          <div class="opt soonline"><span>Paste a GitHub link to see what is missing</span><span class="tag">Coming soon</span></div>
+          <div class="actions"><button type="button" class="primary" id="exDownload">Download the files</button><button type="button" class="quiet" id="exModify">Choose checks and systems</button></div>
+        </section>
+        <section id="nextView" aria-labelledby="nextTitle" hidden>
+          <h2 id="nextTitle" tabindex="-1"><span id="nextName">fooBarPkg</span>.zip is in your downloads</h2>
+          <p class="sub">Now let's put it on GitHub.</p>
+          <fieldset class="routes" id="routes">
+            <legend>How do you want to do it?</legend>
+            <label><input type="radio" name="route" value="r" checked /><span>With R</span></label>
+            <label><input type="radio" name="route" value="desktop" /><span>I'm lazy</span></label>
+          </fieldset>
+          <ol class="steps" id="stepList"></ol>
+          <p class="after" id="nextAfter"></p>
+          <div class="actions"><button type="button" class="primary" id="nextDone">Done</button><button type="button" class="quiet" id="nextChange">Change something</button></div>
+        </section>
+        <aside class="preview" aria-label="What this plan gives you">
+          <div class="pv-hex" id="pvHex">
+            <svg viewBox="0 0 87 100" aria-hidden="true"><polygon points="43.500,3 84,26 84,74 43.500,97 3,74 3,26" /></svg>
+            <span id="pvLetter">fB</span>
+          </div>
+          <p class="pv-name"><span id="pvName">fooBarPkg</span>.zip</p>
+          <p class="pv-plan" id="pvPlan" aria-live="polite">Public, going to CRAN</p>
+          <dl class="pv-rows">
+            <div><dt>Checks on CI</dt><dd id="pvChecks">All seven</dd></div>
+            <div class="pv-more"><dt>Systems</dt><dd id="pvSystems"></dd></div>
+            <div class="pv-more"><dt>Website</dt><dd id="pvSite"></dd></div>
+            <div><dt>Checklists</dt><dd><ul id="pvLists" class="pv-lists"></ul></dd></div>
+            <div><dt>Release features</dt><dd id="pvRelease" aria-live="polite"></dd></div>
+          </dl>
+        </aside>
+      </div>
+    </div>
+  </dialog>

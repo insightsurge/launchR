@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://r-pkg-kit.example.com/sitemap-index.xml
+Sitemap: https://launchr.example.com/sitemap-index.xml

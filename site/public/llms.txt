@@ -1,11 +1,11 @@
-# r-pkg-kit
+# launchR
 
 > Start an R package with tests, CI and GitHub set up, or add ready-made CI and a quality gate to an existing package.
 
-## Guides
-
-- [How do I run R CMD check on GitHub Actions the way CRAN does?](https://r-pkg-kit.example.com/guides/r-cmd-check-on-github-actions): one short workflow file, and why devtools::check() isn't enough.
-
 ## Tools
 
-- [Start a package](https://r-pkg-kit.example.com/start): a form that builds a package zip in your browser.
+- [launchR](https://launchr.example.com/): a form that builds a package zip in your browser.
+
+## Articles
+
+- [R Engineering Playbook](https://insightsurge-dev.web.app/blog): articles on engineering practice for R packages.

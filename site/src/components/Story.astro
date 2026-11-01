@@ -1,0 +1,134 @@
+<main id="main" tabindex="-1">
+    <section class="page" id="start" aria-labelledby="h-start">
+      <div class="text">
+        <p class="eyebrow">Free and open source, MIT licence</p>
+        <h1 id="h-start">Start your R package the way good ones finish</h1>
+        <p class="lede">Good practices from the first commit: tests, CI, GitHub files and checklists, in place before you write a line. Answer a few questions, download a zip named after your package, and carry on. No terminal needed.</p>
+        <p class="cue"><span class="cue-line" aria-hidden="true"></span>Scroll to see how it works</p>
+      </div>
+      <div class="slot"></div>
+    </section>
+
+    <section class="page flip" id="risk" aria-labelledby="h-risk">
+      <div class="text">
+        <p class="eyebrow">Without good practices</p>
+        <h2 id="h-risk">It works today. That is the trap.</h2>
+        <p class="lede">A typical R package has the code and little around it.</p>
+        <ul class="tree">
+          <li class="has wide"><i>·</i><code>R/  man/  DESCRIPTION  NAMESPACE</code></li>
+          <li class="no"><i>✕</i><code>tests/</code><span>Nothing proves a change is safe</span></li>
+          <li class="no"><i>✕</i><code>.github/workflows/</code><span>No checks run on their own</span></li>
+          <li class="no"><i>✕</i><code>.lintr</code><span>Every contributor writes a different style</span></li>
+          <li class="no"><i>✕</i><code>LICENSE</code><span>Others can't safely use the code</span></li>
+          <li class="no"><i>✕</i><code>NEWS.md</code><span>Nobody can tell what changed, or when</span></li>
+          <li class="no"><i>✕</i><code>.Rbuildignore  .gitignore</code><span>Stray files reach the build or git</span></li>
+          <li class="no"><i>✕</i><code>CONTRIBUTING  SECURITY</code><span>No agreed way to help or report a flaw</span></li>
+          <li class="no"><i>✕</i><code>ISSUE_TEMPLATE/</code><span>Bug reports with no version or steps</span></li>
+          <li class="no"><i>✕</i><code>pull_request_template</code><span>Changes merge with no record of why</span></li>
+          <li class="no"><i>✕</i><code>GitHub labels</code><span>Nothing shows what is urgent or blocked</span></li>
+        </ul>
+        <p class="risk">The risk grows with time: a fix breaks something else, nobody remembers why a change was made, and the issue list can't be trusted.</p>
+      </div>
+      <div class="slot"></div>
+    </section>
+
+    <section class="page flip" id="kit" aria-labelledby="h-kit">
+      <div class="text">
+        <p class="eyebrow">With launchR</p>
+        <h2 id="h-kit">The same package, with good practices in place.</h2>
+        <ul class="tree">
+          <li class="yes wide"><i>✓</i><code>R/  man/  DESCRIPTION  NAMESPACE  README.md</code></li>
+          <li class="yes"><i>✓</i><code>tests/</code><span>testthat, with a first test written</span></li>
+          <li class="yes"><i>✓</i><code>.github/workflows/</code><span>Seven checks, plus the website if you add one</span></li>
+          <li class="yes"><i>✓</i><code>.lintr  air.toml</code><span>One style, checked for everyone</span></li>
+          <li class="yes"><i>✓</i><code>LICENSE</code><span>A licence from day one</span></li>
+          <li class="yes"><i>✓</i><code>NEWS.md  cran-comments.md</code><span>A change log, and notes for CRAN</span></li>
+          <li class="yes"><i>✓</i><code>.Rbuildignore  .gitignore</code><span>Only the right files ship</span></li>
+          <li class="yes"><i>✓</i><code>CONTRIBUTING  SECURITY</code><span>Clear rules for helpers, and a code of conduct</span></li>
+          <li class="yes"><i>✓</i><code>ISSUE_TEMPLATE/</code><span>Five forms that ask the right questions</span></li>
+          <li class="yes"><i>✓</i><code>pull_request_template</code><span>Every change explains itself</span></li>
+          <li class="yes"><i>✓</i><code>GitHub labels</code><span>Eleven, from bug to priority: high</span></li>
+        </ul>
+        <p class="risk good">Plus a checklist for each stage, which opens when that stage arrives. What you get follows your plan, and Modify can change any of it.</p>
+      </div>
+      <div class="slot"></div>
+    </section>
+
+    <section class="page flip" id="checks" aria-labelledby="h-checks">
+      <div class="text">
+        <p class="eyebrow">Quality checks</p>
+        <h2 id="h-checks">Seven checks that run by themselves.</h2>
+        <p class="lede">Each one is a short file on CI. Change it or delete it.</p>
+        <ol class="checks" id="checkList">
+          <li><svg class="tick" aria-hidden="true"><use href="#i-tick" /></svg><code>r-cmd-check</code><span>R CMD check, the core check</span></li>
+          <li><svg class="tick" aria-hidden="true"><use href="#i-tick" /></svg><code>lint</code><span>Style, docs in sync, spelling</span></li>
+          <li><svg class="tick" aria-hidden="true"><use href="#i-tick" /></svg><code>secret-scan</code><span>Passwords and tokens committed by mistake</span></li>
+          <li><svg class="tick" aria-hidden="true"><use href="#i-tick" /></svg><code>coverage</code><span>How much code the tests run</span></li>
+          <li><svg class="tick" aria-hidden="true"><use href="#i-tick" /></svg><code>no-suggests</code><span>Works without optional packages</span></li>
+          <li><svg class="tick" aria-hidden="true"><use href="#i-tick" /></svg><code>full-tests</code><span>Browser and snapshot tests CRAN skips</span></li>
+          <li><svg class="tick" aria-hidden="true"><use href="#i-tick" /></svg><code>extended-tests</code><span>Weekly full check on Mac and Windows</span></li>
+        </ol>
+      </div>
+      <div class="slot"></div>
+    </section>
+
+    <section class="page flip" id="plan" aria-labelledby="h-plan">
+      <div class="text">
+        <p class="eyebrow">Your plan</p>
+        <h2 id="h-plan">Tell it your plan. It sets up the rest.</h2>
+        <p class="lede">Where is the package headed? Each plan sets sensible defaults, and Modify can change any of them.</p>
+        <ul class="plans-list">
+          <li><i class="chip c1"></i><div><b>Public, going to CRAN</b></div></li>
+          <li><i class="chip c2"></i><div><b>Public, not for CRAN</b><span>GitHub or R-universe</span></div></li>
+          <li><i class="chip c3"></i><div><b>Private for now</b><span>Public and CRAN later</span></div></li>
+          <li><i class="chip c4"></i><div><b>Private for good</b><span>No release features</span></div></li>
+        </ul>
+        <p class="small">Checklists open when that stage arrives: Before public, After public, Before CRAN, After acceptance, Next release.</p>
+      </div>
+      <div class="slot"></div>
+    </section>
+
+    <section class="page flip" id="yours" aria-labelledby="h-yours">
+      <div class="text">
+        <p class="eyebrow">Yours to keep</p>
+        <h2 id="h-yours">Built in your browser. Yours to keep.</h2>
+        <p class="lede">Nothing you type leaves your browser, there is no server, and no data is collected. What you download is an ordinary R package that never needs this site again.</p>
+        <dl class="notes">
+          <div><dt>Already have a package?</dt><dd>Take the CI files only. R/, tests/ and DESCRIPTION are left alone. <button type="button" class="reset" id="existingStart">Set up an existing package</button></dd></div>
+          <div><dt>Need CI to stay frozen?</dt><dd>A snapshot copied into the repository, with no automatic fixes. <span class="tag">Coming soon</span></dd></div>
+        </dl>
+      </div>
+      <div class="slot"></div>
+    </section>
+
+    <section class="page about" id="about" aria-labelledby="h-about">
+      <div class="text">
+        <div class="who">
+          <div class="photo" role="img" aria-label="Photo placeholder: HV">HV</div>
+          <div><h2 id="h-about">Harsh Verma</h2><p class="role">Tech &amp; Project Lead · R, Shiny and R packages for life sciences.</p></div>
+        </div>
+        <p>A results-driven Tech and Project Lead with a proven track record of developing enterprise-grade R Shiny applications for the life sciences industry. My expertise lies in architecting and delivering robust, interactive dashboards for clinical trial analysis, adhering strictly to CDISC standards like SDTM and ADaM. I'm GxP ready, and I blend good software engineering practices with modern R frameworks and robust CI/CD pipelines.</p>
+        <p class="why"><b>Why launchR exists.</b> Setting up an R package properly takes care, and it is the part most easily skipped. launchR does that part once, the same way every time, so you can get on with the package itself.</p>
+        <button type="button" class="end-start" id="endStart" aria-haspopup="dialog">Start your package</button>
+      </div>
+      <div class="slot"><div id="duo">
+        <section class="hx" aria-labelledby="l-read"><div>
+          <h3 id="l-read">Read</h3>
+          <ul>
+            <li><a href="https://insightsurge-dev.web.app/"><svg aria-hidden="true"><use href="#i-blog" /></svg>Blog</a></li>
+            <li><a href="https://insightsurge-dev.web.app/blog"><svg aria-hidden="true"><use href="#i-book" /></svg><span class="pb-long">R Engineering </span>Playbook</a></li>
+            <li><a href="https://insightsurge-dev.web.app/series/"><svg aria-hidden="true"><use href="#i-series" /></svg>Series</a></li>
+            <li><a href="https://insightsurge-dev.web.app/insightsurge"><svg aria-hidden="true"><use href="#i-hex" /></svg>InsightSurge</a></li>
+          </ul>
+        </div></section>
+        <section class="hx" aria-labelledby="l-pk"><div>
+          <h3 id="l-pk">R packages</h3>
+          <ul>
+            <li><a href="https://insightsurge.github.io/mascot/"><svg aria-hidden="true"><use href="#i-box" /></svg><span><b>mascot</b> <span>Gift your Shiny apps and Quarto sites a mascot</span></span></a></li>
+            <li><a href="https://insightsurge.github.io/stagemap/"><svg aria-hidden="true"><use href="#i-box" /></svg><span><b>stagemap</b> <span>Process visual library in R</span></span></a></li>
+            <li class="soon"><svg aria-hidden="true"><use href="#i-box" /></svg><span><b>atlasR</b> <span>Coming soon</span></span></li>
+          </ul>
+        </div></section>
+      </div></div>
+    </section>
+  </main>

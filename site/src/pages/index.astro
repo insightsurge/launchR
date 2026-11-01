@@ -1,38 +1,35 @@
 ---
 import Base from '../layouts/Base.astro';
+import Header from '../components/Header.astro';
+import Icons from '../components/Icons.astro';
+import Notice from '../components/Notice.astro';
+import Setup from '../components/Setup.astro';
+import Story from '../components/Story.astro';
 
 const schema = {
   '@context': 'https://schema.org',
   '@type': 'WebSite',
-  name: 'r-pkg-kit',
+  name: 'launchR',
   description: 'Start an R package with tests, CI and GitHub set up, or add ready-made CI to one you have.',
 };
 ---
 <Base
-  title="r-pkg-kit: start an R package ready for CRAN"
-  description="Start an R package with tests, CI and GitHub set up, or add ready-made CI to one you have. Free and open source."
+  title="launchR: start an R package, set up properly"
+  description="Free and open source. Start an R package with tests, CI, GitHub files and checklists in place. Built in your browser, with no terminal needed."
   schema={schema}
 >
-  <h1>An R package, set up properly from the first commit</h1>
-  <p>Answer a few questions and download your package with tests, CI and GitHub files. It's an ordinary R package with nothing to delete, and it never needs this site again.</p>
-  <div class="doors">
-    <section class="door">
-      <h2>Start a package</h2>
-      <p>Get a zip with everything in place, then follow the next steps. No terminal needed.</p>
-      <a class="button" href="/start">Start a package</a>
-    </section>
-    <section class="door">
-      <h2>Add the CI to my package</h2>
-      <p>Already have a package? Use the same checks instead of writing your own.</p>
-      <a class="button" href="/guides/r-cmd-check-on-github-actions">Read how</a>
-    </section>
-  </div>
-  <h2>What you get</h2>
-  <ul>
-    <li>A package that passes its checks on day one, with an example function and tests.</li>
-    <li>CI that runs by itself on GitHub, and that you can change one file at a time.</li>
-    <li>Issue forms, a PR template, labels and checklists for each stage up to release.</li>
-  </ul>
-  <h2>What can go wrong</h2>
-  <p>Your first real pull request may fail on spelling or a missing <code>@returns</code>. That's the checks doing their job: the report says what to fix.</p>
+  <a class="skip" href="#main">Skip to the content</a>
+  <Icons />
+  <Header />
+  <div id="mask" aria-hidden="true"></div>
+  <canvas id="scene" aria-hidden="true"></canvas>
+  <button type="button" class="hub plain" id="launch" aria-haspopup="dialog"><span>Start your<br />package</span></button>
+  <Story />
+  <Setup />
+  <Notice />
+  <noscript><p class="no-script">The form and the pictures need JavaScript. The command line tool in the launchR repository makes the same package.</p></noscript>
+  <script>
+    import '../scene/page.js';
+    import '../form/app.js';
+  </script>
 </Base>

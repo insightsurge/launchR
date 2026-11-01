@@ -1,0 +1,23 @@
+---
+import Base from '../layouts/Base.astro';
+import Header from '../components/Header.astro';
+import Icons from '../components/Icons.astro';
+---
+<Base title="Page not found | launchR" description="This page is missing." plain>
+  <Icons />
+  <Header />
+  <main class="lost">
+    <svg viewBox="0 0 240 160" aria-hidden="true"><polygon points="60.0,26.0 89.4,43.0 89.4,77.0 60.0,94.0 30.6,77.0 30.6,43.0" class="solid"/><polygon points="120.0,26.0 149.4,43.0 149.4,77.0 120.0,94.0 90.6,77.0 90.6,43.0" class="solid"/><polygon points="180.0,26.0 209.4,43.0 209.4,77.0 180.0,94.0 150.6,77.0 150.6,43.0" class="gap"/><polygon points="90.0,78.0 119.4,95.0 119.4,129.0 90.0,146.0 60.6,129.0 60.6,95.0" class="gap"/><polygon points="150.0,78.0 179.4,95.0 179.4,129.0 150.0,146.0 120.6,129.0 120.6,95.0" class="solid"/></svg>
+    <h1>This page is missing</h1>
+    <p>The link may be old, or the address mistyped.</p>
+    <div class="actions"><a class="primary" href="/">Go to launchR</a><a class="quiet" href="https://insightsurge-dev.web.app/blog">Read the Playbook</a></div>
+  </main>
+  <script>
+    const button = document.getElementById('themeBtn');
+    button?.addEventListener('click', () => {
+      const root = document.documentElement, next = root.dataset.palette === 'ember' ? 'paper' : 'ember';
+      root.dataset.palette = next;
+      try { localStorage.setItem('launchr-theme', next); } catch { /* private window */ }
+    });
+  </script>
+</Base>
