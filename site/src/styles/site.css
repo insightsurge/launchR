@@ -229,7 +229,8 @@ input[type='text']:focus, input[type='email']:focus { outline: 0; border-color: 
   padding: 7px 10px; font-size: 13.5px; font-weight: 400; line-height: 1.35; color: var(--ink); background: var(--surface);
   border: 1px solid var(--accent); border-radius: 8px; opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 140ms; z-index: 5;
 }
-.tip:hover [role='tooltip'], .tip:focus [role='tooltip'] { opacity: 1; visibility: visible; }
+@media (hover: hover) { .tip:hover [role='tooltip'] { opacity: 1; visibility: visible; } }
+.tip:focus-visible [role='tooltip'] { opacity: 1; visibility: visible; }
 fieldset.plans { border: 0; margin: 18px 0 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .plans legend { padding: 0; margin-bottom: 10px; font-weight: 500; font-size: 14.5px; }
 .plan {
@@ -731,3 +732,19 @@ html.plain { scroll-snap-type: none; }
 .primary:disabled { opacity: 0.6; cursor: not-allowed; }
 .note:empty { display: none; }
 @media (max-width: 860px) { #modifyView input[type='text'], #modifyView select { font-size: 16px; } }
+
+/* touch: every control is at least 44px, and a tap never leaves a hover state behind */
+@media (max-width: 860px), (pointer: coarse) {
+  .back, .brand { min-height: 44px; }
+  .brand { display: inline-flex; align-items: center; }
+  .reset { display: inline-flex; align-items: center; min-height: 44px; margin-block: -11px; }
+  .copy, .notice button { min-width: 44px; min-height: 44px; }
+  .routes span { display: flex; align-items: center; min-height: 44px; }
+  #modifyView input[type='text'], #modifyView select, input.short[type='text'] { min-height: 44px; }
+}
+@media (hover: none) {
+  .pill:hover span { border-color: var(--line); }
+  .pill input:checked + span { border-color: var(--accent); }
+  .cell:hover span { border-color: var(--soft); }
+  .cell input:checked + span { border-color: var(--accent); }
+}
