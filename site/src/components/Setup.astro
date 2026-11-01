@@ -7,12 +7,12 @@
           <p class="sub">Four questions. Nothing leaves your browser. <button type="button" class="reset" id="toExisting">Already have a package?</button></p>
           <div class="field">
             <label for="pkg">Package name</label>
-            <input id="pkg" type="text" autocomplete="off" spellcheck="false" placeholder="fooBarPkg" />
+            <input id="pkg" type="text" maxlength="80" autocomplete="off" spellcheck="false" placeholder="fooBarPkg" />
             <p class="err" id="err-pkg"></p>
           </div>
           <div class="field">
             <label for="what">What it does, in one line</label>
-            <input id="what" type="text" autocomplete="off" placeholder="Tools for clinical tables" />
+            <input id="what" type="text" maxlength="200" autocomplete="off" placeholder="Tools for clinical tables" />
             <p class="err" id="err-what"></p>
           </div>
           <div class="field two">
@@ -66,6 +66,7 @@
           <h3 class="ex-head">What to add</h3>
           <div class="exrows" id="exRows"></div>
           <div class="opt soonline"><span>Paste a GitHub link to see what is missing</span><span class="tag">Coming soon</span></div>
+          <p class="note" id="exNote" role="status"></p>
           <div class="actions"><button type="button" class="primary" id="exDownload">Download the files</button><button type="button" class="quiet" id="exModify">Choose checks and systems</button></div>
         </section>
         <section id="nextView" aria-labelledby="nextTitle" hidden>

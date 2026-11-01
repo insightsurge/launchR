@@ -22,6 +22,7 @@ const RS = [['release', 'release'], ['oldrel-1', 'oldrel-1'], ['devel', 'devel']
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const WORDS = ['No', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'All seven'];
 const WEEKLY = ['r_cmd_check', 'full_tests', 'extended_tests'];
+const BASE_PACKAGES = ['R', 'base', 'compiler', 'datasets', 'graphics', 'grDevices', 'grid', 'methods', 'parallel', 'splines', 'stats', 'stats4', 'tcltk', 'tools', 'utils'];
 const PARTS = [['ci', 'CI checks'], ['website', 'Website'], ['github', 'Issue forms, labels and checklists']];
 
 let bundle = null;
@@ -167,13 +168,35 @@ const put = (id, text) => {
 };
 const v = (id) => $(`#${id}`).value.trim();
 
+function nameProblem(name, empty) {
+  if (!name) return empty;
+  if (name.length > 60) return 'Keep the name under 60 characters.';
+  if (BASE_PACKAGES.includes(name)) return `${name} is part of R itself, so choose another name.`;
+  return checkPackageName(name);
+}
+
+function titleProblem(title) {
+  if (!title) return 'Say in one line what it does. This goes in DESCRIPTION.';
+  if (title.length > 65) return `Keep it to 65 characters. It is ${title.length} now.`;
+  if (/["\\{}%]/.test(title)) return 'Use plain words here: no double quotes, backslashes, braces or percent signs.';
+  return '';
+}
+
+function personProblem(name, which) {
+  if (!name) return `Add a ${which} name. DESCRIPTION needs an author.`;
+  return /["\\]/.test(name) ? 'Names can\'t contain double quotes or backslashes.' : '';
+}
+
+function ownerProblem(owner) {
+  return !owner || /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})$/.test(owner) ? '' : 'Use only your GitHub name, such as insightsurge, not a link.';
+}
+
 function valid() {
-  const name = v('pkg') ? checkPackageName(v('pkg')) : 'Give your package a name, such as fooBarPkg.';
   const rules = [
-    ['pkg', name],
-    ['what', v('what') ? '' : 'Say in one line what it does. This goes in DESCRIPTION.'],
-    ['first', v('first') ? '' : 'Add a first name. DESCRIPTION needs an author.'],
-    ['last', v('last') ? '' : 'Add a last name. DESCRIPTION needs an author.'],
+    ['pkg', nameProblem(v('pkg'), 'Give your package a name, such as fooBarPkg.')],
+    ['what', titleProblem(v('what'))],
+    ['first', personProblem(v('first'), 'first')],
+    ['last', personProblem(v('last'), 'last')],
     ['email', !v('email') || /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v('email')) ? '' : 'That email looks incomplete, or leave it empty.'],
   ];
   rules.forEach(([id, text]) => put(id, text));
@@ -186,12 +209,9 @@ function modifyValid() {
   const open = (index) => { $$('.mod')[index].open = true; view('modify'); };
   if (minRProblem()) { open(0); $('#minR').focus(); return false; }
   if (WEEKLY.some((k) => S.checks[k]) && timeProblem()) { open(0); $('#time').focus(); return false; }
-  if (mode === 'new' && S.website && !S.owner) {
-    open(2);
-    $('#err-owner').textContent = 'A website needs your GitHub name, so it has an address.';
-    $('#owner').focus();
-    return false;
-  }
+  if (S.checks.r_cmd_check && !platforms()) { open(0); $('#minRNote').textContent = 'Choose at least one R version for R CMD check.'; $('[data-matrix]').focus(); return false; }
+  const owner = mode !== 'new' ? '' : ownerProblem(S.owner) || (S.website && !S.owner ? 'A website needs your GitHub name, so it has an address.' : '');
+  if (owner) { open(2); $('#err-owner').textContent = owner; $('#owner').focus(); return false; }
   return true;
 }
 
@@ -199,7 +219,7 @@ function modifyValid() {
 ['exPkg', 'exOwner'].forEach((id) => $(`#${id}`).addEventListener('input', () => put(id, '')));
 
 function cron() {
-  const [hour, minute] = S.time.split(':').map(Number);
+  const [hour, minute] = (timeProblem() ? '05:00' : S.time).split(':').map(Number);
   return `${minute} ${hour} * * ${DAYS.indexOf(S.day)}`;
 }
 
@@ -243,16 +263,29 @@ async function saveZip() {
   setTimeout(() => URL.revokeObjectURL(link.href), 1000);
 }
 
+const buttons = ['#download', '#modDownload', '#exDownload'].map($);
+let saving = false;
+
 async function download() {
-  if (!bundle) { $('#planNote').textContent = 'The form could not load its files. Please refresh the page.'; view('main'); return; }
+  if (saving) return;
+  const fail = (text) => {
+    if (mode === 'existing') { $('#exNote').textContent = text; view('existing'); } else { $('#planNote').textContent = text; view('main'); }
+  };
+  if (!bundle && !(await loadKit())) { fail('The form could not load its files. Check your connection and press Download again.'); return; }
   if (mode === 'new' ? !valid() : !existingValid()) return;
+  saving = true;
+  buttons.forEach((b) => { b.disabled = true; });
   try {
     await saveZip();
   } catch {
-    $('#planNote').textContent = 'The zip could not be built. Please try again.';
-    view('main');
+    fail('The zip could not be built. Press Download to try again.');
     return;
+  } finally {
+    saving = false;
+    buttons.forEach((b) => { b.disabled = false; });
+    if (mode === 'existing') paintExisting();
   }
+  $('#planNote').textContent = '';
   $('#nextName').textContent = mode === 'new' ? pkg() : 'launchR-files';
   $('#routes').hidden = mode === 'existing';
   steps();
@@ -269,14 +302,15 @@ function paintExisting() {
   $('#exRows').innerHTML = PARTS.map(([k, t]) => `<div class="exrow">${pill(`data-part="${k}"`, t, add[k])}</div>`).join('');
   $('#exModify').hidden = !add.ci;
   $('#exDownload').disabled = !PARTS.some(([k]) => add[k]);
+  $('#exNote').textContent = '';
 }
 $('#exRows').addEventListener('change', (e) => { add[e.target.dataset.part] = e.target.checked; S.website = add.website; paintExisting(); });
 $('#exPlans').addEventListener('change', (e) => { $(`input[name=plan][value=${e.target.value}]`).checked = true; S = recommended(); S.website = add.website; paint(); });
 $('#exModify').addEventListener('click', () => { $('#modPkg').textContent = 'your package'; paint(); view('modify', $('#modTitle')); });
 
 function existingValid() {
-  const name = v('exPkg') ? checkPackageName(v('exPkg')) : 'Add the name in your DESCRIPTION file.';
-  const owner = add.website && !v('exOwner') ? 'A website needs your GitHub name, so it has an address.' : '';
+  const name = nameProblem(v('exPkg'), 'Add the name in your DESCRIPTION file.');
+  const owner = ownerProblem(v('exOwner')) || (add.website && !v('exOwner') ? 'A website needs your GitHub name, so it has an address.' : '');
   put('exPkg', name);
   put('exOwner', owner);
   if (name || owner) { view('existing'); $(name ? '#exPkg' : '#exOwner').focus(); return false; }
@@ -305,7 +339,7 @@ function existingSteps() {
   const list = [`Unzip ${code('launchR-files.zip')} and copy what's inside into your package folder. Nothing in ${code('R/')}, ${code('tests/')} or ${code('DESCRIPTION')} changes.`];
   if (add.ci) list.push(`Delete any old files in ${code('.github/workflows')} that do the same job.`);
   list.push("Commit and push, from RStudio's Git pane or GitHub Desktop.");
-  if (add.ci) list.push(actions);
+  if (add.ci && CHECKS.some(([k]) => S.checks[k])) list.push(actions);
   if (add.github) list.push(`On GitHub, go to Actions, ${setupButton}`);
   $('#stepList').innerHTML = list.map((t) => `<li>${t}</li>`).join('');
   $('#nextAfter').innerHTML = '<b>After that.</b> To add something later, come back and choose only that.';
@@ -319,14 +353,15 @@ function steps() {
   const gh = '<a href="https://cli.github.com" target="_blank" rel="noopener">GitHub CLI</a>';
   const route = $('input[name=route]:checked').value;
   const setup = `source("https://raw.githubusercontent.com/insightsurge/launchR/v${lists.settings.kit_version}/cli/setup-github.R")`;
+  const running = CHECKS.some(([k]) => S.checks[k]) ? [actions] : [];
   const list = route === 'desktop' ? [
     open,
     'Make a free <a href="https://github.com/signup" target="_blank" rel="noopener">GitHub account</a>, if you don\'t have one.',
     `Install <a href="https://desktop.github.com" target="_blank" rel="noopener">GitHub Desktop</a> and sign in. It brings Git with it. ${gh} is optional: your checklists show the repository settings to change by hand, and it lets the setup line tick those boxes for you.`,
     `In GitHub Desktop, choose File, then Add local repository, and pick the ${code(name)} folder. It offers to create the repository: accept.`,
     `Click Publish repository. ${priv ? 'Leave Keep this code private ticked.' : 'Untick Keep this code private.'}`,
-    actions,
-    ...(S.github ? [`Still in Actions, ${setupButton}`] : []),
+    ...running,
+    ...(S.github ? [`On GitHub, go to Actions, ${setupButton}`] : []),
   ] : [
     open,
     `Run these in the R console. GitHub asks you to make a token: paste it when R asks.${copy('install.packages(c("usethis", "gitcreds"))')}${copy('usethis::create_github_token()')}${copy('gitcreds::gitcreds_set()')}`,
@@ -335,7 +370,7 @@ function steps() {
       `Install ${gh}, then sign in once from the Terminal tab next to your console.${copy('gh auth login')}`,
       `Back in the R console, set up the labels and checklists. It asks before it changes anything. Your checklists then show the repository settings to change.${copy(setup)}`,
     ] : []),
-    actions,
+    ...running,
   ];
   $('#stepList').innerHTML = list.map((t) => `<li>${t}</li>`).join('');
   const first = { a: 'After public', b: 'After public', c: 'Before public' }[plan()];
@@ -347,13 +382,16 @@ $('#routes').addEventListener('change', steps);
 $('#stepList').addEventListener('click', (e) => {
   const b = e.target.closest('.copy');
   if (!b) return;
-  navigator.clipboard?.writeText(b.dataset.copy).catch(() => { /* the text stays there to select */ });
-  b.textContent = 'Copied';
+  Promise.resolve(navigator.clipboard?.writeText(b.dataset.copy) ?? Promise.reject()).then(() => { b.textContent = 'Copied'; }, () => { b.textContent = 'Select it'; });
   setTimeout(() => { b.textContent = 'Copy'; }, 1400);
 });
 
 new MutationObserver(summary).observe($('#pvLists'), { childList: true });
-dialog.addEventListener('close', () => { mode = 'new'; S = lists ? recommended() : S; changed = false; paint(); view('main'); });
+dialog.addEventListener('close', () => {
+  if (mode === 'existing' && lists) { S = recommended(); changed = false; paint(); }
+  mode = 'new';
+  view('main');
+});
 
 /* tooltips open on hover and focus, and on a tap; Escape or a tap elsewhere closes them */
 const shut = (keep) => $$('.tip.open').forEach((t) => { if (t !== keep) t.classList.remove('open'); });
@@ -373,12 +411,19 @@ dialog.addEventListener('keydown', (e) => {
   }
 });
 
-view('main');
-try {
-  bundle = await (await fetch('/kit/bundle.json')).json();
-  lists = readLists(bundle);
-  S = recommended();
-  paint();
-} catch {
-  $('#planNote').textContent = 'The form could not load its files. Please refresh the page.';
+async function loadKit() {
+  try {
+    const response = await fetch('/kit/bundle.json');
+    if (!response.ok) return false;
+    bundle = await response.json();
+    lists = readLists(bundle);
+    S ??= recommended();
+    paint();
+    return true;
+  } catch {
+    return false;
+  }
 }
+
+view('main');
+await loadKit();

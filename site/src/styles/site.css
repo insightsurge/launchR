@@ -725,3 +725,9 @@ html.plain { scroll-snap-type: none; }
 .lost .solid { fill: none; stroke: var(--accent); stroke-width: 2; }
 .lost .gap { fill: none; stroke: var(--soft); stroke-width: 1.4; stroke-dasharray: 4 5; }
 .no-script { position: fixed; inset: auto 16px 16px; margin: 0; padding: 12px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+
+/* long names wrap instead of pushing the page sideways */
+#modTitle, #nextTitle, .pv-name, .steps, .steps code { overflow-wrap: anywhere; }
+.primary:disabled { opacity: 0.6; cursor: not-allowed; }
+.note:empty { display: none; }
+@media (max-width: 860px) { #modifyView input[type='text'], #modifyView select { font-size: 16px; } }
