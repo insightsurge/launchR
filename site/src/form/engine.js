@@ -77,8 +77,11 @@ export function placeholderValues(choices, lists) {
   const repository = `https://github.com/${owner}/${choices.package}`;
   const site = `https://${owner}.github.io/${choices.package}`;
   const urls = [...(choices.parts.includes('website') ? [`${site}/`] : []), repository];
+  // The spelling check splits a name at digits and dots (demoPkg2 is read as demoPkg), so the parts go in the word list.
+  const parts = [...new Set(choices.package.split(/[^A-Za-z]+/))].filter((part) => part.length > 1 && part !== choices.package);
   const values = {
     package: choices.package,
+    name_words: parts.map((part) => `${part}\n`).join(''),
     title: choices.title,
     description: `${choices.title}.`,
     author: `${choices.given} ${choices.family}`,

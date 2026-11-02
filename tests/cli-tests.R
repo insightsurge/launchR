@@ -131,6 +131,8 @@ expect(noowner$value == 1L && !dir.exists(file.path(work, "noownerpkg")), "new -
 expect(nzchar(check_owner("https://github.com/sample-org")) && !nzchar(check_owner("sample-org")), "a link isn't a GitHub name")
 owned <- read.dcf(file.path(new_package("ownedpkg"), "DESCRIPTION"))
 expect(identical(unname(owned[1, "BugReports"]), "https://github.com/sample-org/ownedpkg/issues"), "DESCRIPTION has BugReports from the start")
+digits <- readLines(file.path(new_package("demo2pkg"), "inst", "WORDLIST"))
+expect(identical(digits, c("demo2pkg", "demo", "pkg", "launchR")), "a name with a digit puts its parts in the word list")
 lint_caller <- readLines(file.path(work, "nogitpkg", ".github", "workflows", "lint.yaml"))
 expect(any(grepl("branches: [main, master]", lint_caller, fixed = TRUE)), "the checks run for main and master")
 
