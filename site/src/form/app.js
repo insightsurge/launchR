@@ -334,7 +334,7 @@ $('#exBack').addEventListener('click', () => { mode = 'new'; S = recommended(); 
 /* the page after the download */
 const copy = (text) => `<div class="cmd"><code>${esc(text)}</code><button type="button" class="copy" data-copy="${esc(text)}">Copy</button></div>`;
 const code = (t) => `<code>${esc(t)}</code>`;
-const setupButton = 'open Set up this repository, click Run workflow, untick Only show what would change, and run it. This makes your labels and checklists.';
+const setupButton = 'open Set up this repository. Its first run, from your push, only lists what it would make. Click Run workflow, untick Only show what would change, and run it. This makes your labels and checklists.';
 const actions = 'Open the repository on GitHub and go to Actions. Your checks are running.';
 const local = `To run the same checks on your computer before a pull request, see <em>Run the checks on your computer</em> in ${code('.github/workflows/README.md')}. `;
 
