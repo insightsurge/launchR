@@ -8,8 +8,8 @@ on:
     # Example: branches: [main, develop, "release/**"]
 {{c_coverage_push}}  push:
 {{c_coverage_push}}    branches: [{{branches}}]   # pushes to these branches
-{{c_coverage_weekly}}  schedule:
-{{c_coverage_weekly}}    - cron: "{{cron_coverage}}"   # times are UTC; runs from the default branch only
+{{c_coverage_schedule}}  schedule:
+{{c_coverage_schedule}}    - cron: "{{cron_coverage}}"   # times are UTC; runs from the default branch only
     # Examples: "0 5 * * *" every day at 05:00, "0 5 1 * *" the 1st of every month at 05:00
 {{c_coverage_manual}}  workflow_dispatch:   # adds a "Run workflow" button on GitHub
 

@@ -1,5 +1,6 @@
 # {{package}}
 
+{{check_badge}}
 {{credit_badge}}
 {{title}}.
 

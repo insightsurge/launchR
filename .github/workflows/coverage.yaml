@@ -4,26 +4,25 @@
 # branch's limit and its own, so a pull request cannot lower the limit by editing DESCRIPTION; changes to this
 # workflow are reviewed like any other change. A push to main reads the checked-out DESCRIPTION. The browser and
 # snapshot tests skip here, as on CRAN (full-tests.yaml runs them), and the example apps' detailed tests
-# (test-*-extended.R) run: this is the coverage all the tests give without Chrome. A pull
+# (test-*-extended.R) run, through EXTENDED_TESTS: this is the coverage all the tests give without Chrome. A pull
 # request that changes only documentation starts the job and skips its steps (.github/scripts/r-changes.sh).
 # The coverage part of the pull request's CI report (.github/pr-report.json): the figure, the difference from main and
 # the added R/ lines these tests don't run, in the job summary and, through the report job, in the comment.
 # The figure also goes to Codecov for the README badge (pushes to main and this repository's pull requests; forks and
-# Dependabot have no CODECOV_TOKEN). Codecov only reports (codecov.yml: no comments, informational statuses); this
-# job enforces the limit. It counts the R code run in the test process, not the JavaScript engine.
+# Dependabot have no CODECOV_TOKEN). Codecov only reports; this job enforces the limit. It counts the R code run in the test process, not the JavaScript engine.
 on:
   workflow_call:
     secrets:
       CODECOV_TOKEN:
         required: false
 
-name: test-coverage
+name: coverage
 
 permissions:
   contents: read  # the most this workflow can use; a job that needs more asks for it itself
 
 jobs:
-  test-coverage:
+  coverage:
     runs-on: ubuntu-26.04  # pinned, like the repo's other workflows
     timeout-minutes: 60  # the tests without Chrome under covr: about a minute, plus room for a slow package mirror
     env:
@@ -33,18 +32,18 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 2  # a pull request's merge commit and its base, for r-changes.sh
-      # kit-fetch-start
-      - name: Fetch the kit at this workflow's version
+      # launchr-fetch-start
+      - name: Fetch launchR at this workflow's version
         uses: actions/checkout@v7
         with:
           repository: insightsurge/launchR
           ref: ${{ job.workflow_sha }}
-          path: .kit
-      # kit-fetch-end
+          path: .launchr
+      # launchr-fetch-end
 
       - name: Find out whether the R steps are needed
         id: changes
-        run: bash .kit/.github/scripts/r-changes.sh
+        run: bash .launchr/.github/scripts/r-changes.sh
 
       - uses: r-lib/actions/setup-r@v2
         if: steps.changes.outputs.r == 'true'
@@ -91,7 +90,7 @@ jobs:
             stop("The base branch's DESCRIPTION was not read.", call. = FALSE)
           }
           read_limit <- function(file) {
-            value <- as.numeric(read.dcf(file, fields = c("Config/quality-gate/coverage", "Config/quality-gate/coverage"))[[1]])
+            value <- as.numeric(read.dcf(file, fields = "Config/quality-gate/coverage")[[1]])
             if (is.na(value)) 70 else value
           }
           limit <- read_limit("DESCRIPTION")
@@ -146,7 +145,7 @@ jobs:
       - name: Get main's coverage (pull requests)
         id: baseline
         if: always() && github.event_name == 'pull_request' && steps.changes.outputs.r == 'true'
-        uses: ./.kit/.github/actions/main-baseline
+        uses: ./.launchr/.github/actions/main-baseline
         with:
           workflow: coverage.yaml
           artifact: coverage-baseline
@@ -161,7 +160,7 @@ jobs:
           BASELINE_SHA: ${{ steps.baseline.outputs.sha }}
           EVENT_NAME: ${{ github.event_name }}
           OUT: ${{ runner.temp }}/coverage-part.md
-        run: Rscript .kit/.github/scripts/coverage-report.R
+        run: Rscript .launchr/.github/scripts/coverage-report.R
 
       # When R didn't run: a documentation-only change, or a failure before the report step.
       - name: Write the coverage report (when R didn't run)
@@ -182,7 +181,7 @@ jobs:
 
       - name: Keep the coverage report
         if: always()
-        uses: ./.kit/.github/actions/pr-report-part
+        uses: ./.launchr/.github/actions/pr-report-part
         with:
           name: tests-1-coverage
           file: ${{ runner.temp }}/coverage-part.md
@@ -207,7 +206,7 @@ jobs:
   # Rewrites the pull request's CI report comment (.github/actions/pr-report-comment). Pull requests from forks and
   # from Dependabot get the job summary only: their token can't write to the pull request.
   report:
-    needs: test-coverage
+    needs: coverage
     if: >-
       always() && github.event_name == 'pull_request' &&
       github.event.pull_request.head.repo.full_name == github.repository &&
@@ -225,18 +224,18 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          sparse-checkout: |  # .kit is here only after eject
+          sparse-checkout: |  # .launchr is here only after eject
             .github
-            .kit
+            .launchr
           persist-credentials: false
-      # kit-fetch-start
-      - name: Fetch the kit at this workflow's version
+      # launchr-fetch-start
+      - name: Fetch launchR at this workflow's version
         uses: actions/checkout@v7
         with:
           repository: insightsurge/launchR
           ref: ${{ job.workflow_sha }}
-          path: .kit
-      # kit-fetch-end
-      - uses: ./.kit/.github/actions/pr-report-comment
+          path: .launchr
+      # launchr-fetch-end
+      - uses: ./.launchr/.github/actions/pr-report-comment
         with:
-          config: .kit/.github/pr-report.json
+          config: .launchr/.github/pr-report.json

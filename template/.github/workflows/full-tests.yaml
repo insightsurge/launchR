@@ -1,4 +1,4 @@
-# Runs every test, including browser and snapshot tests that CRAN skips.
+# Runs every test, including the browser, snapshot and extended tests CRAN skips, with Chrome.
 # How this file works: see README.md in this folder.
 name: full-tests
 
@@ -8,8 +8,8 @@ on:
     # Example: branches: [main, develop, "release/**"]
 {{c_full_tests_push}}  push:
 {{c_full_tests_push}}    branches: [{{branches}}]   # pushes to these branches
-{{c_full_tests_weekly}}  schedule:
-{{c_full_tests_weekly}}    - cron: "{{cron_full_tests}}"   # times are UTC; runs from the default branch only
+{{c_full_tests_schedule}}  schedule:
+{{c_full_tests_schedule}}    - cron: "{{cron_full_tests}}"   # times are UTC; runs from the default branch only
     # Examples: "0 5 * * *" every day at 05:00, "0 5 1 * *" the 1st of every month at 05:00
 {{c_full_tests_manual}}  workflow_dispatch:   # adds a "Run workflow" button on GitHub
 

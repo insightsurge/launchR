@@ -15,7 +15,7 @@ const CHECKS = [
   ['secret_scan', 'secret-scan', 'Catches passwords and tokens committed by mistake.'],
   ['coverage', 'coverage', 'Measures how much of your code the tests run.'],
   ['no_suggests', 'no-suggests', 'Checks the package works without its optional packages.'],
-  ['full_tests', 'full-tests', 'Runs the tests CRAN skips: test files ending in -browser, -snap or -extended. Runs on Linux.'],
+  ['full_tests', 'full-tests', 'Runs every test, including the ones CRAN skips: test files ending in -browser, -snap or -extended. Runs on Linux.'],
   ['extended_tests', 'extended-tests', 'Every week, a full check on Mac and Windows, including test files ending in -extended.'],
 ];
 const SYSTEMS = [['ubuntu', 'Linux'], ['windows', 'Windows'], ['macos', 'Mac']];
@@ -44,11 +44,11 @@ function kitPlatforms() {
   return row[`platforms_${visibility()}`].split(',').map((entry) => entry.trim());
 }
 
-/* what each plan starts from: the kit's own list, so an untouched form matches the CLI */
+/* what each plan starts from: the starter column in lists/, so an untouched form matches the CLI */
 function recommended() {
   const start = kitPlatforms();
   return {
-    checks: Object.fromEntries(CHECKS.map(([k]) => [k, !(k === 'extended_tests' && plan() === 'd')])),
+    checks: Object.fromEntries(lists.checks.map((row) => [row.key, row.starter === 'yes' && !(row.key === 'extended_tests' && plan() === 'd')])),
     matrix: Object.fromEntries(SYSTEMS.flatMap(([s]) => RS.map(([r]) => [`${s}/${r}`, start.includes(`${s}/${r}`)]))),
     minR: '', samePlatforms: false, day: 'Monday', time: '05:00', website: false, github: true, owner: '', frontend: false,
   };
@@ -339,6 +339,7 @@ const copy = (text) => `<div class="cmd"><code>${esc(text)}</code><button type="
 const code = (t) => `<code>${esc(t)}</code>`;
 const setupButton = 'open Set up this repository, click Run workflow, untick Only show what would change, and run it. This makes your labels and checklists.';
 const actions = 'Open the repository on GitHub and go to Actions. Your checks are running.';
+const local = `To run the same checks on your computer before a pull request, see <em>Run the checks on your computer</em> in ${code('.github/workflows/README.md')}. `;
 
 function existingSteps() {
   const list = [`Unzip ${code('launchR-files.zip')} and copy what's inside into your package folder. Nothing in ${code('R/')}, ${code('tests/')} or ${code('DESCRIPTION')} changes.`];
@@ -347,7 +348,7 @@ function existingSteps() {
   if (add.ci && CHECKS.some(([k]) => S.checks[k])) list.push(actions);
   if (add.github) list.push(`On GitHub, go to Actions, ${setupButton}`);
   $('#stepList').innerHTML = list.map((t) => `<li>${t}</li>`).join('');
-  $('#nextAfter').innerHTML = '<b>After that.</b> To add something later, come back and choose only that.';
+  $('#nextAfter').innerHTML = `<b>After that.</b> ${add.ci ? local : ''}To add something later, come back and choose only that.`;
 }
 
 function steps() {
@@ -357,7 +358,7 @@ function steps() {
   const open = `Unzip ${code(`${name}.zip`)}, then open ${code(`${name}.Rproj`)} in RStudio, or the folder in Positron. In RStudio, choose Build, then Test Package, to see your first test pass.`;
   const gh = '<a href="https://cli.github.com" target="_blank" rel="noopener">GitHub CLI</a>';
   const route = $('input[name=route]:checked').value;
-  const setup = `source("https://raw.githubusercontent.com/insightsurge/launchR/v${lists.settings.kit_version}/cli/setup-github.R")`;
+  const setup = `source("https://raw.githubusercontent.com/insightsurge/launchR/v${lists.settings.kit_version}/cli/github-setup.R")`;
   const running = CHECKS.some(([k]) => S.checks[k]) ? [actions] : [];
   const list = route === 'desktop' ? [
     open,
@@ -380,7 +381,7 @@ function steps() {
   $('#stepList').innerHTML = list.map((t) => `<li>${t}</li>`).join('');
   const first = { a: 'After public', b: 'After public', c: 'Before public' }[plan()];
   const email = v('email') ? '' : `Replace the placeholder email in ${code('DESCRIPTION')} before you release. `;
-  $('#nextAfter').innerHTML = `<b>After that.</b> ${email}${first && S.github ? `Open the <em>${first}</em> checklist in your repository's issues when you reach that stage. ` : ''}To add something later, such as a website, come back and choose only that.`;
+  $('#nextAfter').innerHTML = `<b>After that.</b> ${email}${first && S.github ? `Open the <em>${first}</em> checklist in your repository's issues when you reach that stage. ` : ''}${running.length ? local : ''}To add something later, such as a website, come back and choose only that.`;
 }
 
 $('#routes').addEventListener('change', steps);

@@ -1,5 +1,5 @@
-# Copies the kit's CI into the package, so nothing depends on the kit any more. The short caller files keep their
-# triggers and settings; only the line that names the kit changes.
+# Copies launchR's CI into the package, so nothing depends on launchR any more. The short caller files keep their
+# triggers and settings; only the line that names launchR changes.
 eject_copy <- function(from, to) {
   for (file in list.files(from, recursive = TRUE, all.files = TRUE, no.. = TRUE)) {
     target <- file.path(to, file)
@@ -8,8 +8,8 @@ eject_copy <- function(from, to) {
   }
 }
 
-remove_kit_fetch <- function(text) {
-  gsub("(?s)      # kit-fetch-start\n.*?      # kit-fetch-end\n", "", text, perl = TRUE)
+remove_launchr_fetch <- function(text) {
+  gsub("(?s)      # launchr-fetch-start\n.*?      # launchr-fetch-end\n", "", text, perl = TRUE)
 }
 
 cmd_eject <- function(args) {
@@ -18,29 +18,29 @@ cmd_eject <- function(args) {
     message("Run this from the package's folder: there's no .github/workflows here.")
     return(1L)
   }
-  eject_copy(kit_path(".github", "actions"), file.path(".kit", ".github", "actions"))
-  eject_copy(kit_path(".github", "scripts"), file.path(".kit", ".github", "scripts"))
-  eject_copy(kit_path("quality-gate"), file.path(".kit", "quality-gate"))
-  eject_copy(kit_path("cli"), file.path(".kit", "cli"))
-  eject_copy(kit_path("lists"), file.path(".kit", "lists"))
-  file.copy(kit_path(".github", "pr-report.json"), file.path(".kit", ".github", "pr-report.json"), overwrite = TRUE)
+  eject_copy(kit_path(".github", "actions"), file.path(".launchr", ".github", "actions"))
+  eject_copy(kit_path(".github", "scripts"), file.path(".launchr", ".github", "scripts"))
+  eject_copy(kit_path("quality-gate"), file.path(".launchr", "quality-gate"))
+  eject_copy(kit_path("cli"), file.path(".launchr", "cli"))
+  eject_copy(kit_path("lists"), file.path(".launchr", "lists"))
+  file.copy(kit_path(".github", "pr-report.json"), file.path(".launchr", ".github", "pr-report.json"), overwrite = TRUE)
   pattern <- "uses: insightsurge/launchR/\\.github/workflows/([a-z-]+)\\.yaml@v[0-9.]+"
   changed <- character()
   for (file in list.files(workflows, pattern = "[.]yaml$", full.names = TRUE)) {
     text <- read_text(file)
     if (!grepl(pattern, text)) next
     check <- sub(pattern, "\\1", regmatches(text, regexpr(pattern, text)))
-    write_text(remove_kit_fetch(read_text(kit_path(".github", "workflows", paste0(check, ".yaml")))),
-      file.path(workflows, sprintf("kit-%s-full.yaml", check)))
-    write_text(gsub(pattern, sprintf("uses: ./.github/workflows/kit-%s-full.yaml", check), text), file)
+    write_text(remove_launchr_fetch(read_text(kit_path(".github", "workflows", paste0(check, ".yaml")))),
+      file.path(workflows, sprintf("launchr-%s.yaml", check)))
+    write_text(gsub(pattern, sprintf("uses: ./.github/workflows/launchr-%s.yaml", check), text), file)
     changed <- c(changed, basename(file))
   }
   ignore <- ".Rbuildignore"
-  if (file.exists(ignore) && !any(grepl("\\.kit", readLines(ignore, warn = FALSE)))) {
+  if (file.exists(ignore) && !any(grepl("\\.launchr", readLines(ignore, warn = FALSE)))) {
     # write_text keeps the file's \n line endings; write() would add \r\n on Windows.
-    write_text(paste0(sub("\n*$", "\n", read_text(ignore)), "^\\.kit$\n"), ignore)
+    write_text(paste0(sub("\n*$", "\n", read_text(ignore)), "^\\.launchr$\n"), ignore)
   }
-  cat("Copied the kit's CI into .kit/ and .github/workflows/. Files now independent of the kit:\n")
+  cat("Copied launchR's CI into .launchr/ and .github/workflows/. Files now independent of launchR:\n")
   cat(paste0("  ", changed), sep = "\n")
   0L
 }

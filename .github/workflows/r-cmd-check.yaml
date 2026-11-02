@@ -1,6 +1,6 @@
 # Derived from https://github.com/r-lib/actions/tree/v2/examples (check-standard.yaml).
-# The repo rule is 0 errors, 0 warnings, 0 notes, so any note fails the check. R CMD check as CRAN runs it: what it
-# runs and when, the time limit and its line in the CI report are in .github/workflows/README.md.
+# The pass mark is 0 errors, 0 warnings, 0 notes, so any note fails the check. R CMD check as CRAN runs it. The time
+# limit and the test file kinds are explained in the package's .github/workflows/README.md.
 on:
   workflow_call:
     inputs:
@@ -73,18 +73,18 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 2  # a pull request's merge commit and its base, for r-changes.sh
-      # kit-fetch-start
-      - name: Fetch the kit at this workflow's version
+      # launchr-fetch-start
+      - name: Fetch launchR at this workflow's version
         uses: actions/checkout@v7
         with:
           repository: insightsurge/launchR
           ref: ${{ job.workflow_sha }}
-          path: .kit
-      # kit-fetch-end
+          path: .launchr
+      # launchr-fetch-end
 
       - name: Find out whether the R steps are needed
         id: changes
-        run: bash .kit/.github/scripts/r-changes.sh
+        run: bash .launchr/.github/scripts/r-changes.sh
 
       - uses: r-lib/actions/setup-pandoc@v2
         if: steps.changes.outputs.r == 'true'
@@ -125,8 +125,8 @@ jobs:
           error-on: '"note"'
           build_args: 'c("--no-manual", "--compact-vignettes=gs+qpdf")'
 
-      # Each platform's times for the CI report, and the time limit on one runner (.github/workflows/README.md, "The
-      # time limit").
+      # Each platform's times for the CI report, and the time limit on one runner (the package's
+      # .github/workflows/README.md, "The time limit").
       - name: Note the check's times
         if: always() && steps.changes.outputs.r == 'true'
         shell: bash
@@ -135,7 +135,7 @@ jobs:
           STATUS: ${{ job.status }}
           LIMIT_SECONDS: ${{ matrix.config.os == 'ubuntu-26.04' && matrix.config.r == 'release' && inputs.test-time-limit > 0 && inputs.test-time-limit || '' }}
           OUT: ${{ runner.temp }}/check-time-${{ strategy.job-index }}.txt
-        run: bash .kit/.github/scripts/check-times.sh note
+        run: bash .launchr/.github/scripts/check-times.sh note
 
       - name: Keep the check's times
         if: always() && steps.changes.outputs.r == 'true'
@@ -157,18 +157,18 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          sparse-checkout: |  # .kit is here only after eject
+          sparse-checkout: |  # .launchr is here only after eject
             .github
-            .kit
+            .launchr
           persist-credentials: false
-      # kit-fetch-start
-      - name: Fetch the kit at this workflow's version
+      # launchr-fetch-start
+      - name: Fetch launchR at this workflow's version
         uses: actions/checkout@v7
         with:
           repository: insightsurge/launchR
           ref: ${{ job.workflow_sha }}
-          path: .kit
-      # kit-fetch-end
+          path: .launchr
+      # launchr-fetch-end
 
       - name: Get the platforms' times
         uses: actions/download-artifact@v8
@@ -185,10 +185,10 @@ jobs:
           RESULT: ${{ needs.check.result }}
           R_STEPS: ${{ needs.check.outputs.r }}
           OUT: ${{ runner.temp }}/check-part.md
-        run: bash .kit/.github/scripts/check-times.sh report
+        run: bash .launchr/.github/scripts/check-times.sh report
 
       - name: Keep the report
-        uses: ./.kit/.github/actions/pr-report-part
+        uses: ./.launchr/.github/actions/pr-report-part
         with:
           name: tests-0-check
           file: ${{ runner.temp }}/check-part.md
@@ -221,18 +221,18 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          sparse-checkout: |  # .kit is here only after eject
+          sparse-checkout: |  # .launchr is here only after eject
             .github
-            .kit
+            .launchr
           persist-credentials: false
-      # kit-fetch-start
-      - name: Fetch the kit at this workflow's version
+      # launchr-fetch-start
+      - name: Fetch launchR at this workflow's version
         uses: actions/checkout@v7
         with:
           repository: insightsurge/launchR
           ref: ${{ job.workflow_sha }}
-          path: .kit
-      # kit-fetch-end
-      - uses: ./.kit/.github/actions/pr-report-comment
+          path: .launchr
+      # launchr-fetch-end
+      - uses: ./.launchr/.github/actions/pr-report-comment
         with:
-          config: .kit/.github/pr-report.json
+          config: .launchr/.github/pr-report.json

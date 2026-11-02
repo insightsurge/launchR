@@ -13,8 +13,8 @@ const lists = readLists(bundle);
 const out = mkdtempSync(join(tmpdir(), 'kit-compare-'));
 const base = { title: 'Sample Tools For Tables', author: ['Asha', 'Rao'], email: 'asha@example.com', year: '2026' };
 const cases = [
-  { name: 'everything', flags: ['--owner', 'sample-org'], set: { owner: 'sample-org' } },
-  { name: 'public', flags: ['--owner', 'sample-org', '--public'], set: { owner: 'sample-org', visibility: 'public' } },
+  { name: 'everything', flags: ['--owner', 'sample-org', '--preset', 'everything'], set: { owner: 'sample-org' }, preset: 'everything' },
+  { name: 'public', flags: ['--owner', 'sample-org', '--public', '--preset', 'everything'], set: { owner: 'sample-org', visibility: 'public' }, preset: 'everything' },
   { name: 'internal', flags: ['--owner', 'sample-org', '--internal'], set: { owner: 'sample-org', release: 'internal' } },
   { name: 'noowner', flags: [], set: {} },
   { name: 'starter', flags: ['--owner', 'sample-org', '--preset', 'starter'], set: { owner: 'sample-org' }, preset: 'starter' },
@@ -23,8 +23,8 @@ let failed = 0;
 for (const item of cases) {
   const r = join(out, item.name, 'r');
   execFileSync('Rscript', [
-    join(root, 'cli', 'kit.R'), 'new', 'samplepkg', '--recommended', '--title', base.title, '--author', base.author.join(' '),
-    '--email', base.email, '--year', base.year, '--no-git', '--out', r, ...item.flags,
+    join(root, 'cli', 'launchr.R'), 'new', 'samplepkg', '--yes', '--title', base.title, '--author', base.author.join(' '),
+    '--email', base.email, '--year', base.year, '--no-git', '--path', r, ...item.flags,
   ], { stdio: 'ignore' });
   const choices = { ...defaultChoices(lists, item.preset), package: 'samplepkg', title: base.title, given: base.author[0],
     family: base.author[1], email: base.email, year: base.year, ...item.set };

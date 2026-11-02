@@ -1,11 +1,11 @@
 # Labels, the root issue and the stage checklists. Lists what it will do, then acts on a yes. Safe to run again.
 #
-# A checklist line the kit writes ends in a hidden marker, <!-- kit:id -->. On a re-run the kit edits only lines that
+# A checklist line launchR writes ends in a hidden marker, <!-- launchr:id -->. On a re-run launchR edits only lines that
 # carry one: it refreshes the boxes it can check, leaves the boxes a person decides alone, and never touches a line
 # someone else added.
 root_title <- "About this repository"
 checklist_title <- function(stage) sprintf("Checklist: %s", stage)
-marker <- function(id) sprintf("<!-- kit:%s -->", id)
+marker <- function(id) sprintf("<!-- launchr:%s -->", id)
 is_ticked <- function(line) grepl("^\\s*- \\[[xX]\\]", line)
 is_box <- function(line) grepl("^\\s*- \\[[ xX]\\]", line)
 
@@ -90,7 +90,7 @@ add_line <- function(lines, section, line) {
   append(lines, line, after = end)
 }
 
-# Builds a checklist's new text. Returns the lines, plus which boxes the kit ticked and unticked this time.
+# Builds a checklist's new text. Returns the lines, plus which boxes launchR ticked and unticked this time.
 checklist_lines <- function(stage, ctx, old_body = "") {
   rows <- stage_rows(stage, ctx)
   lines <- if (nzchar(old_body)) strsplit(gsub("\r", "", old_body, fixed = TRUE), "\n", fixed = TRUE)[[1]] else character()
@@ -265,7 +265,8 @@ apply_plan <- function(ctx, plan) {
     create_issue(ctx, root_title, c(
       "The plan for this package.", "",
       "Each checklist is a sub-issue of this one. Unticked boxes are what's left to do.",
-      "Run `Rscript cli/kit.R github` from your clone of launchR again at any time to update the ticks.", "",
+      "To update the ticks, run the \"Set up this repository\" workflow again, or run this in R from the package's folder:", "",
+      sprintf("`source(\"https://raw.githubusercontent.com/insightsurge/launchR/v%s/cli/github-setup.R\")`", kit_setting("kit_version")), "",
       marker("root")), "epic")
   } else {
     plan$root$number

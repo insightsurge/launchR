@@ -15,13 +15,13 @@ git_name_is_ai <- function() {
 
 cmd_new <- function(args) {
   package <- args[1]
-  problem <- if (is.na(package)) "Give the package a name: kit.R new mypkg" else check_package_name(package)
+  problem <- if (is.na(package)) "Give the package a name: launchr.R new mypkg" else check_package_name(package)
   if (nzchar(problem)) {
     message(problem)
     return(1L)
   }
   choices <- default_choices(package, flag_value(args, "preset", kit_setting("preset")))
-  if (has_flag(args, "recommended")) {
+  if (has_flag(args, "yes")) {
     choices$title <- flag_value(args, "title", "An R Package")
     author <- strsplit(flag_value(args, "author", "Your Name"), " +")[[1]]
     choices$given <- author[1]
@@ -34,7 +34,7 @@ cmd_new <- function(args) {
   } else {
     choices <- ask_choices(choices)
   }
-  out <- flag_value(args, "out", package)
+  out <- flag_value(args, "path", package)
   if (dir.exists(out) && length(list.files(out, all.files = TRUE, no.. = TRUE)) > 0) {
     message("That folder already has files in it: ", out)
     return(1L)
@@ -72,10 +72,10 @@ kit_main <- function(args) {
   switch(command,
     new = cmd_new(rest),
     gate = cmd_gate(rest),
-    github = cmd_github(rest),
+    "github-setup" = cmd_github(rest),
     eject = cmd_eject(rest),
     {
-      cat("Commands: new, gate, github, eject. See the top of cli/kit.R.\n")
+      cat("Commands: new, gate, github-setup, eject. See the top of cli/launchr.R.\n")
       0L
     }
   )

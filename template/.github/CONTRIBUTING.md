@@ -60,6 +60,8 @@ air format .           # R code style
 - Commit the files `devtools::document()` changes together with the source.
 - An unknown word fails the spelling check: list it in your pull request, and the maintainer adds agreed words to
   `inst/WORDLIST`.
+- To run the same checks CI runs, including style, docs in sync and spelling, use the quality gate: see "Run the
+  checks on your computer" in `.github/workflows/README.md`.
 - A failing check on a pull request is read from its log in the Checks tab. Fix the first failure and push again.
 
 ## Code in short
