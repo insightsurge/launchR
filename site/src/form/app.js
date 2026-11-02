@@ -339,6 +339,7 @@ const copy = (text) => `<div class="cmd"><code>${esc(text)}</code><button type="
 const code = (t) => `<code>${esc(t)}</code>`;
 const setupButton = 'open Set up this repository, click Run workflow, untick Only show what would change, and run it. This makes your labels and checklists.';
 const actions = 'Open the repository on GitHub and go to Actions. Your checks are running.';
+const local = `To run the same checks on your computer before a pull request, see <em>Run the checks on your computer</em> in ${code('.github/workflows/README.md')}. `;
 
 function existingSteps() {
   const list = [`Unzip ${code('launchR-files.zip')} and copy what's inside into your package folder. Nothing in ${code('R/')}, ${code('tests/')} or ${code('DESCRIPTION')} changes.`];
@@ -347,7 +348,7 @@ function existingSteps() {
   if (add.ci && CHECKS.some(([k]) => S.checks[k])) list.push(actions);
   if (add.github) list.push(`On GitHub, go to Actions, ${setupButton}`);
   $('#stepList').innerHTML = list.map((t) => `<li>${t}</li>`).join('');
-  $('#nextAfter').innerHTML = '<b>After that.</b> To add something later, come back and choose only that.';
+  $('#nextAfter').innerHTML = `<b>After that.</b> ${add.ci ? local : ''}To add something later, come back and choose only that.`;
 }
 
 function steps() {
@@ -380,7 +381,7 @@ function steps() {
   $('#stepList').innerHTML = list.map((t) => `<li>${t}</li>`).join('');
   const first = { a: 'After public', b: 'After public', c: 'Before public' }[plan()];
   const email = v('email') ? '' : `Replace the placeholder email in ${code('DESCRIPTION')} before you release. `;
-  $('#nextAfter').innerHTML = `<b>After that.</b> ${email}${first && S.github ? `Open the <em>${first}</em> checklist in your repository's issues when you reach that stage. ` : ''}To add something later, such as a website, come back and choose only that.`;
+  $('#nextAfter').innerHTML = `<b>After that.</b> ${email}${first && S.github ? `Open the <em>${first}</em> checklist in your repository's issues when you reach that stage. ` : ''}${running.length ? local : ''}To add something later, such as a website, come back and choose only that.`;
 }
 
 $('#routes').addEventListener('change', steps);
