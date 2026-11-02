@@ -40,7 +40,7 @@ Each check is a short workflow file in the package that calls a shared workflow 
 | `secret-scan` | Catches passwords and tokens committed by mistake | Yes |
 | `coverage` | Measures how much code the tests run | Yes |
 | `no-suggests` | Checks the package works without its optional packages | No |
-| `off-cran-tests` | Runs the tests CRAN skips: browser, snapshot and extended test files, with Chrome | No |
+| `full-tests` | Runs every test, including the browser, snapshot and extended tests CRAN skips, with Chrome | No |
 | `extended-tests` | A weekly full check on Mac and Windows | No |
 | `pkgdown` | Builds and publishes a package website | When a website is chosen |
 

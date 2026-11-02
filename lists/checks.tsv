@@ -6,5 +6,5 @@ lint	lint	Check style, docs in sync and spelling	yes	yes	pr,push,manual	0 5 * * 
 no_suggests	no-suggests	Check the package works without its optional packages	yes	yes	pr,push,manual	0 5 * * 1		
 secret_scan	secret-scan	Catch passwords and tokens committed by mistake	yes	yes	pr,push	0 5 * * 1		
 coverage	coverage	Measure how much code your tests run	yes	yes	pr,push,manual	0 5 * * 1		
-off_cran_tests	off-cran-tests	Run the tests CRAN skips: browser, snapshot and extended test files, with Chrome	yes	yes	pr,push,schedule,manual	0 5 * * 1	ubuntu/release, ubuntu/4.1	ubuntu/release
+full_tests	full-tests	Run every test, including the browser, snapshot and extended tests CRAN skips, with Chrome	yes	yes	pr,push,schedule,manual	0 5 * * 1	ubuntu/release, ubuntu/4.1	ubuntu/release
 extended_tests	extended-tests	On a schedule, run a full check on Mac and Windows, including any detailed tests you have marked	yes	yes	schedule,manual	0 5 * * 1	macos/release, windows/release, windows/4.1	ubuntu/release

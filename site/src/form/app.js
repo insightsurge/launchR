@@ -15,14 +15,14 @@ const CHECKS = [
   ['secret_scan', 'secret-scan', 'Catches passwords and tokens committed by mistake.'],
   ['coverage', 'coverage', 'Measures how much of your code the tests run.'],
   ['no_suggests', 'no-suggests', 'Checks the package works without its optional packages.'],
-  ['off_cran_tests', 'off-cran-tests', 'Runs the tests CRAN skips: test files ending in -browser, -snap or -extended. Runs on Linux.'],
+  ['full_tests', 'full-tests', 'Runs every test, including the ones CRAN skips: test files ending in -browser, -snap or -extended. Runs on Linux.'],
   ['extended_tests', 'extended-tests', 'Every week, a full check on Mac and Windows, including test files ending in -extended.'],
 ];
 const SYSTEMS = [['ubuntu', 'Linux'], ['windows', 'Windows'], ['macos', 'Mac']];
 const RS = [['release', 'release'], ['oldrel-1', 'oldrel-1'], ['devel', 'devel']];
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const WORDS = ['No', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'All seven'];
-const WEEKLY = ['r_cmd_check', 'off_cran_tests', 'extended_tests'];
+const WEEKLY = ['r_cmd_check', 'full_tests', 'extended_tests'];
 const BASE_PACKAGES = ['R', 'base', 'compiler', 'datasets', 'graphics', 'grDevices', 'grid', 'methods', 'parallel', 'splines', 'stats', 'stats4', 'tcltk', 'tools', 'utils'];
 const PARTS = [['ci', 'CI checks'], ['website', 'Website'], ['github', 'Issue forms, labels and checklists']];
 
@@ -63,7 +63,7 @@ const head3 = (text, why) => `<h4>${text}${Array.isArray(why) ? bullets(why) : w
 function paint() {
   if (!S) return;
   const weekly = WEEKLY.some((k) => S.checks[k]);
-  const extra = S.checks.off_cran_tests || S.checks.extended_tests;
+  const extra = S.checks.full_tests || S.checks.extended_tests;
   $('#bodyCi').innerHTML = `
     ${head3('Checks to run', CHECKS.map(([, n, w]) => [n, w]))}
     <div class="ticks">${CHECKS.map(([k, name]) => pill(`data-check="${k}"`, `<code>${name}</code>`, S.checks[k])).join('')}</div>
@@ -241,7 +241,7 @@ function choices() {
     ...row,
     on: S.checks[key],
     cron: cron(),
-    platforms: key === 'r_cmd_check' || (S.samePlatforms && (key === 'off_cran_tests' || key === 'extended_tests')) ? chosen : null,
+    platforms: key === 'r_cmd_check' || (S.samePlatforms && (key === 'full_tests' || key === 'extended_tests')) ? chosen : null,
   }]));
   const email = mode === 'new' ? v('email') : '';
   return {

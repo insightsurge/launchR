@@ -10,7 +10,7 @@ and where it runs, so it stays short. Nothing needs installing: GitHub runs thes
 | `no-suggests.yaml` | Checks the package works without its optional packages |
 | `secret-scan.yaml` | Catches passwords and tokens committed by mistake |
 | `coverage.yaml` | Measures how much code your tests run |
-| `off-cran-tests.yaml` | Runs the tests CRAN skips: browser, snapshot and extended test files, with Chrome |
+| `full-tests.yaml` | Runs every test, including the browser, snapshot and extended tests CRAN skips, with Chrome |
 | `extended-tests.yaml` | A full check on other systems, including any detailed tests you have marked |
 
 Your package may not have all of these: a missing file means that check is off.
@@ -28,13 +28,13 @@ Scheduled runs use the default branch only, and GitHub pauses them on public rep
 ## Test file kinds
 
 Most tests go in `tests/testthat/test-<name>.R` and run everywhere. Three kinds of file, named by their ending, run
-only where they can:
+only where they can. `full-tests` runs every kind, and fails if any test skips there:
 
 | File name ends in | What it holds | Runs in |
 | --- | --- | --- |
-| `-browser.R` | Tests that drive a browser (shinytest2, chromote) | `off-cran-tests` |
-| `-snap.R` | Snapshot tests (`expect_snapshot()`) | `off-cran-tests` |
-| `-extended.R` | Slow or detailed tests | `off-cran-tests`, `coverage`, `extended-tests` |
+| `-browser.R` | Tests that drive a browser (shinytest2, chromote) | `full-tests` |
+| `-snap.R` | Snapshot tests (`expect_snapshot()`) | `full-tests` |
+| `-extended.R` | Slow or detailed tests | `full-tests`, `coverage`, `extended-tests` |
 
 CRAN and `r-cmd-check` skip all three. Snapshot tests skip on CRAN by themselves. Start each browser or extended file
 with a skip, so it skips there too:

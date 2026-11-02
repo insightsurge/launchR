@@ -1,7 +1,7 @@
-# Writes the off-CRAN tests' part of the pull request's CI report, for one R version: the counts (with the tests in
-# browser, snapshot and extended files), the failing and skipped tests, the slowest test files and the files that got
-# slower than on main. Sourced by off-cran-tests.yaml's test step, which runs the tests with file_time_reporter and
-# calls write_off_cran_report(results, reporter$seconds(), reporter$elapsed()) before it decides whether the job
+# Writes the full tests' part of the pull request's CI report, for one R version: the counts (with the tests in
+# plain, browser, snapshot and extended files), the failing and skipped tests, the slowest test files and the files that got
+# slower than on main. Sourced by full-tests.yaml's test step, which runs the tests with file_time_reporter and
+# calls write_full_tests_report(results, reporter$seconds(), reporter$elapsed()) before it decides whether the job
 # fails.
 # Environment: R_LABEL (the matrix's R version), OUT (the Markdown part), TIMINGS (a CSV of seconds per file, kept
 # from main runs), BASELINE_DIR, BASELINE_FOUND and BASELINE_SHA (main's timings, from main-baseline).
@@ -97,7 +97,7 @@ details <- function(summary, body, open = FALSE) {
 }
 
 # `silent`: the selected files that reported no test, which skipped as a whole (a file skipped from its first line).
-write_off_cran_report <- function(results, timings, elapsed = NA_real_, silent = character()) {
+write_full_tests_report <- function(results, timings, elapsed = NA_real_, silent = character()) {
   label <- Sys.getenv("R_LABEL")
   frame <- as.data.frame(results)
   utils::write.csv(timings, Sys.getenv("TIMINGS"), row.names = FALSE)
@@ -106,15 +106,15 @@ write_off_cran_report <- function(results, timings, elapsed = NA_real_, silent =
   skipped <- problem_rows(results, "expectation_skip")
   passed <- nrow(frame) - nrow(failed) - nrow(skipped)
   ok <- nrow(failed) == 0 && nrow(skipped) == 0 && length(silent) == 0
-  # The tests in each kind of file: test-<name>-browser.R, -snap.R and -extended.R.
+  # The tests in each kind of file: test-<name>.R, and test-<name>-browser.R, -snap.R and -extended.R.
   kind <- factor(
-    sub("^.*-(browser|snap|extended)[.]R$", "\\1", frame$file),
-    levels = c("browser", "snap", "extended"),
-    labels = c("browser", "snapshot", "extended")
+    ifelse(grepl("-(browser|snap|extended)[.]R$", frame$file), sub("^.*-(browser|snap|extended)[.]R$", "\\1", frame$file), "plain"),
+    levels = c("plain", "browser", "snap", "extended"),
+    labels = c("plain", "browser", "snapshot", "extended")
   )
   kinds <- table(kind)
   first <- sprintf(
-    "%s **Off-CRAN tests, R %s:** %d passed · %d failed · %d skipped%s · %s%s",
+    "%s **Full tests, R %s:** %d passed · %d failed · %d skipped%s · %s%s",
     if (ok) "\u2705" else "\u274c",
     label,
     passed,

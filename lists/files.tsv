@@ -18,7 +18,7 @@ path	part	check	release
 .github/workflows/README.md	ci		any
 .github/workflows/coverage.yaml	ci	coverage	any
 .github/workflows/extended-tests.yaml	ci	extended-tests	any
-.github/workflows/off-cran-tests.yaml	ci	off-cran-tests	any
+.github/workflows/full-tests.yaml	ci	full-tests	any
 .github/workflows/github-setup.yaml	github		any
 .github/workflows/lint.yaml	ci	lint	any
 .github/workflows/no-suggests.yaml	ci	no-suggests	any
