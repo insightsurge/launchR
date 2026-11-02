@@ -221,7 +221,7 @@ jobs:
 
       # The test times pull requests are compared with.
       - name: Keep main's test times
-        if: success() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: success() && github.event_name == 'push' && github.ref_name == github.event.repository.default_branch
         uses: actions/upload-artifact@v7
         with:
           name: full-tests-timings-${{ matrix.config.r }}

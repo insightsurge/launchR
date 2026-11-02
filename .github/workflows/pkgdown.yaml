@@ -12,8 +12,9 @@ permissions:
 
 jobs:
   pkgdown:
-    # A run started by hand on another branch does nothing: the site is built from main only.
-    if: github.ref == 'refs/heads/main'
+    # A run started by hand on another branch does nothing: the site is built from the default branch only (main or
+    # master).
+    if: github.ref_name == github.event.repository.default_branch
     runs-on: ubuntu-26.04  # pinned, like the repo's other workflows
     timeout-minutes: 45  # renders the site, then deploys (1-2 min), plus room for a slow package mirror (installing R
     # alone once took 22 min here)

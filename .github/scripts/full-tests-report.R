@@ -147,7 +147,7 @@ write_full_tests_report <- function(results, timings, elapsed = NA_real_, silent
   timing_rows <- sprintf("| `%s` | %s |", slowest$file, duration(slowest$seconds))
   timing_body <- c("| File | Time |", "| :--- | ---: |", timing_rows)
   if (!identical(Sys.getenv("BASELINE_FOUND"), "true") && identical(Sys.getenv("GITHUB_EVENT_NAME"), "pull_request")) {
-    timing_body <- c(timing_body, "", "_No test times from `main` to compare with._")
+    timing_body <- c(timing_body, "", "_No test times from the default branch to compare with._")
   }
   if (identical(Sys.getenv("BASELINE_FOUND"), "true")) {
     base_file <- file.path(Sys.getenv("BASELINE_DIR"), basename(Sys.getenv("TIMINGS")))
@@ -163,12 +163,12 @@ write_full_tests_report <- function(results, timings, elapsed = NA_real_, silent
         timing_body,
         "",
         if (nrow(slower) == 0) {
-          sprintf("No file is much slower than on `main` at %s.", sha)
+          sprintf("No file is much slower than on the default branch at %s.", sha)
         } else {
           c(
-            sprintf("Slower than on `main` at %s:", sha),
+            sprintf("Slower than on the default branch at %s:", sha),
             "",
-            "| File | Here | `main` |",
+            "| File | Here | Default branch |",
             "| :--- | ---: | ---: |",
             sprintf("| `%s` | %s | %s |", slower$file, duration(slower$seconds), duration(slower$seconds_main))
           )
