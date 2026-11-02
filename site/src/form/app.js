@@ -1,4 +1,4 @@
-// The form: four questions, Modify, someone with a package already, and what to do after the download.
+// The form: five questions, Modify, someone with a package already, and what to do after the download.
 // Choices live here; engine.js turns them into files, the same way the CLI does.
 import JSZip from 'jszip';
 import { countZip } from '../consent.js';
@@ -50,7 +50,7 @@ function recommended() {
   return {
     checks: Object.fromEntries(lists.checks.map((row) => [row.key, row.starter === 'yes' && !(row.key === 'extended_tests' && plan() === 'd')])),
     matrix: Object.fromEntries(SYSTEMS.flatMap(([s]) => RS.map(([r]) => [`${s}/${r}`, start.includes(`${s}/${r}`)]))),
-    minR: '', samePlatforms: false, day: 'Monday', time: '05:00', website: false, github: true, owner: '', frontend: false,
+    minR: '', samePlatforms: false, day: 'Monday', time: '05:00', website: false, github: true, frontend: false,
   };
 }
 
@@ -78,10 +78,9 @@ function paint() {
       <div class="opt"><label><input type="radio" name="delivery" checked /><b>Shared</b></label>${help('Your files call the checks kept in launchR, so you get fixes and updates by themselves.')}</div>
       <div class="opt"><label class="soon"><input type="radio" name="delivery" disabled /><b>Snapshot</b></label><span class="tag">Coming soon</span>${help("The checks are copied into your repository and frozen, so nothing changes under a validated process. When a new launchR version is released, you won't get any updates, security fixes included.")}</div>
     </div>`;
-  $('#bodySite').innerHTML = `${sw('website', 'Add a website', 'A pkgdown site published to GitHub Pages. It needs your GitHub name below. A private repository needs a paid GitHub plan for this.', S.website)}
+  $('#bodySite').innerHTML = `${sw('website', 'Add a website', 'A pkgdown site published to GitHub Pages. Its address comes from your GitHub name. A private repository needs a paid GitHub plan for this.', S.website)}
     <div class="opt soonline"><span>Navbar choices and theme colours</span><span class="tag">Coming soon</span></div>`;
   $('#bodyGit').innerHTML = `
-    <div class="field"><div class="field-head"><label for="owner">GitHub username or organisation <span class="opt-word">(optional)</span></label>${help('Fills in the links in your README and DESCRIPTION. Left empty, they show your-github-name until you edit them.')}</div><input id="owner" type="text" autocomplete="off" spellcheck="false" value="${esc(S.owner)}" /><p class="err" id="err-owner"></p></div>
     ${sw('github', 'Issue forms, labels and checklists', 'Five issue forms, a pull request template, eleven labels, and the stage checklists.', S.github)}
     <div class="opt soonline"><span>Choosing each form and label</span><span class="tag">Coming soon</span></div>`;
   $('#bodyMore').innerHTML = `${sw('frontend', 'My package ships its own JS or CSS', 'Adds browser tests and the style checks for them.', S.frontend)}
@@ -119,7 +118,6 @@ body.addEventListener('change', (e) => {
 });
 body.addEventListener('input', (e) => {
   if (e.target.id === 'minR') e.target.value = e.target.value.replace(/[^0-9.]/g, '').replace(/^(\d+\.\d*).*/, '$1').slice(0, 4);
-  if (e.target.id === 'owner') { S.owner = e.target.value.trim(); $('#err-owner').textContent = ''; }
 });
 
 function minRProblem() {
@@ -199,6 +197,7 @@ function valid() {
     ['first', personProblem(v('first'), 'first')],
     ['last', personProblem(v('last'), 'last')],
     ['email', !v('email') || /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v('email')) ? '' : 'That email looks incomplete, or leave it empty.'],
+    ['owner', v('owner') ? ownerProblem(v('owner')) : 'Give your GitHub user or organisation name, such as insightsurge.'],
   ];
   rules.forEach(([id, text]) => put(id, text));
   const bad = rules.find(([, text]) => text);
@@ -211,12 +210,10 @@ function modifyValid() {
   if (minRProblem()) { open(0); $('#minR').focus(); return false; }
   if (WEEKLY.some((k) => S.checks[k]) && timeProblem()) { open(0); $('#time').focus(); return false; }
   if (S.checks.r_cmd_check && !platforms()) { open(0); $('#minRNote').textContent = 'Choose at least one R version for R CMD check.'; $('[data-matrix]').focus(); return false; }
-  const owner = mode !== 'new' ? '' : ownerProblem(S.owner) || (S.website && !S.owner ? 'A website needs your GitHub name, so it has an address.' : '');
-  if (owner) { open(2); $('#err-owner').textContent = owner; $('#owner').focus(); return false; }
   return true;
 }
 
-['pkg', 'what', 'first', 'last', 'email'].forEach((id) => $(`#${id}`).addEventListener('input', () => put(id, '')));
+['pkg', 'what', 'first', 'last', 'email', 'owner'].forEach((id) => $(`#${id}`).addEventListener('input', () => put(id, '')));
 ['exPkg', 'exOwner'].forEach((id) => $(`#${id}`).addEventListener('input', () => put(id, '')));
 
 function cron() {
@@ -245,7 +242,7 @@ function choices() {
   }]));
   const email = mode === 'new' ? v('email') : '';
   return {
-    ...base, parts, checks, visibility: visibility(), release: release(), owner: mode === 'new' ? S.owner : v('exOwner'),
+    ...base, parts, checks, visibility: visibility(), release: release(), owner: mode === 'new' ? v('owner') : v('exOwner'),
     package: pkg(), title: mode === 'new' ? v('what').replace(/[.\s]+$/, '') : '', given: v('first'), family: v('last'),
     email: email || 'your.email@example.com',
   };

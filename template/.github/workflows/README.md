@@ -10,7 +10,7 @@ and where it runs, so it stays short. Nothing needs installing: GitHub runs thes
 | `no-suggests.yaml` | Checks the package works without its optional packages |
 | `secret-scan.yaml` | Catches passwords and tokens committed by mistake |
 | `coverage.yaml` | Measures how much code your tests run |
-| `full-tests.yaml` | Runs every test, including the browser, snapshot and extended tests CRAN skips, with Chrome |
+| `full-tests.yaml` | Runs every test, including the browser, snapshot and extended tests CRAN skips, with Chrome for browser tests |
 | `extended-tests.yaml` | A full check on other systems, including any detailed tests you have marked |
 
 Your package may not have all of these: a missing file means that check is off.

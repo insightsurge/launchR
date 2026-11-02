@@ -12,7 +12,7 @@ run() { name=$1; shift
 }
 run allprivate --owner sample-org
 run allpublic --owner sample-org --public
-run noowner
+run publicstarter --owner sample-org --public --preset starter
 run internalpkg --owner sample-org --internal
 run starterpkg --owner sample-org --preset starter
 exit $fails

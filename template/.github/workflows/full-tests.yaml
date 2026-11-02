@@ -1,4 +1,4 @@
-# Runs every test, including the browser, snapshot and extended tests CRAN skips, with Chrome.
+# Runs every test, including the browser, snapshot and extended tests CRAN skips, with Chrome for browser tests.
 # How this file works: see README.md in this folder.
 name: full-tests
 

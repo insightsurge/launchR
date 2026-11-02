@@ -41,3 +41,15 @@ check_package_name <- function(name) {
   }
   ""
 }
+
+# The GitHub user or organisation: it fills URL, BugReports and the help page's links, so use_github() finds nothing to
+# add. The same rule as the site's form.
+check_owner <- function(owner) {
+  if (!nzchar(owner)) {
+    return("Give your GitHub user or organisation name, such as insightsurge.")
+  }
+  if (!grepl("^[A-Za-z0-9][A-Za-z0-9-]{0,38}$", owner)) {
+    return("Use only your GitHub name, such as insightsurge, not a link.")
+  }
+  ""
+}

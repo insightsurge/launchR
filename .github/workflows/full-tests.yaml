@@ -1,4 +1,5 @@
-# Runs every test file, with NOT_CRAN=true, EXTENDED_TESTS=true and Chrome, on R release and R 4.1, so nothing skips:
+# Runs every test file, with NOT_CRAN=true, EXTENDED_TESTS=true and, when there are browser tests, Chrome, on R release
+# and R 4.1, so nothing skips:
 # the plain tests and the three kinds CRAN skips, the browser tests (shinytest2 and chromote, in
 # tests/testthat/test-*-browser.R), the snapshot tests (test-*-snap.R) and the slow or detailed tests (test-*-extended.R).
 # R CMD check skips those three, as CRAN does; coverage.yaml and extended-tests.yaml run the extended tests too. One line per test file as it finishes shows the
@@ -115,7 +116,7 @@ jobs:
           artifact: full-tests-timings-${{ matrix.config.r }}
           path: ${{ runner.temp }}/full-tests-baseline
 
-      - name: Run the tests with Chrome
+      - name: Run the tests
         if: steps.changes.outputs.r == 'true'
         shell: Rscript {0}
         env:
@@ -126,9 +127,12 @@ jobs:
           BASELINE_FOUND: ${{ steps.baseline.outputs.found }}
           BASELINE_SHA: ${{ steps.baseline.outputs.sha }}
         run: |
-          chrome <- chromote::find_chrome()
-          if (is.null(chrome)) stop("No Chrome on this runner: the browser tests would all skip.", call. = FALSE)
-          message("Chrome: ", system2(chrome, "--version", stdout = TRUE))
+          # Chrome only for a package with browser tests: chromote is in its Suggests then, and not otherwise.
+          if (length(list.files("tests/testthat", "^test-.*-browser[.]R$")) > 0L) {
+            chrome <- chromote::find_chrome()
+            if (is.null(chrome)) stop("No Chrome on this runner: the browser tests would all skip.", call. = FALSE)
+            message("Chrome: ", system2(chrome, "--version", stdout = TRUE))
+          }
           library(testthat)
           # The package's name from DESCRIPTION, so the workflow names no package.
           package <- read.dcf("DESCRIPTION", fields = "Package")[[1]]

@@ -276,7 +276,7 @@ step_docs <- function(uses, log) {
   common <- intersect(names(before), names(after))
   changed <- c(changed, common[before[common] != after[common]])
   if (length(changed) > 0) {
-    return(result("FAIL", paste0("document() changed ", paste(changed, collapse = ", "), ": review and commit")))
+    return(result("FAIL", paste0("document() changed ", paste(changed, collapse = ", "), ": run devtools::document(), then commit")))
   }
   result("PASS")
 }
