@@ -40,7 +40,7 @@ note() {
       exit 1
     fi
     if [ "${tests}" != "under10" ] && awk -v t="${tests}" -v l="${LIMIT_SECONDS}" 'BEGIN { exit !(t > l) }'; then
-      echo "::error::The tests took ${tests} s, over the ${LIMIT_SECONDS} s limit. Move detailed tests of an example app to a -extended.R file (tests/README.md) or make them faster."
+      echo "::error::The tests took ${tests} s, over the ${LIMIT_SECONDS} s limit. Move slow tests to a -extended.R file (.github/workflows/README.md, Test file kinds) or make them faster."
       exit 1
     fi
   fi

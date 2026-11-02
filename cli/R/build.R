@@ -29,14 +29,18 @@ placeholder_values <- function(choices) {
     bugreports_line = if (has_owner) sprintf("BugReports: https://github.com/%s/%s/issues", owner, choices$package) else "",
     chromote_line = if (frontend) "    chromote," else "",
     target_line = if (choices$release == "internal") "Config/quality-gate/target: internal" else "",
+    check_badge = if (public && has_owner && "ci" %in% choices$parts && isTRUE(choices$checks$r_cmd_check$on)) {
+      sprintf("[![R-CMD-check](%s/actions/workflows/r-cmd-check.yaml/badge.svg)](%s/actions/workflows/r-cmd-check.yaml)", repository, repository)
+    } else {
+      ""
+    },
     credit_badge = if (public) sprintf("[![Set up with launchR](https://img.shields.io/badge/set%%20up%%20with-launchR-f6ab85)](%s)\n", site_url) else "",
-    credit_line = if (public) sprintf("\nSet up with [launchR](%s).", site_url) else "",
-    js_css_tests = if (frontend) "true" else "false"
+    credit_line = if (public) sprintf("\nSet up with [launchR](%s).", site_url) else ""
   )
   for (i in seq_len(nrow(checks))) {
     key <- checks$key[i]
     check <- choices$checks[[key]]
-    for (event in c("pr", "push", "weekly", "manual")) {
+    for (event in c("pr", "push", "schedule", "manual")) {
       values[[sprintf("c_%s_%s", key, event)]] <- if (event %in% check$events) "" else "# "
     }
     values[[paste0("cron_", key)]] <- check$cron

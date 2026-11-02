@@ -6,7 +6,7 @@ name: Set up this repository
 on:
   workflow_dispatch:
     inputs:
-      dry_run:
+      dry-run:
         description: Only show what would change
         type: boolean
         default: true
@@ -20,4 +20,4 @@ jobs:
   setup:
     uses: insightsurge/launchR/.github/workflows/github-setup.yaml@v{{kit_version}}
     with:
-      dry_run: ${{ inputs.dry_run }}
+      dry-run: ${{ inputs.dry-run }}

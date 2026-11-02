@@ -1,6 +1,6 @@
 # Values the CLI and the app share.
 key	value
-kit_version	0.0.3
+kit_version	0.0.4
 site_url	https://launch-r.web.app
-preset	everything
+preset	starter
 branches	main

@@ -27,6 +27,6 @@
 ^codecov\.yml$
 ^tests/README\.md$
 ^site$
-^\.kit$
+^\.launchr$
 ^\.gitattributes$
 ^README\.Rmd$

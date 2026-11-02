@@ -21,7 +21,7 @@ badges	After public	Launch	manual		any		README badges
 codecov	After public	Launch	manual		any	.github/workflows/coverage.yaml	Codecov set up	Codecov	https://app.codecov.io/gh/{repo}	add the repository and its upload token as a secret
 ci-main-cran	Before CRAN	CI	ci		cran	.github/workflows	CI is green on the default branch			
 timing	Before CRAN	Checks	manual		cran		Time the tests with CRAN's settings			
-gate-full	Before CRAN	Checks	manual		cran		The gate's `full` mode passes			
+gate-full	Before CRAN	Checks	manual		cran		The quality gate's `full` mode passes (`.github/workflows/README.md`, "Run the checks on your computer")			
 urls	Before CRAN	Checks	manual		cran		urlchecker and spelling report nothing			
 builders	Before CRAN	Checks	manual		cran		win-builder and mac-builder are clean			
 description	Before CRAN	Wording	placeholder	DESCRIPTION|First version	cran		Description says what only this package does			
@@ -30,6 +30,6 @@ on-cran	Before CRAN	Submission	cran		cran		The package is on CRAN
 cran-badges	After acceptance	Launch	manual		cran		CRAN status and downloads badges			
 runiverse	After acceptance	Launch	manual		cran		R-universe set up			
 release	After acceptance	Launch	manual		cran		GitHub release published			
-kit-news	Next release	Release	manual		any		Look at what's new in the kit			
+launchr-news	Next release	Release	manual		any		Look at what's new in launchR			
 news	Next release	Release	manual		any		NEWS.md is up to date			
 version	Next release	Release	manual		any		Version set with `usethis::use_version()`			

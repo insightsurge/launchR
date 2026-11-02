@@ -4,11 +4,6 @@
 # request's CI report (.github/pr-report.json).
 on:
   workflow_call:
-    inputs:
-      js-css-tests:
-        description: Also check the style of the JavaScript and CSS in inst/ with Biome
-        type: boolean
-        default: false
 
 name: lint
 
@@ -25,27 +20,28 @@ jobs:
 
     steps:
       - uses: actions/checkout@v7
-      # kit-fetch-start
-      - name: Fetch the kit at this workflow's version
+      # launchr-fetch-start
+      - name: Fetch launchR at this workflow's version
         uses: actions/checkout@v7
         with:
           repository: insightsurge/launchR
           ref: ${{ job.workflow_sha }}
-          path: .kit
-      # kit-fetch-end
+          path: .launchr
+      # launchr-fetch-end
 
       - uses: posit-dev/setup-air@cf390573ff4fe0f198f35df3a642b1409328d859 # v1.0.1
         with:
           version: "0.11.0"   # keep in step with the local install (air --version)
 
-      # Biome's version comes from the package's own biome.json, so a kit update can't clash with it.
+      # Biome runs when inst/ has JS or CSS and the package has a biome.json, as in the gate. Its version comes from that
+      # biome.json, so a launchR update can't clash with it.
       - name: Read Biome's version
         id: biome
-        if: inputs.js-css-tests
+        if: hashFiles('biome.json') != '' && hashFiles('inst/**/*.js', 'inst/**/*.css') != ''
         run: echo "version=$(sed -n 's|.*schemas/\([0-9.]*\)/schema.json.*|\1|p' biome.json)" >> "$GITHUB_OUTPUT"
 
       - uses: biomejs/setup-biome@4c91541eaada48f67d7dbd7833600ce162b68f51 # v2.7.1
-        if: inputs.js-css-tests
+        if: hashFiles('biome.json') != '' && hashFiles('inst/**/*.js', 'inst/**/*.css') != ''
         with:
           version: ${{ steps.biome.outputs.version }}
 
@@ -61,7 +57,7 @@ jobs:
       - name: Gate (lint mode)
         id: gate
         # The run folder in a known place, so the report can read the gate's results (gate.json).
-        run: Rscript .kit/quality-gate/quality-gate.R lint --out "${RUNNER_TEMP}/gate"
+        run: Rscript .launchr/quality-gate/quality-gate.R lint --out "${RUNNER_TEMP}/gate"
 
       - name: Write the lint report
         if: always()
@@ -100,7 +96,7 @@ jobs:
 
       - name: Keep the lint report
         if: always()
-        uses: ./.kit/.github/actions/pr-report-part
+        uses: ./.launchr/.github/actions/pr-report-part
         with:
           name: style-1-lint
           file: ${{ runner.temp }}/lint-part.md
@@ -126,18 +122,18 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          sparse-checkout: |  # .kit is here only after eject
+          sparse-checkout: |  # .launchr is here only after eject
             .github
-            .kit
+            .launchr
           persist-credentials: false
-      # kit-fetch-start
-      - name: Fetch the kit at this workflow's version
+      # launchr-fetch-start
+      - name: Fetch launchR at this workflow's version
         uses: actions/checkout@v7
         with:
           repository: insightsurge/launchR
           ref: ${{ job.workflow_sha }}
-          path: .kit
-      # kit-fetch-end
-      - uses: ./.kit/.github/actions/pr-report-comment
+          path: .launchr
+      # launchr-fetch-end
+      - uses: ./.launchr/.github/actions/pr-report-comment
         with:
-          config: .kit/.github/pr-report.json
+          config: .launchr/.github/pr-report.json

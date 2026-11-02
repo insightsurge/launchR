@@ -9,7 +9,7 @@
 #   full            everything: fast steps, tests, coverage, new lines, CRAN-like check with tests, built tarball and
 #                   the check without Suggests
 #   lint            the quick static steps only: tools, style, docs in sync, \value, spelling
-#   nosuggests      R CMD check with only the hard dependencies on the library path (CI's check-no-suggests job)
+#   nosuggests      R CMD check with only the hard dependencies on the library path (CI's no-suggests job)
 #
 # In `tests` and `full` the suite runs ONCE, under covr, and the same run gives the test results and the coverage
 # (a package whose tests/ is not the standard testthat layout falls back to a plain run plus a separate covr run). If
@@ -60,6 +60,9 @@
 
 modes <- c("fast", "tests", "full", "lint", "nosuggests")
 
+# The gate's settings are Config/quality-gate/* fields in DESCRIPTION: coverage, tarball-mb, target, extra-dirs.
+# Config/launchR/version is not the gate's: it records which launchR version set the package up.
+
 # TRUE when the package says it won't go to CRAN (Config/quality-gate/target: internal).
 gate_internal <- function() {
   identical(unname(read.dcf("DESCRIPTION", fields = "Config/quality-gate/target")[[1]]), "internal")
@@ -68,9 +71,7 @@ gate_internal <- function() {
 setting <- function(name, default) {
   checkmate::assert_string(name)
   checkmate::assert_string(default)
-  fields <- paste0(c("Config/quality-gate/", "Config/cran-gate/"), name)  # the old field name still works
-  values <- read.dcf("DESCRIPTION", fields = fields)
-  value <- values[!is.na(values)][1]
+  value <- read.dcf("DESCRIPTION", fields = paste0("Config/quality-gate/", name))[[1]]
   if (is.na(value)) default else trimws(value)
 }
 

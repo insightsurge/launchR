@@ -75,18 +75,18 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 2  # a pull request's merge commit and its base, for r-changes.sh
-      # kit-fetch-start
-      - name: Fetch the kit at this workflow's version
+      # launchr-fetch-start
+      - name: Fetch launchR at this workflow's version
         uses: actions/checkout@v7
         with:
           repository: insightsurge/launchR
           ref: ${{ job.workflow_sha }}
-          path: .kit
-      # kit-fetch-end
+          path: .launchr
+      # launchr-fetch-end
 
       - name: Find out whether the R steps are needed
         id: changes
-        run: bash .kit/.github/scripts/r-changes.sh
+        run: bash .launchr/.github/scripts/r-changes.sh
 
       - uses: r-lib/actions/setup-pandoc@v2
         if: steps.changes.outputs.r == 'true'
@@ -109,9 +109,9 @@ jobs:
       - name: Get main's test times (pull requests)
         id: baseline
         if: github.event_name == 'pull_request' && steps.changes.outputs.r == 'true'
-        uses: ./.kit/.github/actions/main-baseline
+        uses: ./.launchr/.github/actions/main-baseline
         with:
-          workflow: full-tests.yaml
+          workflow: off-cran-tests.yaml
           artifact: off-cran-timings-${{ matrix.config.r }}
           path: ${{ runner.temp }}/off-cran-baseline
 
@@ -133,7 +133,7 @@ jobs:
           # The package's name from DESCRIPTION, so the workflow names no package.
           package <- read.dcf("DESCRIPTION", fields = "Package")[[1]]
           library(package, character.only = TRUE)
-          # The kinds of test file CRAN skips (tests/README.md); test-helper-layout.R keeps them apart.
+          # The kinds of test file CRAN skips (the package's .github/workflows/README.md, "Test file kinds").
           files <- list.files("tests/testthat", "^test-(.*-)?(browser|snap|extended)[.]R$")
           message(length(files), " files with browser, snapshot or extended tests: ", paste(files, collapse = ", "))
           # A package need not have any: nothing to run isn't a failure.
@@ -147,7 +147,7 @@ jobs:
           }
           # A line per file when it finishes, with its time, and a status line when one starts (update_interval = Inf:
           # no progress spinner in between); failures in full. The reporter also keeps each file's time for the report.
-          source(".kit/.github/scripts/off-cran-report.R")
+          source(".launchr/.github/scripts/off-cran-report.R")
           reporter <- file_time_reporter$new(show_praise = FALSE)
           reporter$update_interval <- Inf  # testthat's parallel reporter sets 0.05 in its constructor
           results <- testthat::test_dir(
@@ -211,7 +211,7 @@ jobs:
 
       - name: Keep the report
         if: always()
-        uses: ./.kit/.github/actions/pr-report-part
+        uses: ./.launchr/.github/actions/pr-report-part
         with:
           name: tests-2-off-cran-${{ matrix.config.r }}
           file: ${{ runner.temp }}/off-cran-part.md
@@ -263,18 +263,18 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          sparse-checkout: |  # .kit is here only after eject
+          sparse-checkout: |  # .launchr is here only after eject
             .github
-            .kit
+            .launchr
           persist-credentials: false
-      # kit-fetch-start
-      - name: Fetch the kit at this workflow's version
+      # launchr-fetch-start
+      - name: Fetch launchR at this workflow's version
         uses: actions/checkout@v7
         with:
           repository: insightsurge/launchR
           ref: ${{ job.workflow_sha }}
-          path: .kit
-      # kit-fetch-end
-      - uses: ./.kit/.github/actions/pr-report-comment
+          path: .launchr
+      # launchr-fetch-end
+      - uses: ./.launchr/.github/actions/pr-report-comment
         with:
-          config: .kit/.github/pr-report.json
+          config: .launchr/.github/pr-report.json

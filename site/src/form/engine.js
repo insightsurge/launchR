@@ -96,13 +96,15 @@ export function placeholderValues(choices, lists) {
     bugreports_line: hasOwner ? `BugReports: ${repository}/issues` : '',
     chromote_line: frontend ? '    chromote,' : '',
     target_line: choices.release === 'internal' ? 'Config/quality-gate/target: internal' : '',
+    check_badge: isPublic && hasOwner && choices.parts.includes('ci') && choices.checks.r_cmd_check?.on
+      ? `[![R-CMD-check](${repository}/actions/workflows/r-cmd-check.yaml/badge.svg)](${repository}/actions/workflows/r-cmd-check.yaml)`
+      : '',
     credit_badge: isPublic ? `[![Set up with launchR](https://img.shields.io/badge/set%20up%20with-launchR-f6ab85)](${siteUrl})\n` : '',
     credit_line: isPublic ? `\nSet up with [launchR](${siteUrl}).` : '',
-    js_css_tests: frontend ? 'true' : 'false',
   };
   for (const row of lists.checks) {
     const check = choices.checks[row.key];
-    for (const event of ['pr', 'push', 'weekly', 'manual']) {
+    for (const event of ['pr', 'push', 'schedule', 'manual']) {
       values[`c_${row.key}_${event}`] = check.events.includes(event) ? '' : '# ';
     }
     values[`cron_${row.key}`] = check.cron;

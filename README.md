@@ -5,7 +5,7 @@ in your package, with the checks themselves kept here.
 
 | Folder | What it holds |
 | --- | --- |
-| `cli/` | The command line: `kit.R`, with the work in functions under `R/` |
+| `cli/` | The command line: `launchr.R`, with the work in functions under `R/` |
 | `site/` | The Astro app: landing page and form. The form's logic is in `src/form/` |
 | `template/` | The package files, with `{{placeholders}}` |
 | `lists/` | Tab-separated lists read by both R and the app |
@@ -21,7 +21,7 @@ npm --prefix site run dev
 ```
 
 ```bash
-Rscript cli/kit.R new mypkg
+Rscript cli/launchr.R new mypkg
 ```
 
 ## Publish the site

@@ -1,10 +1,10 @@
-# The one place that finds the kit's files: a clone first, an installed package second.
+# The one place that finds launchR's files: a clone first, an installed package second.
 kit_path <- function(...) {
   root <- getOption("kit.root")
   if (!is.null(root)) {
     return(file.path(root, ...))
   }
-  system.file(..., package = "rpkgkit", mustWork = TRUE)
+  system.file(..., package = "launchR", mustWork = TRUE)
 }
 
 read_list <- function(name) {

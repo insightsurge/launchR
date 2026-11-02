@@ -7,13 +7,13 @@
 on:
   workflow_call:
 
-name: check-no-suggests
+name: no-suggests
 
 permissions:
   contents: read  # the most this workflow can use; a job that needs more asks for it itself
 
 jobs:
-  check-no-suggests:
+  no-suggests:
     runs-on: ubuntu-26.04  # pinned, like the repo's other workflows
     timeout-minutes: 90  # it installs its packages without a cache, so a slow package mirror makes it long; usually
     # 1-3 min
@@ -26,18 +26,18 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 2  # a pull request's merge commit and its base, for r-changes.sh
-      # kit-fetch-start
-      - name: Fetch the kit at this workflow's version
+      # launchr-fetch-start
+      - name: Fetch launchR at this workflow's version
         uses: actions/checkout@v7
         with:
           repository: insightsurge/launchR
           ref: ${{ job.workflow_sha }}
-          path: .kit
-      # kit-fetch-end
+          path: .launchr
+      # launchr-fetch-end
 
       - name: Find out whether the R steps are needed
         id: changes
-        run: bash .kit/.github/scripts/r-changes.sh
+        run: bash .launchr/.github/scripts/r-changes.sh
 
       - uses: r-lib/actions/setup-pandoc@v2
         if: steps.changes.outputs.r == 'true'
@@ -51,7 +51,7 @@ jobs:
         if: steps.changes.outputs.r == 'true'
         with:
           dependencies: '"hard"'
-          # A fresh library each time (decided 2026-10-23); the gate hides what the check doesn't need anyway.
+          # A fresh library each time; the gate hides what the check doesn't need anyway.
           cache: false
           extra-packages: |
             any::rcmdcheck
@@ -70,7 +70,7 @@ jobs:
           # The whole test output when a test fails, not only its last 13 lines.
           _R_CHECK_TESTS_NLINES_: 0
         run: |
-          Rscript .kit/quality-gate/quality-gate.R nosuggests | tee "${RUNNER_TEMP}/gate.txt"
+          Rscript .launchr/quality-gate/quality-gate.R nosuggests | tee "${RUNNER_TEMP}/gate.txt"
           if grep -q "^SKIP nosuggests" "${RUNNER_TEMP}/gate.txt"; then
             echo "The no-Suggests check was skipped, so nothing was checked."
             exit 1
@@ -83,14 +83,14 @@ jobs:
           OUT: ${{ runner.temp }}/report-part.md
         run: |
           case "${STATUS}" in
-            success) echo "✅ **Without Suggests:** passed." > "${OUT}" ;;
-            cancelled) echo "⏹️ **Without Suggests:** cancelled." > "${OUT}" ;;
-            *) echo "❌ **Without Suggests:** failed (see the run's log)." > "${OUT}" ;;
+            success) echo "✅ **No Suggests:** passed." > "${OUT}" ;;
+            cancelled) echo "⏹️ **No Suggests:** cancelled." > "${OUT}" ;;
+            *) echo "❌ **No Suggests:** failed (see the run's log)." > "${OUT}" ;;
           esac
 
       - name: Keep the report
         if: always()
-        uses: ./.kit/.github/actions/pr-report-part
+        uses: ./.launchr/.github/actions/pr-report-part
         with:
           name: tests-3-no-suggests
           file: ${{ runner.temp }}/report-part.md
@@ -98,7 +98,7 @@ jobs:
   # Rewrites the pull request's CI report comment (.github/actions/pr-report-comment). Pull requests from forks and
   # from Dependabot get the job summary only: their token can't write to the pull request.
   report:
-    needs: check-no-suggests
+    needs: no-suggests
     if: >-
       always() && github.event_name == 'pull_request' &&
       github.event.pull_request.head.repo.full_name == github.repository &&
@@ -116,18 +116,18 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          sparse-checkout: |  # .kit is here only after eject
+          sparse-checkout: |  # .launchr is here only after eject
             .github
-            .kit
+            .launchr
           persist-credentials: false
-      # kit-fetch-start
-      - name: Fetch the kit at this workflow's version
+      # launchr-fetch-start
+      - name: Fetch launchR at this workflow's version
         uses: actions/checkout@v7
         with:
           repository: insightsurge/launchR
           ref: ${{ job.workflow_sha }}
-          path: .kit
-      # kit-fetch-end
-      - uses: ./.kit/.github/actions/pr-report-comment
+          path: .launchr
+      # launchr-fetch-end
+      - uses: ./.launchr/.github/actions/pr-report-comment
         with:
-          config: .kit/.github/pr-report.json
+          config: .launchr/.github/pr-report.json

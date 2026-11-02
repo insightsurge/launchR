@@ -1,4 +1,4 @@
-# Parts of a package. starter is the default for strangers; everything is the maintainer's preset and the POC's default.
+# Parts of a package. starter is the default, on the site and in the CLI; everything turns every part on.
 part	label	starter	everything	description
 skeleton	Package skeleton	yes	yes	DESCRIPTION, an example function, tests and help pages
 ci	CI	yes	yes	Checks that run on GitHub by themselves
