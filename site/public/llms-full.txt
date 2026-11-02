@@ -31,7 +31,7 @@ The command line in the repository (`Rscript cli/launchr.R new mypkg`) makes the
 
 ## Checks
 
-Each check is a short workflow file in the package that calls a shared workflow in launchR, pinned to an exact version. Dependabot proposes version updates.
+Each check is a short workflow file in the package that calls a shared workflow in launchR, pinned to an exact version. Dependabot proposes updates for new minor and major launchR versions; patch versions arrive with the next minor one.
 
 | Check | What it does | On by default |
 | --- | --- | --- |

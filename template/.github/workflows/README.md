@@ -64,7 +64,9 @@ Use `fast` instead of `full` for a quicker run. It prints one PASS or FAIL line 
 
 ## Updates
 
-Dependabot opens a pull request when launchR has a new version, and changes only the `@v...` part of these files. It
+Dependabot opens a pull request when launchR has a new minor or major version (`0.6.0`, `1.0.0`), and changes only
+the `@v...` part of these files. Patch versions (`0.6.1`) arrive with the next minor version; to take one sooner,
+change the `@v...` part yourself. Updates to other actions you add come in their own pull requests. Dependabot
 waits 3 days after a release by default; a `cooldown` block in `.github/dependabot.yml` changes that.
 
 - To decline one version, close the pull request.
@@ -75,4 +77,5 @@ Your CI keeps working on the old version either way.
 ## Leaving launchR
 
 To keep your own copy of the checks, for example if your organisation blocks outside workflows, run launchR's `eject`
-command. The checks then live in this repository and nothing depends on launchR.
+command. The checks then live in this repository and nothing depends on launchR. "Run the checks on your computer"
+above then uses the copy of the gate in `.launchr/`.

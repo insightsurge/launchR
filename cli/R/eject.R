@@ -35,6 +35,13 @@ cmd_eject <- function(args) {
     write_text(gsub(pattern, sprintf("uses: ./.github/workflows/launchr-%s.yaml", check), text), file)
     changed <- c(changed, basename(file))
   }
+  # The workflows README's local run downloads launchR's gate; point it at the package's own copy instead.
+  readme <- file.path(workflows, "README.md")
+  if (file.exists(readme)) {
+    write_text(sub(paste0("gate <- tempfile\\(fileext = \"\\.R\"\\)\ndownload\\.file\\(\"https://raw\\.githubusercontent\\.com/",
+      "insightsurge/launchR/v[0-9.]+/quality-gate/quality-gate\\.R\", gate\\)\n"),
+      "gate <- \".launchr/quality-gate/quality-gate.R\"\n", read_text(readme)), readme)
+  }
   ignore <- ".Rbuildignore"
   if (file.exists(ignore) && !any(grepl("\\.launchr", readLines(ignore, warn = FALSE)))) {
     # write_text keeps the file's \n line endings; write() would add \r\n on Windows.
