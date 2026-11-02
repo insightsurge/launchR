@@ -24,6 +24,9 @@ permissions:
 jobs:
   coverage:
     runs-on: ubuntu-26.04  # pinned, like the repo's other workflows
+    permissions:
+      actions: read  # finds the default branch's figure for a pull request (a private repository needs it)
+      contents: read
     timeout-minutes: 60  # the tests without Chrome under covr: about a minute, plus room for a slow package mirror
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}

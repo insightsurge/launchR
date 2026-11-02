@@ -54,6 +54,9 @@ jobs:
 
   tests:
     needs: platforms
+    permissions:
+      actions: read  # finds the default branch's test times for a pull request (a private repository needs it)
+      contents: read
     runs-on: ${{ matrix.config.os }}
     name: full-tests (${{ matrix.config.r }})
     timeout-minutes: 120  # room for a cold cache and a slow package mirror (R CMD check on R 4.1 once took 42 min
