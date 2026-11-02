@@ -52,7 +52,17 @@ skip_if_not(identical(Sys.getenv("EXTENDED_TESTS"), "true"))      # -extended.R 
 ## Run the checks on your computer
 
 The quality gate runs most of these checks locally: style, docs in sync, spelling, tests, coverage and R CMD check as
-CRAN runs it. From the package's folder, in R:
+CRAN runs it. It needs these packages once:
+
+```r
+install.packages(c(
+  "checkmate", "cli", "devtools", "jsonlite", "spelling", "roxygen2", "lintr",
+  "callr", "covr", "withr", "testthat", "pkgbuild", "processx", "rcmdcheck"
+))
+```
+
+The style step also needs [Air](https://posit-dev.github.io/air/), and [Biome](https://biomejs.dev) when the package
+has JS or CSS. A missing one is named in the first FAIL line. Then, from the package's folder, in R:
 
 ```r
 gate <- tempfile(fileext = ".R")

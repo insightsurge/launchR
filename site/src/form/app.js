@@ -349,13 +349,14 @@ function steps() {
   if (mode === 'existing') { existingSteps(); return; }
   const name = pkg();
   const priv = !isPublic();
-  const open = `Unzip ${code(`${name}.zip`)}, then open ${code(`${name}.Rproj`)} in RStudio, or the folder in Positron. In RStudio, choose Build, then Test Package, to see your first test pass.`;
+  const unzip = `Unzip ${code(`${name}.zip`)}, then open ${code(`${name}.Rproj`)} in RStudio, or the folder in Positron.`;
+  const testPass = 'In RStudio, choose Build, then Test Package, to see your first test pass.';
   const gh = '<a href="https://cli.github.com" target="_blank" rel="noopener">GitHub CLI</a>';
   const route = $('input[name=route]:checked').value;
   const setup = `source("https://raw.githubusercontent.com/insightsurge/launchR/v${lists.settings.kit_version}/cli/github-setup.R")`;
   const running = CHECKS.some(([k]) => S.checks[k]) ? [actions] : [];
   const list = route === 'desktop' ? [
-    open,
+    `${unzip} Install the tools once: choose Tools, then Install Packages, and install ${code('devtools')}. ${testPass}`,
     'Make a free <a href="https://github.com/signup" target="_blank" rel="noopener">GitHub account</a>, if you don\'t have one.',
     `Install <a href="https://desktop.github.com" target="_blank" rel="noopener">GitHub Desktop</a> and sign in. It brings Git with it. ${gh} is optional: your checklists show the repository settings to change by hand, and it lets the setup line tick those boxes for you.`,
     `In GitHub Desktop, choose File, then Add local repository, and pick the ${code(name)} folder. It offers to create the repository: accept.`,
@@ -363,8 +364,8 @@ function steps() {
     ...running,
     ...(S.github ? [`On GitHub, go to Actions, ${setupButton}`] : []),
   ] : [
-    open,
-    `Run these in the R console. GitHub asks you to make a token: paste it when R asks.${copy('install.packages(c("usethis", "gitcreds"))')}${copy('usethis::create_github_token()')}${copy('gitcreds::gitcreds_set()')}`,
+    `${unzip} Install the tools once, then the packages your package needs, in the R console. devtools brings usethis and testthat.${copy('install.packages(c("devtools", "gitcreds"))')}${copy('devtools::install_dev_deps()')}${testPass}`,
+    `Run these in the R console. GitHub asks you to make a token: paste it when R asks.${copy('usethis::create_github_token()')}${copy('gitcreds::gitcreds_set()')}`,
     `Put the package on GitHub.${copy('usethis::use_git()')}${copy(`usethis::use_github(private = ${priv ? 'TRUE' : 'FALSE'})`)}`,
     ...(S.github ? [
       `Install ${gh}, then sign in once from the Terminal tab next to your console.${copy('gh auth login')}`,
