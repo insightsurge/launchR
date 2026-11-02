@@ -26,9 +26,17 @@ default_choices <- function(package, preset = kit_setting("preset")) {
   )
 }
 
+# R's rules for a package name, plus a length limit and the names of R's own packages. site/src/form/engine.js has the
+# same.
 check_package_name <- function(name) {
   if (nchar(name) < 2) {
     return("Names need at least two characters.")
+  }
+  if (nchar(name) > 60) {
+    return("Keep the name under 60 characters.")
+  }
+  if (name %in% trimws(strsplit(kit_setting("base_packages"), ",")[[1]])) {
+    return(paste(name, "is part of R itself, so choose another name."))
   }
   if (!grepl("^[A-Za-z]", name)) {
     return("Names must start with a letter.")

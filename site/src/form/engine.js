@@ -20,8 +20,13 @@ export function readLists(bundle) {
   };
 }
 
-export function checkPackageName(name) {
+// R's rules for a package name, plus a length limit and the names of R's own packages. cli/R/choices.R has the same.
+export function checkPackageName(name, lists) {
   if (name.length < 2) return 'Names need at least two characters.';
+  if (name.length > 60) return 'Keep the name under 60 characters.';
+  if (lists.settings.base_packages.split(',').map((base) => base.trim()).includes(name)) {
+    return `${name} is part of R itself, so choose another name.`;
+  }
   if (!/^[A-Za-z]/.test(name)) return 'Names must start with a letter.';
   if (/[.]$/.test(name)) return "Names can't end in a dot.";
   if (!/^[A-Za-z0-9.]+$/.test(name)) return 'Names can only use letters, numbers and dots.';

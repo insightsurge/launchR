@@ -23,7 +23,6 @@ const RS = [['release', 'release'], ['oldrel-1', 'oldrel-1'], ['devel', 'devel']
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const WORDS = ['No', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'All seven'];
 const WEEKLY = ['r_cmd_check', 'full_tests', 'extended_tests'];
-const BASE_PACKAGES = ['R', 'base', 'compiler', 'datasets', 'graphics', 'grDevices', 'grid', 'methods', 'parallel', 'splines', 'stats', 'stats4', 'tcltk', 'tools', 'utils'];
 const PARTS = [['ci', 'CI checks'], ['website', 'Website'], ['github', 'Issue forms, labels and checklists']];
 
 let bundle = null;
@@ -169,9 +168,7 @@ const v = (id) => $(`#${id}`).value.trim();
 
 function nameProblem(name, empty) {
   if (!name) return empty;
-  if (name.length > 60) return 'Keep the name under 60 characters.';
-  if (BASE_PACKAGES.includes(name)) return `${name} is part of R itself, so choose another name.`;
-  return checkPackageName(name);
+  return checkPackageName(name, lists);
 }
 
 function titleProblem(title) {
