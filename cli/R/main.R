@@ -86,8 +86,8 @@ cmd_new <- function(args) {
   build_package(choices, out)
   cat("Created", out, "\n")
   placeholders <- c(
-    if (identical(c(choices$given, choices$family), c("Your", "Name"))) "the author (--author)",
-    if (!nzchar(choices$email)) "the email (--email)"
+    if (identical(c(choices$given, choices$family), c("Your", "Name"))) "author (--author)",
+    if (!nzchar(choices$email)) "email (--email)"
   )
   if (length(placeholders) > 0) {
     message("Replace the placeholder ", paste(placeholders, collapse = " and "), " in DESCRIPTION before you publish.")

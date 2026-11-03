@@ -6,6 +6,11 @@
 # (.github/scripts/r-changes.sh).
 on:
   workflow_call:
+    inputs:
+      timeout-minutes:
+        description: Longest a job may run, in minutes; 0 keeps launchR's default (90)
+        type: number
+        default: 0
 
 name: no-suggests
 
@@ -15,7 +20,7 @@ permissions:
 jobs:
   no-suggests:
     runs-on: ubuntu-26.04  # pinned, like the repo's other workflows
-    timeout-minutes: 90  # it installs its packages without a cache, so a slow package mirror makes it long; usually
+    timeout-minutes: ${{ inputs.timeout-minutes > 0 && inputs.timeout-minutes || 90 }}  # it installs its packages without a cache, so a slow package mirror makes it long; usually
     # 1-3 min
 
     env:

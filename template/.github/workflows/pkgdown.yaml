@@ -9,7 +9,8 @@ on:
 permissions:
   contents: read
 
-# A new push to a pull request stops this check's older run for it; pushes and weekly runs are never stopped.
+# A new push to a pull request stops this check's older run for it, to save minutes; pushes and weekly runs always
+# finish. To let every pull request run finish too, set cancel-in-progress to false.
 concurrency:
   group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}

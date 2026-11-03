@@ -12,6 +12,11 @@
 # Dependabot have no CODECOV_TOKEN). Codecov only reports; this job enforces the limit. It counts the R code run in the test process, not the JavaScript engine.
 on:
   workflow_call:
+    inputs:
+      timeout-minutes:
+        description: Longest a job may run, in minutes; 0 keeps launchR's default (60)
+        type: number
+        default: 0
     secrets:
       CODECOV_TOKEN:
         required: false
@@ -27,7 +32,7 @@ jobs:
     permissions:
       actions: read  # finds the default branch's figure for a pull request (a private repository needs it)
       contents: read
-    timeout-minutes: 60  # the tests without Chrome under covr: about a minute, plus room for a slow package mirror
+    timeout-minutes: ${{ inputs.timeout-minutes > 0 && inputs.timeout-minutes || 60 }}  # the tests without Chrome under covr: about a minute, plus room for a slow package mirror
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
 

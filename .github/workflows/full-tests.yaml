@@ -11,6 +11,10 @@
 on:
   workflow_call:
     inputs:
+      timeout-minutes:
+        description: Longest a job may run, in minutes; 0 keeps launchR's default (60 on Mac, 120 elsewhere)
+        type: number
+        default: 0
       platforms:
         description: Systems and R versions, as system/R version, comma separated
         type: string
@@ -62,7 +66,7 @@ jobs:
     name: full-tests (${{ matrix.config.os }}, R ${{ matrix.config.r }})
     # Room for a cold cache and a slow package mirror (R CMD check on R 4.1 once took 42 min here); the time goes into
     # installing R and the packages, the tests themselves are few so far. Mac minutes cost ten times: an hour there.
-    timeout-minutes: ${{ matrix.config.os == 'macos-latest' && 60 || 120 }}
+    timeout-minutes: ${{ inputs.timeout-minutes > 0 && inputs.timeout-minutes || (matrix.config.os == 'macos-latest' && 60 || 120) }}
 
     strategy:
       fail-fast: false

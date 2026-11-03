@@ -14,6 +14,10 @@ that check.
 
 - **Which branches or times:** edit the `on:` block at the top of the file. Times are UTC.
 - **Which systems and R versions:** edit `platforms` under `with:`.
+- **How long a job may run:** `timeout-minutes` under `with:`, in minutes. 0 keeps launchR's default: 60 on Mac (its
+  minutes cost ten times), 120 elsewhere, 60 for coverage and 90 for no-suggests.
+- **Older pull request runs:** a new push to a pull request stops the older run of each check, to save minutes. To let
+  them finish, set `cancel-in-progress: false` in the file's `concurrency:` block.
 - **Turn a check off:** delete its file.
 - **Keep a check but run it only by hand:** keep only `workflow_dispatch:` under `on:`.
 - **Keep the `permissions:` block as it is:** a check that reports on pull requests needs what it lists, or it stops before it starts.
