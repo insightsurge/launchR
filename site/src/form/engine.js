@@ -190,7 +190,7 @@ export function placeholderValues(choices, lists) {
   const extendedInCi = ['full_tests', 'coverage', 'r_cmd_check_extended'].some((key) => ciOn && choices.checks[key]?.on);
   values.extended_env = extendedInCi ? 'EXTENDED_TESTS=true' : '# EXTENDED_TESTS=true';
   values.browser_row = frontend
-    ? `| \`-browser.R\` | Tests that drive a browser (shinytest2, chromote) | \`test-demo-browser.R\` | ${values.runs_browser} |`
+    ? `| \`-browser.R\` | Tests that drive a browser (shinytest2, chromote); start them with \`options(chromote.timeout = 60)\`, as Chrome can start slowly on CI | \`test-demo-browser.R\` | ${values.runs_browser} |`
     : '';
   values.browser_skip = frontend ? 'skip_on_cran()                                                    # -browser.R files' : '';
   // How to send coverage to Codecov; codecov.yml comes with new packages only (an existing package's .Rbuildignore
@@ -218,7 +218,7 @@ export function placeholderValues(choices, lists) {
     '',
     '| File name ends in | What it holds | Runs in |',
     '| --- | --- | --- |',
-    `| \`-browser.R\` | Tests that drive a browser (shinytest2, chromote) | ${values.runs_browser} |`,
+    `| \`-browser.R\` | Tests that drive a browser (shinytest2, chromote); start them with \`options(chromote.timeout = 60)\`, as Chrome can start slowly on CI | ${values.runs_browser} |`,
     `| \`-snap.R\` | Snapshot tests (\`expect_snapshot()\`) | ${values.runs_snap} |`,
     `| \`-extended.R\` | Slow or detailed tests | ${values.runs_extended} |`,
     '',
