@@ -171,7 +171,7 @@ export function placeholderValues(choices, lists) {
       ? `[![R-CMD-check](${repository}/actions/workflows/r-cmd-check.yaml/badge.svg)](${repository}/actions/workflows/r-cmd-check.yaml)`
       : '',
     credit_badge: isPublic ? `[![Set up with launchR](https://img.shields.io/badge/set%20up%20with-launchR-f6ab85)](${siteUrl})\n` : '',
-    credit_line: isPublic ? `\nSet up with [launchR](${siteUrl}).` : '',
+    credit_line: `\nSet up with [launchR](${siteUrl}).`,
   };
   // The oldest R supported: in DESCRIPTION, and in place of 4.1 in the default platforms.
   const minR = choices.minR || lists.settings.min_r;

@@ -39,7 +39,7 @@ placeholder_values <- function(choices) {
       ""
     },
     credit_badge = if (public) sprintf("[![Set up with launchR](https://img.shields.io/badge/set%%20up%%20with-launchR-f6ab85)](%s)\n", site_url) else "",
-    credit_line = if (public) sprintf("\nSet up with [launchR](%s).", site_url) else ""
+    credit_line = sprintf("\nSet up with [launchR](%s).", site_url)
   )
   # The oldest R supported: in DESCRIPTION, and in place of 4.1 in the default platforms.
   min_r <- if (nzchar(choices$min_r %||% "")) choices$min_r else kit_setting("min_r")
