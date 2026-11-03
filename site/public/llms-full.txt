@@ -25,7 +25,7 @@ The command line in the repository (`Rscript cli/launchr.R new mypkg`) makes the
 | Plan | For | Quality gate |
 | --- | --- | --- |
 | Public, going to CRAN | Open-source package authors | CRAN rules |
-| Public, not for CRAN | Packages installed from GitHub or R-universe | Internal rules |
+| Public, not for CRAN | Packages installed from GitHub | Internal rules |
 | Private for now | Public and CRAN later | CRAN rules |
 | Private for good | Company or personal packages | Internal rules |
 

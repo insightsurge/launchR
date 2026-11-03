@@ -1,6 +1,7 @@
 # One row per template file. part: when the file is included. check: the CI check that needs it. release: cran or any.
 path	part	check	release
 .Rbuildignore	skeleton		any
+.Renviron	skeleton		any
 .gitattributes	skeleton		any
 .github/CODE_OF_CONDUCT.md	github		any
 .github/CONTRIBUTING.md	github		any

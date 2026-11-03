@@ -11,6 +11,10 @@
 on:
   workflow_call:
     inputs:
+      timeout-minutes:
+        description: Longest a job may run, in minutes; 0 keeps launchR's default (60 on Mac, 120 elsewhere)
+        type: number
+        default: 0
       platforms:
         description: Systems and R versions, as system/R version, comma separated
         type: string
@@ -58,9 +62,11 @@ jobs:
       actions: read  # finds the default branch's test times for a pull request (a private repository needs it)
       contents: read
     runs-on: ${{ matrix.config.os }}
-    name: full-tests (${{ matrix.config.r }})
-    timeout-minutes: 120  # room for a cold cache and a slow package mirror (R CMD check on R 4.1 once took 42 min
-    # here); the time goes into installing R and the packages, the tests themselves are few so far
+    # The system is in every name below, so two systems with the same R version keep apart.
+    name: full-tests (${{ matrix.config.os }}, R ${{ matrix.config.r }})
+    # Room for a cold cache and a slow package mirror (R CMD check on R 4.1 once took 42 min here); the time goes into
+    # installing R and the packages, the tests themselves are few so far. Mac minutes cost ten times: an hour there.
+    timeout-minutes: ${{ inputs.timeout-minutes > 0 && inputs.timeout-minutes || (matrix.config.os == 'macos-latest' && 60 || 120) }}
 
     strategy:
       fail-fast: false
@@ -116,7 +122,7 @@ jobs:
         uses: ./.launchr/.github/actions/main-baseline
         with:
           workflow: full-tests.yaml
-          artifact: full-tests-timings-${{ matrix.config.r }}
+          artifact: full-tests-timings-${{ matrix.config.os }}-${{ matrix.config.r }}
           path: ${{ runner.temp }}/full-tests-baseline
 
       - name: Run the tests
@@ -193,7 +199,7 @@ jobs:
         if: failure() && steps.changes.outputs.r == 'true'
         uses: actions/upload-artifact@v7
         with:
-          name: full-tests-test-problems-${{ matrix.config.r }}
+          name: full-tests-test-problems-${{ matrix.config.os }}-${{ matrix.config.r }}
           path: tests/testthat/_problems
           if-no-files-found: ignore
 
@@ -219,7 +225,7 @@ jobs:
         if: always()
         uses: ./.launchr/.github/actions/pr-report-part
         with:
-          name: tests-2-full-tests-${{ matrix.config.r }}
+          name: tests-2-full-tests-${{ matrix.config.os }}-${{ matrix.config.r }}
           file: ${{ runner.temp }}/full-tests-part.md
 
       # The test times pull requests are compared with.
@@ -227,7 +233,7 @@ jobs:
         if: success() && github.event_name == 'push' && github.ref_name == github.event.repository.default_branch
         uses: actions/upload-artifact@v7
         with:
-          name: full-tests-timings-${{ matrix.config.r }}
+          name: full-tests-timings-${{ matrix.config.os }}-${{ matrix.config.r }}
           path: ${{ runner.temp }}/full-tests-timings.csv
           retention-days: 90
           overwrite: true

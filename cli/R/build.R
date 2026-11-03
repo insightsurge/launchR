@@ -16,12 +16,12 @@ placeholder_values <- function(choices) {
   values <- list(
     package = choices$package,
     name_words = if (length(parts) > 0) paste0(parts, "\n", collapse = "") else "",
-    title = choices$title,
-    description = paste0(choices$title, "."),
+    title = clean_title(choices$title),
+    description = paste0(clean_title(choices$title), "."),
     author = author,
     given = choices$given,
     family = choices$family,
-    email = choices$email,
+    email = if (nzchar(choices$email)) choices$email else kit_setting("placeholder_email"),
     owner = owner,
     owner_or_you = owner,
     year = choices$year,
@@ -41,6 +41,9 @@ placeholder_values <- function(choices) {
     credit_badge = if (public) sprintf("[![Set up with launchR](https://img.shields.io/badge/set%%20up%%20with-launchR-f6ab85)](%s)\n", site_url) else "",
     credit_line = if (public) sprintf("\nSet up with [launchR](%s).", site_url) else ""
   )
+  # The oldest R supported: in DESCRIPTION, and in place of 4.1 in the default platforms.
+  min_r <- if (nzchar(choices$min_r %||% "")) choices$min_r else kit_setting("min_r")
+  values$min_r <- paste0(min_r, ".0")
   ci_on <- "ci" %in% choices$parts
   on_rows <- if (ci_on) which(vapply(checks$key, function(key) isTRUE(choices$checks[[key]]$on), logical(1))) else integer()
   values$checks_table <- paste(
@@ -53,18 +56,32 @@ placeholder_values <- function(choices) {
     rows <- on_rows[checks$key[on_rows] %in% test_kinds[[kind]]]
     values[[paste0("runs_", kind)]] <- if (length(rows) > 0) paste0("`", checks$check[rows], "`", collapse = ", ") else "none of the checks yet"
   }
+  # .Renviron runs the extended tests locally when a check runs them in CI.
+  extended_in_ci <- ci_on && any(vapply(c("full_tests", "coverage", "r_cmd_check_extended"), function(key) isTRUE(choices$checks[[key]]$on), logical(1)))
+  values$extended_env <- if (extended_in_ci) "EXTENDED_TESTS=true" else "# EXTENDED_TESTS=true"
   values$browser_row <- if (frontend) {
     sprintf("| `-browser.R` | Tests that drive a browser (shinytest2, chromote) | `test-demo-browser.R` | %s |", values$runs_browser)
   } else {
     ""
   }
   values$browser_skip <- if (frontend) "skip_on_cran()                                                    # -browser.R files" else ""
-  # codecov.yml comes with new packages only: an existing package's .Rbuildignore doesn't list it.
-  values$codecov_note <- if (ci_on && "skeleton" %in% choices$parts && isTRUE(choices$checks$coverage$on)) {
-    paste0(
-      "The coverage check decides on its own. If you also send coverage to Codecov (the comment in `coverage.yaml` says how),\n",
-      "`codecov.yml` at the top of the package keeps Codecov to reporting: no blocking status and no second comment.\n\n"
-    )
+  # How to send coverage to Codecov; codecov.yml comes with new packages only (an existing package's .Rbuildignore
+  # doesn't list it).
+  values$codecov_note <- if (ci_on && isTRUE(choices$checks$coverage$on)) {
+    yml <- if ("skeleton" %in% choices$parts) {
+      c("", "`codecov.yml` at the top of the package keeps Codecov to reporting: no blocking status and no second comment.")
+    }
+    paste0(paste(c(
+      "## Codecov",
+      "",
+      "The coverage check decides on its own. To also show coverage on Codecov:",
+      "",
+      "1. Sign in at <https://about.codecov.io> with GitHub and add this repository.",
+      "2. Copy its upload token. On GitHub, add it as a repository secret named `CODECOV_TOKEN` (Settings, then Secrets and",
+      "   variables, then Actions).",
+      "3. In `coverage.yaml`, remove the `#` before the `secrets:` and `CODECOV_TOKEN:` lines.",
+      yml
+    ), collapse = "\n"), "\n\n")
   } else {
     ""
   }
@@ -108,6 +125,7 @@ placeholder_values <- function(choices) {
     }
     values[[paste0("cron_", key)]] <- check$cron
     default <- checks[[paste0("platforms_", choices$visibility)]][i]
+    default <- gsub(paste0("/", kit_setting("min_r")), paste0("/", min_r), default, fixed = TRUE)
     values[[paste0("platforms_", key)]] <- if (is.null(check$platforms)) default else check$platforms
   }
   values
@@ -149,6 +167,8 @@ man_seealso <- function(urls, repository) {
 }
 
 render_text <- function(text, values) {
+  missing <- names(values)[vapply(values, function(value) length(value) != 1 || is.na(value), logical(1))]
+  if (length(missing) > 0) stop("No value for: ", paste(missing, collapse = ", "), call. = FALSE)
   lines <- strsplit(text, "\n", fixed = TRUE)[[1]]
   ends_with_newline <- endsWith(text, "\n")
   empty <- names(values)[vapply(values, function(value) !nzchar(value), logical(1))]
@@ -166,7 +186,7 @@ selected_files <- function(choices) {
   on_checks <- checks$check[vapply(checks$key, function(key) choices$checks[[key]]$on, logical(1))]
   keep <- files$part %in%
     choices$parts &
-    (!nzchar(files$check) | files$check %in% on_checks) &
+    (!nzchar(files$check) | ("ci" %in% choices$parts & files$check %in% on_checks)) &
     (files$release == "any" | files$release == choices$release)
   files$path[keep]
 }

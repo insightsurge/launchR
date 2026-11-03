@@ -6,13 +6,13 @@
           <h2 id="setupTitle">Set up your package</h2>
           <p class="sub">Five questions. Nothing you type leaves your browser. <button type="button" class="reset" id="toExisting">Already have a package?</button></p>
           <div class="field">
-            <div class="field-head"><label for="pkg">Package name</label><span class="tip" tabindex="0" aria-describedby="tip-pkg"><svg aria-hidden="true"><use href="#i-info" /></svg><span role="tooltip" id="tip-pkg">Going to CRAN? Check the name is free first: run available::available("yourname") in R, or open cran.r-project.org/package=yourname.</span></span></div>
+            <div class="field-head"><label for="pkg">Package name</label><span class="tip" tabindex="0" aria-describedby="tip-pkg"><svg aria-hidden="true"><use href="#i-info" /></svg><span role="tooltip" id="tip-pkg">Letters, numbers and dots only, starting with a letter: no - or _. Going to CRAN? Check the name is free first: open cran.r-project.org/package=yourname.</span></span></div>
             <input id="pkg" type="text" maxlength="80" autocomplete="off" spellcheck="false" placeholder="fooBarPkg" aria-describedby="tip-pkg" />
             <p class="err" id="err-pkg"></p>
           </div>
           <div class="field">
-            <label for="what">What it does, in one line</label>
-            <input id="what" type="text" maxlength="200" autocomplete="off" placeholder="Tools for clinical tables" />
+            <div class="field-head"><label for="what">What it does, in one line <span class="opt">(up to 65 characters)</span></label><span class="tip" tabindex="0" aria-describedby="tip-what"><svg aria-hidden="true"><use href="#i-info" /></svg><span role="tooltip" id="tip-what">It becomes the Title in DESCRIPTION, and CRAN asks for 65 characters or fewer.</span></span></div>
+            <input id="what" type="text" maxlength="65" autocomplete="off" placeholder="Tools for clinical tables" aria-describedby="tip-what" />
             <p class="err" id="err-what"></p>
           </div>
           <div class="field two">
@@ -20,19 +20,20 @@
             <div><label for="last">Author last name</label><input id="last" type="text" autocomplete="off" /><p class="err" id="err-last"></p></div>
           </div>
           <div class="field">
-            <div class="field-head"><label for="email">Email <span class="opt">(optional)</span></label><span class="tip" tabindex="0" aria-describedby="tip-email"><svg aria-hidden="true"><use href="#i-info" /></svg><span role="tooltip" id="tip-email">Goes in the DESCRIPTION file.</span></span></div>
+            <div class="field-head"><label for="email">Email <span class="opt">(optional)</span></label><span class="tip" tabindex="0" aria-describedby="tip-email"><svg aria-hidden="true"><use href="#i-info" /></svg><span role="tooltip" id="tip-email">Goes in DESCRIPTION. Left empty, a placeholder goes there: replace it before you release, as CRAN needs a real one.</span></span></div>
             <input id="email" type="email" autocomplete="off" aria-describedby="tip-email" />
             <p class="err" id="err-email"></p>
           </div>
           <div class="field">
-            <div class="field-head"><label for="owner">GitHub user or organisation</label><span class="tip" tabindex="0" aria-describedby="tip-owner"><svg aria-hidden="true"><use href="#i-info" /></svg><span role="tooltip" id="tip-owner">Where the repository will live. It fills in the links in your README and DESCRIPTION.</span></span></div>
-            <input id="owner" type="text" autocomplete="off" spellcheck="false" aria-describedby="tip-owner" />
+            <div class="field-head"><label for="owner">GitHub username or organisation</label><span class="tip" tabindex="0" aria-describedby="tip-owner"><svg aria-hidden="true"><use href="#i-info" /></svg><span role="tooltip" id="tip-owner">Where the package will live on GitHub, such as github.com/yourname/yourpackage. It fills in the links in your README and DESCRIPTION.</span></span></div>
+            <input id="owner" type="text" autocomplete="off" spellcheck="false" aria-describedby="tip-owner owner-note" />
             <p class="err" id="err-owner"></p>
+            <p class="field-note" id="owner-note">No GitHub account yet? <a href="https://github.com/signup" target="_blank" rel="noopener">Sign up free</a>, then come back with your username.</p>
           </div>
           <fieldset class="plans" id="plans">
             <legend>What is the plan for this package?</legend>
             <label class="plan p1"><input type="radio" name="plan" value="a" checked /><i class="chip c1"></i><span><b>Public, going to CRAN</b></span></label>
-            <label class="plan p2"><input type="radio" name="plan" value="b" /><i class="chip c2"></i><span><b>Public, not for CRAN</b><em>GitHub or R-universe</em></span></label>
+            <label class="plan p2"><input type="radio" name="plan" value="b" /><i class="chip c2"></i><span><b>Public, not for CRAN</b><em>Installed from GitHub</em></span></label>
             <label class="plan p3"><input type="radio" name="plan" value="c" /><i class="chip c3"></i><span><b>Private for now</b><em>Public and CRAN later</em></span></label>
             <label class="plan p4"><input type="radio" name="plan" value="d" /><i class="chip c4"></i><span><b>Private for good</b><em>Company or personal</em></span></label>
           </fieldset>
@@ -80,8 +81,8 @@
           <p class="sub">Now let's put it on GitHub.</p>
           <fieldset class="routes" id="routes">
             <legend>How do you want to do it?</legend>
-            <label><input type="radio" name="route" value="r" checked /><span>With R</span></label>
-            <label><input type="radio" name="route" value="desktop" /><span>I'm lazy</span></label>
+            <label><input type="radio" name="route" value="r" checked /><span>In the R console</span></label>
+            <label><input type="radio" name="route" value="desktop" /><span>With GitHub Desktop</span></label>
           </fieldset>
           <ol class="steps" id="stepList"></ol>
           <p class="after" id="nextAfter"></p>
@@ -95,7 +96,7 @@
           <p class="pv-name"><span id="pvName">fooBarPkg</span>.zip</p>
           <p class="pv-plan" id="pvPlan" aria-live="polite">Public, going to CRAN</p>
           <dl class="pv-rows">
-            <div><dt>Checks on CI</dt><dd id="pvChecks">All seven</dd></div>
+            <div><dt>Checks on GitHub</dt><dd id="pvChecks">All seven</dd></div>
             <div class="pv-more"><dt>Systems</dt><dd id="pvSystems"></dd></div>
             <div class="pv-more"><dt>Website</dt><dd id="pvSite"></dd></div>
             <div><dt>Checklists</dt><dd><ul id="pvLists" class="pv-lists"></ul></dd></div>

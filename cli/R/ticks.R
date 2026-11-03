@@ -77,9 +77,20 @@ tick_site <- function(ctx) {
   if (is.na(status)) NA else status == 200L
 }
 
-on_cran <- function(package) {
-  status <- status_of(sprintf("https://cran.r-project.org/web/packages/%s/index.html", package))
-  if (is.na(status)) NA else status == 200L
+# On CRAN when CRAN has a page for the name and, once the repository is known, that page links to it: another
+# author's package with the same name doesn't make a new package "on CRAN".
+on_cran <- function(package, repo = NA_character_) {
+  page <- sprintf("https://cran.r-project.org/web/packages/%s/index.html", package)
+  status <- status_of(page)
+  if (is.na(status) || status != 200L || is.na(repo)) {
+    return(if (is.na(status)) NA else status == 200L)
+  }
+  text <- cached(paste("page", page), function() getOption("kit.http_text", http_text)(page))
+  if (is.na(text)) NA else grepl(tolower(paste0("github.com/", repo)), tolower(text), fixed = TRUE)
+}
+
+http_text <- function(url) {
+  tryCatch(paste(suppressWarnings(readLines(url, warn = FALSE)), collapse = "\n"), error = function(e) NA_character_)
 }
 
 tick_state <- function(row, ctx) {
@@ -89,7 +100,7 @@ tick_state <- function(row, ctx) {
     setting = tick_setting(row$target, ctx),
     ci = tick_ci(ctx),
     site = tick_site(ctx),
-    cran = on_cran(ctx$package),
+    cran = on_cran(ctx$package, if (ctx$connected) ctx$repo else NA_character_),
     NA
   )
 }

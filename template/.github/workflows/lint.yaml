@@ -18,6 +18,12 @@ permissions:
   actions: read   # lets CI read the other checks' results for its report
   pull-requests: write   # lets CI post its report on the PR
 
+# A new push to a pull request stops this check's older run for it, to save minutes; pushes and weekly runs always
+# finish. To let every pull request run finish too, set cancel-in-progress to false.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   check:
     uses: insightsurge/launchR/.github/workflows/lint.yaml@v{{kit_version}}

@@ -176,7 +176,7 @@ github_plan <- function(ctx) {
   }, "")
   issues <- if (ctx$connected) existing_issues(ctx) else data.frame(number = character(), state = character(), title = character())
   root <- pick_issue(issues, root_title)
-  cran <- if (ctx$internal) FALSE else on_cran(ctx$package)
+  cran <- if (ctx$internal) FALSE else on_cran(ctx$package, if (ctx$connected) ctx$repo else NA_character_)
   wanted <- open_stages(ctx, cran)
   stages <- unique(c(wanted, read_list("checklists.tsv")$stage))
   checklists <- list()

@@ -8,7 +8,7 @@ License: MIT + file LICENSE
 {{url_line}}
 {{bugreports_line}}
 Depends: 
-    R (>= 4.1.0)
+    R (>= {{min_r}})
 Suggests: 
 {{chromote_line}}
     testthat (>= 3.1.7)

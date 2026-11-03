@@ -4,6 +4,10 @@
 on:
   workflow_call:
     inputs:
+      timeout-minutes:
+        description: Longest a job may run, in minutes; 0 keeps launchR's default (60 on Mac, 120 elsewhere)
+        type: number
+        default: 0
       platforms:
         description: Systems and R versions, as system/R version, comma separated
         type: string
@@ -20,11 +24,31 @@ permissions:
 
 jobs:
   platforms:
-    # Turns the `platforms` input, such as "ubuntu/release, windows/4.1", into the job matrix.
+    # Turns the `platforms` input, such as "ubuntu/release, windows/4.1", into the job matrix, and finds out whether the
+    # R steps are needed at all: a pull request that changes only documentation starts no Windows or Mac runner.
     runs-on: ubuntu-26.04
+    timeout-minutes: 5
     outputs:
       config: ${{ steps.parse.outputs.config }}
+      r: ${{ steps.changes.outputs.r }}
     steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 2  # a pull request's merge commit and its base, for r-changes.sh
+          persist-credentials: false
+      # launchr-fetch-start
+      - name: Fetch launchR at this workflow's version
+        uses: actions/checkout@v7
+        with:
+          repository: insightsurge/launchR
+          ref: ${{ job.workflow_sha }}
+          path: .launchr
+      # launchr-fetch-end
+
+      - name: Find out whether the R steps are needed
+        id: changes
+        run: bash .launchr/.github/scripts/r-changes.sh
+
       - id: parse
         env:
           PLATFORMS: ${{ inputs.platforms }}
@@ -51,12 +75,11 @@ jobs:
 
   check:
     needs: platforms
+    if: needs.platforms.outputs.r == 'true'
     runs-on: ${{ matrix.config.os }}
-    outputs:
-      # Whether the R steps ran (false for a pull request that changes only documentation), for the report line.
-      r: ${{ steps.changes.outputs.r }}
-    timeout-minutes: 120  # room for a slow day: R 4.1 with a cold cache once took 42 min, and installing R from a slow
-    # package mirror can take 20 min; usually 1-3 min
+    # Mac minutes cost ten times, so an hour there; elsewhere room for a slow day: R 4.1 with a cold cache once took
+    # 42 min, and installing R from a slow package mirror can take 20 min; usually 1-3 min.
+    timeout-minutes: ${{ inputs.timeout-minutes > 0 && inputs.timeout-minutes || (matrix.config.os == 'macos-latest' && 60 || 120) }}
 
     name: ${{ matrix.config.os }} (${{ matrix.config.r }})
 
@@ -149,7 +172,7 @@ jobs:
   # One stable check name that sums up the jobs above (a branch ruleset could require it): it fails unless every
   # matrix job above succeeded.
   R-CMD-check:
-    needs: check
+    needs: [platforms, check]
     if: always()
     runs-on: ubuntu-26.04
     name: R-CMD-check
@@ -183,7 +206,7 @@ jobs:
         env:
           DIR: ${{ runner.temp }}/check-times
           RESULT: ${{ needs.check.result }}
-          R_STEPS: ${{ needs.check.outputs.r }}
+          R_STEPS: ${{ needs.platforms.outputs.r }}
           OUT: ${{ runner.temp }}/check-part.md
         run: bash .launchr/.github/scripts/check-times.sh report
 
@@ -196,9 +219,11 @@ jobs:
       - name: Require every matrix job to succeed
         env:
           RESULT: ${{ needs.check.result }}
+          R_STEPS: ${{ needs.platforms.outputs.r }}
         run: |
           echo "Matrix result: ${RESULT}"
-          test "${RESULT}" = "success"
+          # Skipped is a pass only when the pull request changes documentation alone.
+          test "${RESULT}" = "success" || { test "${RESULT}" = "skipped" && test "${R_STEPS}" = "false"; }
 
   # Rewrites the pull request's CI report comment (.github/actions/pr-report-comment). Pull requests from forks and
   # from Dependabot get the job summaries only: their token can't write to the pull request.

@@ -6,6 +6,11 @@
 # (.github/scripts/r-changes.sh).
 on:
   workflow_call:
+    inputs:
+      timeout-minutes:
+        description: Longest a job may run, in minutes; 0 keeps launchR's default (90)
+        type: number
+        default: 0
 
 name: no-suggests
 
@@ -15,7 +20,7 @@ permissions:
 jobs:
   no-suggests:
     runs-on: ubuntu-26.04  # pinned, like the repo's other workflows
-    timeout-minutes: 90  # it installs its packages without a cache, so a slow package mirror makes it long; usually
+    timeout-minutes: ${{ inputs.timeout-minutes > 0 && inputs.timeout-minutes || 90 }}  # it installs its packages without a cache, so a slow package mirror makes it long; usually
     # 1-3 min
 
     env:
@@ -53,7 +58,13 @@ jobs:
           dependencies: '"hard"'
           # A fresh library each time; the gate hides what the check doesn't need anyway.
           cache: false
+          # The gate's own needs in its nosuggests mode (quality-gate.R, needs_for()), then the check's.
           extra-packages: |
+            any::checkmate
+            any::cli
+            any::jsonlite
+            any::pkgbuild
+            any::processx
             any::rcmdcheck
             any::testthat
             any::knitr
@@ -69,6 +80,8 @@ jobs:
         env:
           # The whole test output when a test fails, not only its last 13 lines.
           _R_CHECK_TESTS_NLINES_: 0
+        # bash with pipefail: without it, the gate's exit status is lost in the pipe to tee and a failure looks passed.
+        shell: bash
         run: |
           Rscript .launchr/quality-gate/quality-gate.R nosuggests | tee "${RUNNER_TEMP}/gate.txt"
           if grep -q "^SKIP nosuggests" "${RUNNER_TEMP}/gate.txt"; then

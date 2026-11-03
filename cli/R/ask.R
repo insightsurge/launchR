@@ -25,20 +25,35 @@ ask_choice <- function(question, options) {
   }
 }
 
-ask_choices <- function(choices) {
-  choices$title <- ask("One-line title, in title case")
-  author <- strsplit(ask("Your name"), " +")[[1]]
-  choices$given <- author[1]
-  choices$family <- paste(author[-1], collapse = " ")
-  choices$email <- ask("Your email, shown in DESCRIPTION")
+# Asks until the answer passes check(answer), printing the problem each time.
+ask_until <- function(question, check, default = "") {
   repeat {
-    choices$owner <- ask("GitHub user or organisation")
-    problem <- check_owner(choices$owner)
-    if (!nzchar(problem)) break
+    answer <- ask(question, default)
+    problem <- check(answer)
+    if (!nzchar(problem)) {
+      return(answer)
+    }
     cat(problem, "\n")
   }
-  choices$visibility <- ask_choice("Public or private repository", c("private", "public"))
-  choices$release <- ask_choice("Going to CRAN or staying internal", c("cran", "internal"))
+}
+
+ask_choices <- function(choices) {
+  choices$title <- ask_until("One-line title, in title case", check_title)
+  author <- split_name(ask_until("Your first and last name", function(name) {
+    parts <- split_name(name)
+    problem <- check_person(parts[1], "first")
+    if (nzchar(problem)) problem else check_person(parts[2], "last")
+  }))
+  choices$given <- author[1]
+  choices$family <- author[2]
+  choices$email <- ask_until("Your email, shown in DESCRIPTION (Enter to add it later)", check_email)
+  choices$owner <- ask_until("GitHub user or organisation", check_owner)
+  plans <- read_list("plans.tsv")
+  cat(sprintf("  %s: %s\n", plans$plan, plans$label), sep = "")
+  chosen <- plan_row(ask_choice("Your plan for this package", plans$plan))
+  choices$visibility <- chosen$visibility
+  choices$release <- chosen$release
+  if (chosen$extended == "no") choices$checks$r_cmd_check_extended$on <- FALSE
   parts <- read_list("parts.tsv")
   for (i in which(parts$part != "skeleton")) {
     on <- parts$part[i] %in% choices$parts

@@ -20,12 +20,15 @@ skip on CRAN by themselves; start each other file, or each test in it, with a sk
 
 ```r
 {{browser_skip}}
-skip_if_not(identical(Sys.getenv("EXTENDED_TESTS"), "true"))      # -extended.R files
+skip_if_not(identical(Sys.getenv("EXTENDED_TESTS"), "true"), "an extended test")   # -extended.R files
 ```
 
 ## On your computer
 
-`devtools::test()` runs the plain, snapshot and browser tests. To run the extended ones too:
+`devtools::test()` runs the plain, snapshot and browser tests. The extended ones run too when `EXTENDED_TESTS` is
+`true`: the package's `.Renviron` sets it when one of your checks runs them in CI. `.Renviron` is kept out of git, so a
+fresh clone doesn't have it; to run the extended tests there, add the line `EXTENDED_TESTS=true` to a `.Renviron` in
+the package's folder, or run:
 
 ```r
 Sys.setenv(EXTENDED_TESTS = "true")

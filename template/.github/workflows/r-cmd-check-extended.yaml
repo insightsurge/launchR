@@ -16,6 +16,12 @@ on:
 permissions:
   contents: read
 
+# A new push to a pull request stops this check's older run for it, to save minutes; pushes and weekly runs always
+# finish. To let every pull request run finish too, set cancel-in-progress to false.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   check:
     uses: insightsurge/launchR/.github/workflows/r-cmd-check-extended.yaml@v{{kit_version}}
@@ -23,3 +29,4 @@ jobs:
       # One entry per run, as system/R version, comma separated. System: ubuntu, windows, macos.
       # R version: release, devel, oldrel-1, or a number such as 4.1. R 4.1 on macos may fail: it has no ready-built packages.
       platforms: {{platforms_r_cmd_check_extended}}
+      timeout-minutes: 0   # longest a job may run, in minutes; 0 keeps launchR's default: 60 on Mac, 120 elsewhere
