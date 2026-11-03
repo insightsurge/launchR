@@ -47,8 +47,11 @@ note() {
 }
 
 report() {
+  # "as CRAN" only when the check ran with --as-cran (not for Config/quality-gate/target: internal).
+  local label="R CMD check (as CRAN)"
+  if [ "${AS_CRAN:-true}" = "false" ]; then label="R CMD check"; fi
   if [ "${R_STEPS:-}" = "false" ]; then
-    echo "⏭️ **R CMD check (as CRAN):** not run: this pull request changes only documentation." >"${OUT}"
+    echo "⏭️ **${label}:** not run: this pull request changes only documentation." >"${OUT}"
     return
   fi
   local total=0 passed=0 headline_time="" rows=() file platform status tests check limit icon shown
@@ -75,10 +78,10 @@ report() {
   [ "${RESULT}" = "cancelled" ] && mark="⏹️"
   {
     if [ "${total}" -eq 0 ]; then
-      echo "${mark} **R CMD check (as CRAN):** no platform reported its times (see the run)"
+      echo "${mark} **${label}:** no platform reported its times (see the run)"
       return
     fi
-    echo "${mark} **R CMD check (as CRAN):** ${passed} of ${total} platforms passed${headline_time}"
+    echo "${mark} **${label}:** ${passed} of ${total} platforms passed${headline_time}"
     echo
     echo "<details>"
     echo "<summary>Time per platform (the tests, and the whole check)</summary>"

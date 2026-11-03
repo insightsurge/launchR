@@ -31,6 +31,7 @@ jobs:
     outputs:
       config: ${{ steps.parse.outputs.config }}
       r: ${{ steps.changes.outputs.r }}
+      as-cran: ${{ steps.target.outputs.as-cran }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -48,6 +49,16 @@ jobs:
       - name: Find out whether the R steps are needed
         id: changes
         run: bash .launchr/.github/scripts/r-changes.sh
+
+      # As CRAN (--as-cran) unless DESCRIPTION says the package won't go there: Config/quality-gate/target: internal.
+      - name: Read the package's release target
+        id: target
+        run: |
+          if grep -qiE '^Config/quality-gate/target:[[:space:]]*internal[[:space:]]*$' DESCRIPTION; then
+            echo "as-cran=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "as-cran=true" >> "$GITHUB_OUTPUT"
+          fi
 
       - id: parse
         env:
@@ -144,7 +155,7 @@ jobs:
           # The whole test output when a test fails, not only its last 13 lines.
           _R_CHECK_TESTS_NLINES_: 0
         with:
-          args: 'c("--no-manual", "--as-cran")'
+          args: ${{ needs.platforms.outputs.as-cran == 'true' && 'c("--no-manual", "--as-cran")' || 'c("--no-manual")' }}
           error-on: '"note"'
           build_args: 'c("--no-manual", "--compact-vignettes=gs+qpdf")'
 
@@ -207,6 +218,7 @@ jobs:
           DIR: ${{ runner.temp }}/check-times
           RESULT: ${{ needs.check.result }}
           R_STEPS: ${{ needs.platforms.outputs.r }}
+          AS_CRAN: ${{ needs.platforms.outputs.as-cran }}
           OUT: ${{ runner.temp }}/check-part.md
         run: bash .launchr/.github/scripts/check-times.sh report
 
@@ -239,10 +251,12 @@ jobs:
       actions: read
       contents: read
       pull-requests: write
-    # One report job at a time per pull request, across the workflows that write the comment.
+    # One report job at a time per pull request and check: a newer one replaces a waiting older one. Each rewrites the
+    # whole comment from every check's latest run, so the comment stays right, and no run shows "cancelled" because
+    # another check's report was waiting.
     concurrency:
-      group: pr-report-${{ github.event.pull_request.number }}
-      cancel-in-progress: false
+      group: pr-report-${{ github.event.pull_request.number }}-${{ github.workflow }}
+      cancel-in-progress: true
     steps:
       - uses: actions/checkout@v7
         with:

@@ -268,10 +268,12 @@ jobs:
       actions: read
       contents: read
       pull-requests: write
-    # One report job at a time per pull request, across the workflows that write the comment.
+    # One report job at a time per pull request and check: a newer one replaces a waiting older one. Each rewrites the
+    # whole comment from every check's latest run, so the comment stays right, and no run shows "cancelled" because
+    # another check's report was waiting.
     concurrency:
-      group: pr-report-${{ github.event.pull_request.number }}
-      cancel-in-progress: false
+      group: pr-report-${{ github.event.pull_request.number }}-${{ github.workflow }}
+      cancel-in-progress: true
     steps:
       - uses: actions/checkout@v7
         with:

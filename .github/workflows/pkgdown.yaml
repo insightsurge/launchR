@@ -22,9 +22,9 @@ jobs:
       contents: read
       pages: write     # publish to GitHub Pages
       id-token: write  # proves to Pages that this workflow made the site
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+    # No `environment: github-pages` here: GitHub gives that environment a rule that only `main` may deploy, so a
+    # package on `master` (as usethis::use_git() can make it) would stop before its first step. The deploy works
+    # without it; the run's summary links the site.
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
 
@@ -83,3 +83,9 @@ jobs:
         if: steps.pages.outputs.on == 'true'
         id: deployment
         uses: actions/deploy-pages@v5
+
+      - name: Link the site in the summary
+        if: steps.pages.outputs.on == 'true'
+        env:
+          URL: ${{ steps.deployment.outputs.page_url }}
+        run: echo "The website is published at ${URL}" >> "$GITHUB_STEP_SUMMARY"
