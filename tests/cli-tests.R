@@ -61,6 +61,7 @@ fake_github <- function(visibility = "PRIVATE", settings_ok = TRUE, token_visibl
   if (token_visible) writeLines('{"default_workflow_permissions":"read"}', file.path(dir, "api", "actions_permissions_workflow.json"))
   writeLines('[{"type":"deletion"},{"type":"non_fast_forward"}]', file.path(dir, "api", "rules_branches_main.json"))
   writeLines('{"total_count":1,"check_runs":[{"status":"completed","conclusion":"success"}]}', file.path(dir, "api", "commits_main_check_runs_per_page_100.json"))
+  writeLines('{"enabled":true}', file.path(dir, "api", "private_vulnerability_reporting.json"))
   writeLines('{"html_url":"https://sample-org.github.io/samplepkg/","build_type":"workflow"}', file.path(dir, "api", "pages.json"))
   dir
 }
@@ -98,7 +99,13 @@ expect(read_text(crlf) == "one\ntwo\n", "text with Windows line endings is read 
 expect(all(c("id", "stage", "kind", "needs", "link", "pick") %in% names(read_list("checklists.tsv"))), "checklists.tsv has its columns")
 rows <- read_list("checklists.tsv")
 expect(!anyDuplicated(rows$id), "every checklist row has its own id")
-expect(all(rows$kind %in% c("file", "placeholder", "setting", "ci", "site", "cran", "description", "manual")), "only the decided check kinds are used")
+kit_versions <- c(
+  settings = kit_setting("kit_version"),
+  description = sub("^Version: *", "", grep("^Version:", readLines(file.path(kit_root, "cli", "DESCRIPTION")), value = TRUE)),
+  setup = sub('^.*version <- "([^"]*)".*$', "\\1", grep('^ *version <- "', readLines(file.path(kit_root, "cli", "github-setup.R")), value = TRUE)[1])
+)
+expect(length(unique(kit_versions)) == 1, paste("the version is the same in settings.tsv, cli/DESCRIPTION and github-setup.R:", toString(kit_versions)))
+expect(all(rows$kind %in% c("file", "placeholder", "setting", "ci", "site", "cran", "description", "manual", "platforms")), "only the decided check kinds are used")
 expect(all(nzchar(rows$id[rows$kind == "setting"]) & nzchar(rows$link[rows$kind == "setting"]) & nzchar(rows$pick[rows$kind == "setting"])), "every settings box has a link and a value to pick")
 
 # --- cmd_new ------------------------------------------------------------------------------------------------------
@@ -112,6 +119,11 @@ expect(all(listed %in% tracked), paste("every template file in files.tsv is in g
 section("launchr.R new")
 expect(quiet(cmd_new(character()))$value == 1L, "new without a name fails")
 expect(quiet(cmd_new("1bad"))$value == 1L, "new with a bad name fails")
+steps <- quiet(cmd_new(c("stepspkg", "--yes", "--owner", "sample-org", "--plan", "c", "--path", file.path(work, "stepspkg"), "--no-git")))
+expect(any(grepl("usethis::use_github(organisation = \"sample-org\", private = TRUE)", steps$out, fixed = TRUE)) && any(grepl("pak::local_install_dev_deps()", steps$out, fixed = TRUE)) && any(grepl("Set up this repository", steps$out, fixed = TRUE)),
+  "new prints the next steps, with the organisation line and the plan's visibility")
+expect(!any(grepl("^Next:", quiet(cmd_new(c("stepspkg", "--yes", "--path", file.path(work, "stepspkg2"))))$out)), "no next steps when new failed")
+expect(any(grepl("usethis::use_git()", steps$out, fixed = TRUE)), "with --no-git the next steps start with use_git()")
 pkg <- new_package()
 expect(file.exists(file.path(pkg, "DESCRIPTION")) && file.exists(file.path(pkg, ".github", "workflows", "github-setup.yaml")), "new writes the package, hidden folders included")
 expect(!grepl("\r", read_text(file.path(pkg, "DESCRIPTION")), fixed = TRUE), "generated files use \\n line endings")
@@ -120,13 +132,14 @@ expect(!any(grepl("template-LICENSE", made)) && !("template-LICENSE" %in% read_l
 expect(!any(grepl("Zero-Clause", vapply(file.path(pkg, made), read_text, ""), fixed = TRUE)), "no generated file carries the template's licence text")
 expect(quiet(cmd_new(c("samplepkg", "--yes", "--path", pkg, "--no-git")))$value == 1L, "new refuses a folder that already has files")
 git_pkg <- new_package("gitpkg", git = TRUE)
+expect(!any(grepl("usethis::use_git()", quiet(cmd_new(c("nextpkg", "--yes", "--owner", "sample-org", "--path", file.path(work, "nextpkg"))))$out, fixed = TRUE)), "after a first commit the next steps skip use_git()")
 expect(dir.exists(file.path(git_pkg, ".git")), "new makes the first commit when git is there")
 expect(identical(system2("git", c("-C", quote_arg(git_pkg), "log", "-1", "--format=%an"), stdout = TRUE), "Test Person"), "the first commit is under the person's own git name")
 expect(!grepl("Co-authored", paste(system2("git", c("-C", quote_arg(git_pkg), "log", "-1", "--format=%B"), stdout = TRUE), collapse = "\n"), ignore.case = TRUE), "the first commit has no trailer")
 writeLines(c("[user]", "  name = Claude", "  email = x@example.com"), file.path(home, ".gitconfig-ai"))
 Sys.setenv(GIT_CONFIG_GLOBAL = file.path(home, ".gitconfig-ai"))
 ai <- quiet(new_package("aipkg", git = TRUE))
-expect(!dir.exists(file.path(work, list.files(work, pattern = "^aipkg"), ".git")), "new skips the first commit when the git name names an AI tool")
+expect(dir.exists(file.path(work, list.files(work, pattern = "^aipkg"), ".git")), "new makes the first commit whatever the git name is")
 Sys.setenv(GIT_CONFIG_GLOBAL = file.path(home, ".gitconfig"))
 Sys.setenv(PATH = "/nonexistent")
 nogit <- quiet(cmd_new(c("nogitpkg", "--yes", "--owner", "sample-org", "--path", file.path(work, "nogitpkg"))))
@@ -211,6 +224,15 @@ dcf <- read.dcf("DESCRIPTION")
 dcf[1, "Description"] <- "Builds tables for clinical reports from analysis datasets."
 write.dcf(dcf, "DESCRIPTION")
 expect(identical(tick_state(desc_row, ctx), TRUE), "a written Description ticks its box")
+# the platforms box ticks itself once the caller lists a Windows and a Mac system
+plat <- tempfile(); dir.create(file.path(plat, ".github", "workflows"), recursive = TRUE)
+plat_file <- file.path(plat, ".github", "workflows", "r-cmd-check.yaml")
+plat_row <- list(kind = "platforms", target = plat_file)
+expect(is.na(tick_state(plat_row, list(connected = FALSE))), "platforms: no file leaves the box alone")
+writeLines(c("with:", "  platforms: ubuntu/release"), plat_file)
+expect(identical(tick_state(plat_row, list(connected = FALSE)), FALSE), "platforms: Linux only is not ticked")
+writeLines(c("with:", "  platforms: ubuntu/release, macos/release, windows/release"), plat_file)
+expect(identical(tick_state(plat_row, list(connected = FALSE)), TRUE), "platforms: Windows and Mac tick the box")
 # the website box only appears when the package has a website
 expect(!any(grepl("launchr:site", checklist_lines("After public", ctx)$lines, fixed = TRUE)) == !file.exists("_pkgdown.yml"), "website boxes appear only with a website")
 setwd(old)
@@ -281,6 +303,7 @@ section("Public, internal and on CRAN")
 fake3 <- fake_github("PUBLIC")
 run_github(pkg, fake3, "--yes")
 expect(identical(sub("^[0-9]+\\|OPEN\\|", "", issues(fake3)), c(root_title, "Checklist: After public", "Checklist: Before CRAN")), "a public repository gets After public")
+expect(any(grepl("^- \\[x\\] Private vulnerability reporting on", body(fake3, 2))), "a setting read from an enabled flag is ticked")
 expect(any(grepl("^- \\[x\\] The website is live", body(fake3, 2))) == FALSE, "the website box is not ticked when the site doesn't answer")
 run_github(pkg, fake3, "--yes", http = function(url) 200L)
 expect(any(grepl("^- \\[x\\] The website is live", body(fake3, 2))), "the website box ticks when the site answers")
@@ -394,7 +417,8 @@ ignore <- read_text(".Rbuildignore")
 readme <- read_text(".github/workflows/README.md")
 dependabot_kept <- file.exists(".github/dependabot.yml")
 setwd(old)
-expect(ejected$value == 0L && dir.exists(file.path(eject_pkg, ".launchr", "quality-gate")), "eject copies launchR's CI and gate into .launchr")
+expect(ejected$value == 0L && dir.exists(file.path(eject_pkg, ".launchr", "quality-gate")) && file.exists(file.path(eject_pkg, ".launchr", ".github", "gitleaks.toml")),
+  "eject copies launchR's CI, gate and gitleaks config into .launchr")
 expect(grepl("uses: ./.github/workflows/launchr-lint.yaml", workflow, fixed = TRUE) && !grepl("insightsurge/launchR", workflow, fixed = TRUE), "eject points the caller files at local copies")
 expect(endsWith(ignore, "^\\.launchr$\n") && !grepl("\r", ignore, fixed = TRUE), "eject adds .launchr to .Rbuildignore with \\n line endings")
 expect(grepl('gate <- ".launchr/quality-gate/quality-gate.R"', readme, fixed = TRUE) && !grepl("insightsurge/launchR", readme, fixed = TRUE), "eject points the local gate run at the package's own copy")
@@ -406,6 +430,12 @@ expect(outside$value == 1L, "eject outside a package fails with a message")
 
 # --- Eject, gate and the command line ----------------------------------------------------------------------------
 section("launchr.R from the command line")
+no_package <- file.path(work, "no-package")
+dir.create(no_package)
+old_dir <- setwd(no_package)
+no_desc <- suppressWarnings(system2(rscript, quote_arg(file.path(kit_root, "quality-gate", "quality-gate.R")), stdout = TRUE, stderr = TRUE))
+setwd(old_dir)
+expect(identical(attr(no_desc, "status"), 2L) && length(no_desc) == 1 && grepl("package root", no_desc), "the gate outside a package folder exits 2 with one line")
 help_out <- system2(rscript, c(quote_arg(file.path(kit_root, "cli", "launchr.R"))), stdout = TRUE)
 expect(any(grepl("Commands: new, gate, github-setup, eject", help_out)), "launchr.R with no command prints the commands")
 

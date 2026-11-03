@@ -28,6 +28,7 @@ fi
 footer=()
 states=()
 waiting=()
+notstarted=()
 silent=()
 failures=()
 summary_jobs=$(jq -r '.summary_jobs // [] | .[]' "${CONFIG}")
@@ -42,9 +43,12 @@ while IFS= read -r workflow; do
   run=$(gh api "repos/${repo}/actions/workflows/${workflow}/runs?head_sha=${HEAD_SHA}&event=pull_request&per_page=20" \
     --jq "[.workflow_runs[] | select(any(.pull_requests[]; .number == ${PR_NUMBER}))][0] // empty |
       [.id, .status, (.conclusion // \"-\"), .html_url] | @tsv")
+  # No run yet. This does not hold the comment at "running": a check can have no run for good (the pull request goes
+  # into a branch the caller doesn't list, or the caller's trigger doesn't match), and the comment would never finish.
+  # Every started run being done is what ends it. A run that is only late is still caught: GitHub creates a push's runs
+  # together, so by the time one run has finished the others are listed, and the next report corrects the comment.
   if [ -z "${run}" ]; then
-    waiting+=("${workflow%.*} (not started)")
-    states+=("running")
+    notstarted+=("${workflow%.*}")
     continue
   fi
   # No empty fields: read would join two tabs into one ("-" stands for a run with no conclusion yet).
@@ -156,6 +160,10 @@ fi
   echo "---"
   if [ "${#waiting[@]}" -gt 0 ]; then
     echo "⏳ Still running: $(printf '%s, ' "${waiting[@]}" | sed 's/, $//')."
+    echo
+  fi
+  if [ "${#notstarted[@]}" -gt 0 ]; then
+    echo "Not started for this commit: $(printf '%s, ' "${notstarted[@]}" | sed 's/, $//')."
     echo
   fi
   if [ "${#silent[@]}" -gt 0 ]; then

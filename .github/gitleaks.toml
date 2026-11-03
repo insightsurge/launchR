@@ -1,0 +1,5 @@
+# launchR's own gitleaks settings: the program's default rules, nothing added and nothing allowed. secret-scan.yaml
+# passes this file with --config, so a package's own .gitleaks.toml (which its pull requests could change to hide a
+# secret) is not read.
+[extend]
+useDefault = true

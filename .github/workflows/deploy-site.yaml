@@ -25,14 +25,17 @@ env:
   FIREBASE_TOOLS: firebase-tools@15.34.2
 
 jobs:
-  deploy:
+  # Builds with the repository's npm packages and only the right to read, so nothing they run can ask Google for a token.
+  build:
     if: github.ref == 'refs/heads/main' && vars.GCP_WORKLOAD_IDENTITY_PROVIDER != ''
     runs-on: ubuntu-26.04
+    timeout-minutes: 15  # an install and a static build
     permissions:
       contents: read
-      id-token: write
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - uses: actions/setup-node@v7
         with:
@@ -45,11 +48,44 @@ jobs:
           npm --prefix site ci
           npm --prefix site run build
 
+      - name: Keep the built site
+        uses: actions/upload-artifact@v7
+        with:
+          name: site
+          path: site/dist
+          retention-days: 1
+
+  # The only job that can sign in to Google: it runs no npm install of the site, only the built files and firebase-tools.
+  deploy:
+    needs: build
+    if: github.ref == 'refs/heads/main' && vars.GCP_WORKLOAD_IDENTITY_PROVIDER != ''
+    runs-on: ubuntu-26.04
+    timeout-minutes: 15  # a download and an upload
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Get the built site
+        uses: actions/download-artifact@v8
+        with:
+          name: site
+          path: site/dist
+
       - name: Sign in to Google
-        uses: google-github-actions/auth@v3
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
         with:
           workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
 
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      # firebase-tools stays an npx download pinned in FIREBASE_TOOLS: adding it to site/package.json would pull in a
+      # large dependency tree for every build and test run of the site.
       - name: Publish
         run: npx --yes "$FIREBASE_TOOLS" deploy --only hosting --non-interactive

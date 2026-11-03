@@ -105,6 +105,7 @@ jobs:
         if: steps.changes.outputs.r == 'true'
         with:
           r-version: ${{ matrix.config.r }}
+          http-user-agent: ${{ matrix.config.http-user-agent }}
           use-public-rspm: true
           # The R option Ncpus for every R session (setup-r's default is 1). testthat starts that many processes for
           # the test files (Config/testthat/parallel in DESCRIPTION): two, as in R CMD check and on CRAN.

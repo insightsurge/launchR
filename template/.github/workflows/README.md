@@ -20,6 +20,8 @@ that check.
   them finish, set `cancel-in-progress: false` in the file's `concurrency:` block.
 - **Turn a check off:** delete its file.
 - **Keep a check but run it only by hand:** keep only `workflow_dispatch:` under `on:`.
+- **A secret-scan false alarm:** the scan uses launchR's rules, not a `.gitleaks.toml` in the package. Silence a false alarm
+  with a `gitleaks:allow` comment on that line; a real secret must be removed and its key rotated.
 - **Keep the `permissions:` block as it is:** a check that reports on pull requests needs what it lists, or it stops before it starts.
 
 Scheduled runs use the default branch only, and GitHub pauses them on public repositories after 60 days with no activity.

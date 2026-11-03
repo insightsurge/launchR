@@ -24,6 +24,7 @@ cmd_eject <- function(args) {
   eject_copy(kit_path("cli"), file.path(".launchr", "cli"))
   eject_copy(kit_path("lists"), file.path(".launchr", "lists"))
   file.copy(kit_path(".github", "pr-report.json"), file.path(".launchr", ".github", "pr-report.json"), overwrite = TRUE)
+  file.copy(kit_path(".github", "gitleaks.toml"), file.path(".launchr", ".github", "gitleaks.toml"), overwrite = TRUE)
   pattern <- "uses: insightsurge/launchR/\\.github/workflows/([a-z-]+)\\.yaml@v[0-9.]+"
   changed <- character()
   for (file in list.files(workflows, pattern = "[.]yaml$", full.names = TRUE)) {

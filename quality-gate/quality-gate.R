@@ -1443,7 +1443,8 @@ main <- function(args) {
   update <- opts$update
   mode <- opts$mode
   if (!file.exists("DESCRIPTION")) {
-    cli::cli_abort("Run the gate from the package root (no DESCRIPTION in {.path {getwd()}}).")
+    cli::cat_line("FAIL usage: run the gate from the package root (no DESCRIPTION in ", getwd(), ").")
+    quit(status = 2)
   }
   settings <- tryCatch(read_settings(), error = function(e) conditionMessage(e))
   if (is.character(settings)) {

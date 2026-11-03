@@ -36,6 +36,18 @@ tick_description <- function(target) {
   unname(plain(fields[1, "Description"]) != plain(fields[1, "Title"]))
 }
 
+# The caller's platforms line lists a Windows and a Mac system (r-cmd-check.yaml starts with Linux only).
+tick_platforms <- function(target) {
+  if (!file.exists(target)) {
+    return(NA)
+  }
+  line <- grep("^\\s*platforms:", strsplit(read_text(target), "\n", fixed = TRUE)[[1]], value = TRUE)
+  if (length(line) == 0) {
+    return(NA)
+  }
+  grepl("windows/", line[1], fixed = TRUE) && grepl("macos/", line[1], fixed = TRUE)
+}
+
 # target is "endpoint|jq"; the jq expression must print true or false (or nothing, when the field is hidden).
 tick_setting <- function(target, ctx) {
   if (!ctx$connected) {
@@ -107,6 +119,7 @@ tick_state <- function(row, ctx) {
   switch(row$kind,
     file = tick_file(row$target),
     placeholder = tick_placeholder(row$target),
+    platforms = tick_platforms(row$target),
     description = tick_description(row$target),
     setting = tick_setting(row$target, ctx),
     ci = tick_ci(ctx),
