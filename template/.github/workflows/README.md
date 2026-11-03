@@ -15,6 +15,9 @@ and where it runs, so it stays short. Nothing needs installing: GitHub runs thes
 
 Your package may not have all of these: a missing file means that check is off.
 
+The coverage check decides on its own. If you also send coverage to Codecov (the comment in `coverage.yaml` says how),
+`codecov.yml` at the top of the package keeps Codecov to reporting: no blocking status and no second comment.
+
 ## Changing a check
 
 - **Which branches or times:** edit the `on:` block at the top of the file. Times are UTC.

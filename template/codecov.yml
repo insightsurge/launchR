@@ -1,0 +1,13 @@
+# Codecov only reports here: the coverage check enforces the limit (Config/quality-gate/coverage in DESCRIPTION) and
+# writes the figure into the pull request's CI report, so Codecov's own statuses never block a pull request and it
+# posts no second comment. Used only once you send results to Codecov (see .github/workflows/coverage.yaml).
+comment: false
+
+coverage:
+  status:
+    project:
+      default:
+        informational: true
+    patch:
+      default:
+        informational: true

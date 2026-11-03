@@ -20,6 +20,10 @@
 ^renv\.lock$
 ^\.Rprofile$
 ^\.Rhistory$
+^\.Renviron$
+^\.env$
+^\.env\..*$
+^\.httr-oauth$
 ^.*\.Rcheck$
 ^{{package}}_.*\.tar\.gz$
 ^tools$

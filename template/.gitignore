@@ -2,7 +2,11 @@
 .Rproj.user/
 .Rhistory
 .RData
+
+# Local secrets: tokens and passwords stay on your computer
 .Renviron
+.env
+.env.*
 
 # Operating system files
 .DS_Store
