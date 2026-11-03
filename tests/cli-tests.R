@@ -328,7 +328,14 @@ dry_out <- quiet(cmd_github("--dry-run"))
 setwd(old)
 expect(signed_out$value == 1L && length(writes(log_lines(fake8))) == 0L, "--yes while signed out stops and writes nothing")
 expect(dry_out$value == 0L && any(grepl("isn't signed in", dry_out$out)), "a dry run while signed out still shows the plan")
-Sys.setenv(PATH = "/usr/bin:/bin")
+# A PATH with git and the shell tools but no gh (on GitHub's runners gh sits in /usr/bin, so "/usr/bin:/bin" won't do).
+no_gh_bin <- file.path(work, "no-gh-bin")
+dir.create(no_gh_bin)
+for (tool in c("git", "jq", "sh", "bash", "env")) {
+  found <- Sys.which(tool)
+  if (nzchar(found)) file.symlink(found, file.path(no_gh_bin, tool))
+}
+Sys.setenv(PATH = no_gh_bin)
 old <- setwd(pkg)
 no_gh <- quiet(cmd_github("--dry-run"))
 no_gh_yes <- quiet(cmd_github("--yes"))
