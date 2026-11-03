@@ -41,6 +41,65 @@ placeholder_values <- function(choices) {
     credit_badge = if (public) sprintf("[![Set up with launchR](https://img.shields.io/badge/set%%20up%%20with-launchR-f6ab85)](%s)\n", site_url) else "",
     credit_line = if (public) sprintf("\nSet up with [launchR](%s).", site_url) else ""
   )
+  ci_on <- "ci" %in% choices$parts
+  on_rows <- if (ci_on) which(vapply(checks$key, function(key) isTRUE(choices$checks[[key]]$on), logical(1))) else integer()
+  values$checks_table <- paste(
+    sprintf("| `%s.yaml` | %s | %s |", checks$check[on_rows], checks$label[on_rows],
+      vapply(checks$key[on_rows], function(key) when_text(choices$checks[[key]]), character(1))),
+    collapse = "\n"
+  )
+  if (length(on_rows) == 0) values$checks_table <- "| None yet | Come back to the site to add one | |"
+  for (kind in names(test_kinds)) {
+    rows <- on_rows[checks$key[on_rows] %in% test_kinds[[kind]]]
+    values[[paste0("runs_", kind)]] <- if (length(rows) > 0) paste0("`", checks$check[rows], "`", collapse = ", ") else "none of the checks yet"
+  }
+  values$browser_row <- if (frontend) {
+    sprintf("| `-browser.R` | Tests that drive a browser (shinytest2, chromote) | `test-demo-browser.R` | %s |", values$runs_browser)
+  } else {
+    ""
+  }
+  values$browser_skip <- if (frontend) "skip_on_cran()                                                    # -browser.R files" else ""
+  # codecov.yml comes with new packages only: an existing package's .Rbuildignore doesn't list it.
+  values$codecov_note <- if (ci_on && "skeleton" %in% choices$parts && isTRUE(choices$checks$coverage$on)) {
+    paste0(
+      "The coverage check decides on its own. If you also send coverage to Codecov (the comment in `coverage.yaml` says how),\n",
+      "`codecov.yml` at the top of the package keeps Codecov to reporting: no blocking status and no second comment.\n\n"
+    )
+  } else {
+    ""
+  }
+  test_kinds_text <- paste(c(
+    "## Test file kinds",
+    "",
+    "Most tests run in every check. Files whose name ends in a kind run only where they can:",
+    "",
+    "| File name ends in | What it holds | Runs in |",
+    "| --- | --- | --- |",
+    sprintf("| `-browser.R` | Tests that drive a browser (shinytest2, chromote) | %s |", values$runs_browser),
+    sprintf("| `-snap.R` | Snapshot tests (`expect_snapshot()`) | %s |", values$runs_snap),
+    sprintf("| `-extended.R` | Slow or detailed tests | %s |", values$runs_extended),
+    "",
+    "Start each browser file with `skip_on_cran()` and each extended file with",
+    "`skip_if_not(identical(Sys.getenv(\"EXTENDED_TESTS\"), \"true\"))`, so CRAN and R CMD check skip them."
+  ), collapse = "\n")
+  values$test_kinds_section <- if ("skeleton" %in% choices$parts) {
+    "Which test files each check runs: `tests/README.md`.\n\n"
+  } else {
+    paste0(test_kinds_text, "\n\n")
+  }
+  values$full_tests_line <- if (ci_on && isTRUE(choices$checks$full_tests$on)) {
+    "`full-tests` runs every kind and fails if any test skips there. "
+  } else {
+    ""
+  }
+  values$time_limit_section <- if (ci_on && isTRUE(choices$checks$r_cmd_check$on)) {
+    paste0(
+      "## The time limit\n\n`r-cmd-check` fails when the tests take longer than `test-time-limit` seconds on Linux with R release (180 by default;\n",
+      "0 turns it off). CRAN asks for quick checks. Move slow tests to a `-extended.R` file, or make them faster.\n\n"
+    )
+  } else {
+    ""
+  }
   for (i in seq_len(nrow(checks))) {
     key <- checks$key[i]
     check <- choices$checks[[key]]
@@ -53,6 +112,31 @@ placeholder_values <- function(choices) {
   }
   values
 }
+
+# When a check runs, in words for the workflows README: "pull requests, pushes, Mondays at 05:00 UTC, by hand".
+# site/src/form/engine.js has the same.
+when_text <- function(check) {
+  cron <- strsplit(check$cron, " ", fixed = TRUE)[[1]]
+  time <- sprintf("%02d:%02d UTC", as.integer(cron[2]), as.integer(cron[1]))
+  weekdays <- c("Sundays", "Mondays", "Tuesdays", "Wednesdays", "Thursdays", "Fridays", "Saturdays")
+  parts <- c(
+    if ("pr" %in% check$events) "pull requests",
+    if ("push" %in% check$events) "pushes",
+    if ("schedule" %in% check$events) {
+      if (cron[5] == "*") paste("every day at", time) else paste(weekdays[as.integer(cron[5]) + 1], "at", time)
+    },
+    if ("manual" %in% check$events) "by hand"
+  )
+  paste(parts, collapse = ", ")
+}
+
+# Which of the package's checks run each kind of test file, for tests/README.md.
+test_kinds <- list(
+  plain = c("r_cmd_check", "coverage", "full_tests", "r_cmd_check_extended"),
+  browser = "full_tests",
+  snap = "full_tests",
+  extended = c("coverage", "full_tests", "r_cmd_check_extended")
+)
 
 # The help page's links, as roxygen2 writes them from URL and BugReports.
 man_seealso <- function(urls, repository) {

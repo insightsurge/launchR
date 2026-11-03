@@ -17,7 +17,8 @@ path	part	check	release
 .github/release.yml	github		any
 .github/workflows/README.md	ci		any
 .github/workflows/coverage.yaml	ci	coverage	any
-.github/workflows/extended-tests.yaml	ci	extended-tests	any
+codecov.yml	skeleton	coverage	any
+.github/workflows/r-cmd-check-extended.yaml	ci	r-cmd-check-extended	any
 .github/workflows/full-tests.yaml	ci	full-tests	any
 .github/workflows/github-setup.yaml	github		any
 .github/workflows/lint.yaml	ci	lint	any
@@ -48,7 +49,11 @@ inst/www/{{package}}.js	frontend		any
 man/say_hello.Rd	skeleton		any
 man/{{package}}-package.Rd	skeleton		any
 pkgdown/extra.css	website		any
+tests/README.md	skeleton		any
 tests/testthat.R	skeleton		any
-tests/testthat/test-browser.R	frontend		any
+tests/testthat/test-demo-browser.R	frontend		any
 tests/testthat/test-say_hello.R	skeleton		any
+tests/testthat/test-say_hello-snap.R	skeleton		any
+tests/testthat/_snaps/say_hello-snap.md	skeleton		any
+tests/testthat/test-say_hello-extended.R	skeleton		any
 {{package}}.Rproj	skeleton		any

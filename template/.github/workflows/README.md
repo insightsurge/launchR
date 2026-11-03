@@ -3,19 +3,14 @@
 Each file in this folder is one check. The check itself lives in the launchR repository and this file only says when
 and where it runs, so it stays short. Nothing needs installing: GitHub runs these by itself.
 
-| File | What it does |
-| --- | --- |
-| `r-cmd-check.yaml` | R CMD check, the core check |
-| `lint.yaml` | Style, docs in sync and spelling |
-| `no-suggests.yaml` | Checks the package works without its optional packages |
-| `secret-scan.yaml` | Catches passwords and tokens committed by mistake |
-| `coverage.yaml` | Measures how much code your tests run |
-| `full-tests.yaml` | Runs every test, including the browser, snapshot and extended tests CRAN skips, with Chrome for browser tests |
-| `extended-tests.yaml` | A full check on other systems, including any detailed tests you have marked |
+| File | What it does | When it runs |
+| --- | --- | --- |
+{{checks_table}}
 
-Your package may not have all of these: a missing file means that check is off.
+These are the checks chosen when the package was set up. To add another later, come back to the site and choose only
+that check.
 
-## Changing a check
+{{test_kinds_section}}{{codecov_note}}## Changing a check
 
 - **Which branches or times:** edit the `on:` block at the top of the file. Times are UTC.
 - **Which systems and R versions:** edit `platforms` under `with:`.
@@ -25,31 +20,7 @@ Your package may not have all of these: a missing file means that check is off.
 
 Scheduled runs use the default branch only, and GitHub pauses them on public repositories after 60 days with no activity.
 
-## Test file kinds
-
-Most tests go in `tests/testthat/test-<name>.R` and run everywhere. Three kinds of file, named by their ending, run
-only where they can. `full-tests` runs every kind, and fails if any test skips there:
-
-| File name ends in | What it holds | Runs in |
-| --- | --- | --- |
-| `-browser.R` | Tests that drive a browser (shinytest2, chromote) | `full-tests` |
-| `-snap.R` | Snapshot tests (`expect_snapshot()`) | `full-tests` |
-| `-extended.R` | Slow or detailed tests | `full-tests`, `coverage`, `extended-tests` |
-
-CRAN and `r-cmd-check` skip all three. Snapshot tests skip on CRAN by themselves. Start each browser or extended file
-with a skip, so it skips there too:
-
-```r
-skip_on_cran()                                                    # -browser.R files
-skip_if_not(identical(Sys.getenv("EXTENDED_TESTS"), "true"))      # -extended.R files
-```
-
-## The time limit
-
-`r-cmd-check` fails when the tests take longer than `test-time-limit` seconds on Linux with R release (180 by default;
-0 turns it off). CRAN asks for quick checks. Move slow tests to a `-extended.R` file, or make them faster.
-
-## Run the checks on your computer
+{{time_limit_section}}## Run the checks on your computer
 
 The quality gate runs most of these checks locally: style, docs in sync, spelling, tests, coverage and R CMD check as
 CRAN runs it. It needs these packages once:
@@ -70,7 +41,8 @@ download.file("https://raw.githubusercontent.com/insightsurge/launchR/v{{kit_ver
 system2(file.path(R.home("bin"), "Rscript"), c(gate, "full"))
 ```
 
-Use `fast` instead of `full` for a quicker run. It prints one PASS or FAIL line per step.
+Use `fast` instead of `full` for a quicker run. It prints one PASS or FAIL line per step. Like CRAN, it skips the
+extended tests: run those with `Sys.setenv(EXTENDED_TESTS = "true")`, then `devtools::test()`.
 
 ## Updates
 

@@ -77,7 +77,8 @@ jobs:
           EVENT_NAME: ${{ github.event_name }}
           # As CRAN: setup-r sets NOT_CRAN to true, which would run the browser tests here too.
           NOT_CRAN: false
-          # Apart from the extended tests, which CRAN skips: coverage counts them (tests/testthat/helper-extended.R).
+          # Apart from the extended tests, which CRAN skips: coverage counts them (files ending in -extended.R run only
+          # with EXTENDED_TESTS=true; the package's tests/README.md).
           EXTENDED_TESTS: true
         run: |
           cov <- covr::package_coverage(
