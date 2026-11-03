@@ -58,7 +58,13 @@ jobs:
           dependencies: '"hard"'
           # A fresh library each time; the gate hides what the check doesn't need anyway.
           cache: false
+          # The gate's own needs in its nosuggests mode (quality-gate.R, needs_for()), then the check's.
           extra-packages: |
+            any::checkmate
+            any::cli
+            any::jsonlite
+            any::pkgbuild
+            any::processx
             any::rcmdcheck
             any::testthat
             any::knitr
