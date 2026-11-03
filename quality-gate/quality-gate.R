@@ -1325,7 +1325,7 @@ usage_lines <- c(
 
 # The command line as a list; `error` is a message when the arguments don't make sense (the gate then exits 2).
 parse_args <- function(args) {
-  checkmate::assert_character(args, any.missing = FALSE)
+  stopifnot(is.character(args), !anyNA(args))
   opts <- list(
     mode = "fast",
     update = FALSE,
@@ -1429,10 +1429,10 @@ list_steps <- function(uses) {
 }
 
 main <- function(args) {
-  checkmate::assert_character(args, any.missing = FALSE)
+  stopifnot(is.character(args), !anyNA(args))
   opts <- parse_args(args)
   if (opts$help) {
-    cli::cat_line(usage_lines)
+    writeLines(usage_lines)
     quit(status = 0)
   }
   if (!is.null(opts$error)) {
