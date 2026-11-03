@@ -126,8 +126,12 @@ placeholder_values <- function(choices) {
     }
     values[[paste0("cron_", key)]] <- check$cron
     default <- checks[[paste0("platforms_", choices$visibility)]][i]
-    # A chosen oldest R is checked on Linux by R CMD check, as the site's Modify page does. engine.js has the same.
-    if (key == "r_cmd_check" && min_r != kit_setting("min_r")) default <- paste0(default, ", ubuntu/", min_r)
+    # The default oldest R (4.1) in a check's systems becomes the chosen one, and R CMD check runs on it on Linux, as
+    # the site's Modify page does. engine.js has the same.
+    default <- gsub(paste0("/", kit_setting("min_r")), paste0("/", min_r), default, fixed = TRUE)
+    if (key == "r_cmd_check" && min_r != kit_setting("min_r") && !grepl(paste0("ubuntu/", min_r), default, fixed = TRUE)) {
+      default <- paste0(default, ", ubuntu/", min_r)
+    }
     values[[paste0("platforms_", key)]] <- if (is.null(check$platforms)) default else check$platforms
   }
   values

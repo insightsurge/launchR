@@ -254,9 +254,11 @@ export function placeholderValues(choices, lists) {
       values[`c_${row.key}_${event}`] = check.events.includes(event) ? '' : '# ';
     }
     values[`cron_${row.key}`] = check.cron;
-    // A chosen oldest R is checked on Linux by R CMD check, as the site's Modify page does. cli/R/build.R has the same.
-    const oldest = row.key === 'r_cmd_check' && minR !== lists.settings.min_r ? `, ubuntu/${minR}` : '';
-    values[`platforms_${row.key}`] = check.platforms ?? `${row[`platforms_${choices.visibility}`]}${oldest}`;
+    // The default oldest R (4.1) in a check's systems becomes the chosen one, and R CMD check runs on it on Linux, as
+    // the site's Modify page does. cli/R/build.R has the same.
+    const start = row[`platforms_${choices.visibility}`].replaceAll(`/${lists.settings.min_r}`, `/${minR}`);
+    const oldest = row.key === 'r_cmd_check' && minR !== lists.settings.min_r && !start.includes(`ubuntu/${minR}`) ? `, ubuntu/${minR}` : '';
+    values[`platforms_${row.key}`] = check.platforms ?? `${start}${oldest}`;
   }
   return values;
 }

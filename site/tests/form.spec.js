@@ -141,8 +141,23 @@ test('Modify: the oldest R reaches DESCRIPTION, and the download works from ther
   const { files } = await download(page, '#modDownload');
   await expect(page.locator('#nextView')).toBeVisible();
   expect(files['tablePkg/DESCRIPTION']).toContain('R (>= 4.3.0)');
+  // No check runs on an R older than the one chosen.
+  for (const [path, text] of Object.entries(files)) if (path.includes('/workflows/')) expect(text, path).not.toMatch(/^ *platforms:.*\/4\.1/m);
   // A private plan checks the oldest R on Linux too.
   expect(files['tablePkg/.github/workflows/r-cmd-check.yaml']).toContain('platforms: ubuntu/release, ubuntu/oldrel-1, ubuntu/4.3');
+});
+
+test('Modify: on a public plan, no check runs on an R older than the oldest R chosen', async ({ page }) => {
+  await openForm(page);
+  await fillForm(page);
+  await page.locator('input[name=plan][value=a]').check();
+  await page.locator('#modify').click();
+  await page.locator('#minR').fill('4.3');
+  await page.locator('#minR').dispatchEvent('change');
+  const { files } = await download(page, '#modDownload');
+  const flows = Object.entries(files).filter(([path]) => path.includes('/workflows/'));
+  for (const [path, text] of flows) expect(text, path).not.toMatch(/^ *platforms:.*\/4\.1/m);
+  expect(files['tablePkg/.github/workflows/full-tests.yaml']).toContain('platforms: ubuntu/release, ubuntu/4.3');
 });
 
 test('Modify refuses an oldest R below 4.1 or with a patch number', async ({ page }) => {

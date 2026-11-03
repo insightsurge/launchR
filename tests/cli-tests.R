@@ -147,6 +147,9 @@ expect(!file.exists(file.path(plan_d, ".github", "workflows", "r-cmd-check-exten
   any(grepl("target: internal", readLines(file.path(plan_d, "DESCRIPTION")))), "plan d is private and internal, without r-cmd-check-extended")
 min_r <- new_package("minrpkg", "--min-r", "4.3")
 expect(any(grepl("R (>= 4.3.0)", readLines(file.path(min_r, "DESCRIPTION")), fixed = TRUE)), "the minimum R version reaches DESCRIPTION")
+min_r_flows <- unlist(lapply(list.files(file.path(min_r, ".github", "workflows"), "[.]yaml$", full.names = TRUE), readLines))
+expect(!any(grepl("^ *platforms:.*/4[.]1", min_r_flows)) && any(grepl("platforms: ubuntu/release, ubuntu/4.3", min_r_flows, fixed = TRUE)),
+  "no check runs on an R older than the oldest R chosen")
 private_min_r <- new_package("privminrpkg", "--plan", "c", "--min-r", "4.4")
 expect(any(grepl("platforms: ubuntu/release, ubuntu/oldrel-1, ubuntu/4.4", readLines(file.path(private_min_r, ".github", "workflows", "r-cmd-check.yaml")), fixed = TRUE)),
   "a private package checks its oldest R on Linux, as the site does")
