@@ -8,9 +8,9 @@ and where it runs, so it stays short. Nothing needs installing: GitHub runs thes
 {{checks_table}}
 
 These are the checks chosen when the package was set up. To add another later, come back to the site and choose only
-that check. Which test files each check runs: `tests/README.md`.
+that check.
 
-{{codecov_note}}## Changing a check
+{{test_kinds_section}}{{codecov_note}}## Changing a check
 
 - **Which branches or times:** edit the `on:` block at the top of the file. Times are UTC.
 - **Which systems and R versions:** edit `platforms` under `with:`.
@@ -41,7 +41,8 @@ download.file("https://raw.githubusercontent.com/insightsurge/launchR/v{{kit_ver
 system2(file.path(R.home("bin"), "Rscript"), c(gate, "full"))
 ```
 
-Use `fast` instead of `full` for a quicker run. It prints one PASS or FAIL line per step.
+Use `fast` instead of `full` for a quicker run. It prints one PASS or FAIL line per step. Like CRAN, it skips the
+extended tests: run those with `Sys.setenv(EXTENDED_TESTS = "true")`, then `devtools::test()`.
 
 ## Updates
 

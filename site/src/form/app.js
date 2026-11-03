@@ -70,8 +70,8 @@ function paint() {
     <div class="line"><label for="minR">Minimum R version</label><input id="minR" class="short" type="text" inputmode="decimal" autocomplete="off" placeholder="4.1" value="${esc(S.minR)}" /></div>
     <p class="fieldnote" id="minRNote" role="status"></p>
     <table class="rmatrix"><thead><tr><td></td>${RS.map(([, x]) => `<th scope="col"><code>${x}</code></th>`).join('')}</tr></thead><tbody>${SYSTEMS.map(([k, t]) => `<tr><th scope="row">${t}</th>${RS.map(([v, x]) => (k === 'ubuntu' || v === 'release' ? `<td><label class="cell"><input type="checkbox" data-matrix="${k}/${v}" aria-label="${t}, ${x}"${S.matrix[`${k}/${v}`] ? ' checked' : ''} /><span><svg aria-hidden="true"><use href="#i-tick" /></svg></span></label></td>` : '<td class="none"></td>')).join('')}</tr>`).join('')}</tbody></table>
-    ${extra ? sw('samePlatforms', 'Use the same systems for browser and extended tests', 'Runs test files ending in -browser or -extended on the systems above. Off keeps the recommended ones.', S.samePlatforms) : ''}
-    ${weekly ? `<div class="line"><label for="day">Weekly checks run on</label>${help('The weekly run of R-CMD-check, full-tests and r-cmd-check-extended, whichever are on. It shows here when any of them is on, and the workflows README lists the time. Time is in 24-hour UTC, which is what GitHub uses. It may run some minutes late when GitHub is busy.')}<span class="when"><select id="day">${[...DAYS.slice(1), DAYS[0]].map((d) => `<option${d === S.day ? ' selected' : ''}>${d}</option>`).join('')}</select><label class="sr" for="time">Time in 24-hour UTC</label><input id="time" class="short" type="text" inputmode="numeric" autocomplete="off" maxlength="5" value="${esc(S.time)}" /><span class="unit">UTC</span></span></div><p class="fieldnote" id="timeNote" role="status"></p>` : ''}
+    ${extra ? sw('samePlatforms', 'Use the same systems for browser and extended tests', 'Runs full-tests and r-cmd-check-extended on the systems and R versions above, as R CMD check does. Off keeps their recommended ones.', S.samePlatforms) : ''}
+    ${weekly ? `<div class="line"><label for="day">Weekly checks run on</label>${help('The weekly run of r-cmd-check, full-tests and r-cmd-check-extended, whichever are on. It shows here when any of them is on, and the workflows README lists the time. Time is in 24-hour UTC, which is what GitHub uses. It may run some minutes late when GitHub is busy.')}<span class="when"><select id="day">${[...DAYS.slice(1), DAYS[0]].map((d) => `<option${d === S.day ? ' selected' : ''}>${d}</option>`).join('')}</select><label class="sr" for="time">Time in 24-hour UTC</label><input id="time" class="short" type="text" inputmode="numeric" autocomplete="off" maxlength="5" value="${esc(S.time)}" /><span class="unit">UTC</span></span></div><p class="fieldnote" id="timeNote" role="status"></p>` : ''}
     ${head3('How the checks reach your package')}
     <div class="pick">
       <div class="opt"><label><input type="radio" name="delivery" checked /><b>Shared</b></label>${help('Your files call the checks kept in launchR, so you get fixes and updates by themselves.')}</div>
@@ -235,7 +235,7 @@ function choices() {
     ...row,
     on: S.checks[key],
     cron: cron(),
-    platforms: key === 'r_cmd_check' || (S.samePlatforms && (key === 'full_tests' || key === 'r_cmd_check_extended')) ? chosen : null,
+    platforms: key === 'r_cmd_check' ? chosen : S.samePlatforms && (key === 'full_tests' || key === 'r_cmd_check_extended') ? platforms() : null,
   }]));
   const email = mode === 'new' ? v('email') : '';
   return {
@@ -335,7 +335,7 @@ const setupButton = 'open Set up this repository. Its first run, from your push,
 const actions = 'Open the repository on GitHub and go to Actions. Your checks are running.';
 const local = `To run the same checks on your computer before a pull request, see <em>Run the checks on your computer</em> in ${code('.github/workflows/README.md')}. `;
 // Optional, and only with the coverage check: the check works without Codecov.
-const codecov = () => (S.checks.coverage ? `Optional: to see coverage on <a href="https://about.codecov.io" target="_blank" rel="noopener">Codecov</a>, sign in there with GitHub and add your repository, save its upload token on GitHub as a repository secret named ${code('CODECOV_TOKEN')} (Settings, then Secrets and variables, then Actions), and remove the ${code('#')} before the three ${code('secrets')} lines in ${code('.github/workflows/coverage.yaml')}. ` : '');
+const codecov = () => (S.checks.coverage ? `Optional: to see coverage on <a href="https://about.codecov.io" target="_blank" rel="noopener">Codecov</a>, sign in there with GitHub and add your repository, save its upload token on GitHub as a repository secret named ${code('CODECOV_TOKEN')} (Settings, then Secrets and variables, then Actions), and remove the ${code('#')} before the ${code('secrets:')} and ${code('CODECOV_TOKEN:')} lines in ${code('.github/workflows/coverage.yaml')}. ` : '');
 
 function existingSteps() {
   const list = [`Unzip ${code('launchR-files.zip')} and copy what's inside into your package folder. Nothing in ${code('R/')}, ${code('tests/')} or ${code('DESCRIPTION')} changes.`];

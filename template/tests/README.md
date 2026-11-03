@@ -15,8 +15,8 @@ they go in a file whose name ends in a kind. The examples next to each are in `t
 | `-snap.R` | Snapshot tests (`expect_snapshot()`): the output is saved in `_snaps/` and compared on later runs | `test-say_hello-snap.R` | {{runs_snap}} |
 | `-extended.R` | Slow or detailed tests | `test-say_hello-extended.R` | {{runs_extended}} |
 
-`full-tests` runs every kind and fails if any test skips there. CRAN skips every kind but the plain one. Snapshot tests
-skip on CRAN by themselves; start each other file with a skip line, so it skips there too:
+{{full_tests_line}}CRAN skips every kind but the plain one. Snapshot tests
+skip on CRAN by themselves; start each other file, or each test in it, with a skip line, so it skips there too:
 
 ```r
 {{browser_skip}}
@@ -25,7 +25,7 @@ skip_if_not(identical(Sys.getenv("EXTENDED_TESTS"), "true"))      # -extended.R 
 
 ## On your computer
 
-`devtools::test()` runs the plain and snapshot tests. To run the extended ones too:
+`devtools::test()` runs the plain, snapshot and browser tests. To run the extended ones too:
 
 ```r
 Sys.setenv(EXTENDED_TESTS = "true")

@@ -140,7 +140,7 @@ jobs:
           # The package's name from DESCRIPTION, so the workflow names no package.
           package <- read.dcf("DESCRIPTION", fields = "Package")[[1]]
           library(package, character.only = TRUE)
-          # Every test file, including the kinds CRAN skips (the package's .github/workflows/README.md, "Test file kinds").
+          # Every test file, including the kinds CRAN skips (the package's tests/README.md, or "Test file kinds" in .github/workflows/README.md).
           files <- list.files("tests/testthat", "^test-.*[.]R$")
           message(length(files), " test files: ", paste(files, collapse = ", "))
           # A package need not have any: nothing to run isn't a failure.

@@ -17,7 +17,7 @@ path	part	check	release
 .github/release.yml	github		any
 .github/workflows/README.md	ci		any
 .github/workflows/coverage.yaml	ci	coverage	any
-codecov.yml	ci	coverage	any
+codecov.yml	skeleton	coverage	any
 .github/workflows/r-cmd-check-extended.yaml	ci	r-cmd-check-extended	any
 .github/workflows/full-tests.yaml	ci	full-tests	any
 .github/workflows/github-setup.yaml	github		any

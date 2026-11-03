@@ -48,6 +48,7 @@ placeholder_values <- function(choices) {
       vapply(checks$key[on_rows], function(key) when_text(choices$checks[[key]]), character(1))),
     collapse = "\n"
   )
+  if (length(on_rows) == 0) values$checks_table <- "| None yet | Come back to the site to add one | |"
   for (kind in names(test_kinds)) {
     rows <- on_rows[checks$key[on_rows] %in% test_kinds[[kind]]]
     values[[paste0("runs_", kind)]] <- if (length(rows) > 0) paste0("`", checks$check[rows], "`", collapse = ", ") else "none of the checks yet"
@@ -58,11 +59,36 @@ placeholder_values <- function(choices) {
     ""
   }
   values$browser_skip <- if (frontend) "skip_on_cran()                                                    # -browser.R files" else ""
-  values$codecov_note <- if (ci_on && isTRUE(choices$checks$coverage$on)) {
+  # codecov.yml comes with new packages only: an existing package's .Rbuildignore doesn't list it.
+  values$codecov_note <- if (ci_on && "skeleton" %in% choices$parts && isTRUE(choices$checks$coverage$on)) {
     paste0(
       "The coverage check decides on its own. If you also send coverage to Codecov (the comment in `coverage.yaml` says how),\n",
       "`codecov.yml` at the top of the package keeps Codecov to reporting: no blocking status and no second comment.\n\n"
     )
+  } else {
+    ""
+  }
+  test_kinds_text <- paste(c(
+    "## Test file kinds",
+    "",
+    "Most tests run in every check. Files whose name ends in a kind run only where they can:",
+    "",
+    "| File name ends in | What it holds | Runs in |",
+    "| --- | --- | --- |",
+    sprintf("| `-browser.R` | Tests that drive a browser (shinytest2, chromote) | %s |", values$runs_browser),
+    sprintf("| `-snap.R` | Snapshot tests (`expect_snapshot()`) | %s |", values$runs_snap),
+    sprintf("| `-extended.R` | Slow or detailed tests | %s |", values$runs_extended),
+    "",
+    "Start each browser file with `skip_on_cran()` and each extended file with",
+    "`skip_if_not(identical(Sys.getenv(\"EXTENDED_TESTS\"), \"true\"))`, so CRAN and R CMD check skip them."
+  ), collapse = "\n")
+  values$test_kinds_section <- if ("skeleton" %in% choices$parts) {
+    "Which test files each check runs: `tests/README.md`.\n\n"
+  } else {
+    paste0(test_kinds_text, "\n\n")
+  }
+  values$full_tests_line <- if (ci_on && isTRUE(choices$checks$full_tests$on)) {
+    "`full-tests` runs every kind and fails if any test skips there. "
   } else {
     ""
   }

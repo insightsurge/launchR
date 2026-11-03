@@ -1,6 +1,6 @@
 # Derived from https://github.com/r-lib/actions/tree/v2/examples (check-standard.yaml).
 # The pass mark is 0 errors, 0 warnings, 0 notes, so any note fails the check. R CMD check as CRAN runs it. The time
-# limit and the test file kinds are explained in the package's .github/workflows/README.md.
+# limit is explained in the package's .github/workflows/README.md, the test file kinds in its tests/README.md.
 on:
   workflow_call:
     inputs:

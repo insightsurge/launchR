@@ -1,4 +1,4 @@
-# R CMD check on other systems, with the extended tests (files ending in -extended.R; see tests/README.md).
+# R CMD check on other systems, with the extended tests (test files ending in -extended.R).
 # How this file works: see README.md in this folder.
 name: r-cmd-check-extended
 
