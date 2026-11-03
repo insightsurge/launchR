@@ -20,8 +20,13 @@ export function readLists(bundle) {
   };
 }
 
-export function checkPackageName(name) {
+// R's rules for a package name, plus a length limit and the names of R's own packages. cli/R/choices.R has the same.
+export function checkPackageName(name, lists) {
   if (name.length < 2) return 'Names need at least two characters.';
+  if (name.length > 60) return 'Keep the name under 60 characters.';
+  if (lists.settings.base_packages.split(',').map((base) => base.trim()).includes(name)) {
+    return `${name} is part of R itself, so choose another name.`;
+  }
   if (!/^[A-Za-z]/.test(name)) return 'Names must start with a letter.';
   if (/[.]$/.test(name)) return "Names can't end in a dot.";
   if (!/^[A-Za-z0-9.]+$/.test(name)) return 'Names can only use letters, numbers and dots.';
@@ -77,8 +82,11 @@ export function placeholderValues(choices, lists) {
   const repository = `https://github.com/${owner}/${choices.package}`;
   const site = `https://${owner}.github.io/${choices.package}`;
   const urls = [...(choices.parts.includes('website') ? [`${site}/`] : []), repository];
+  // The spelling check splits a name at digits and dots (demoPkg2 is read as demoPkg), so the parts go in the word list.
+  const parts = [...new Set(choices.package.split(/[^A-Za-z]+/))].filter((part) => part.length > 1 && part !== choices.package);
   const values = {
     package: choices.package,
+    name_words: parts.map((part) => `${part}\n`).join(''),
     title: choices.title,
     description: `${choices.title}.`,
     author: `${choices.given} ${choices.family}`,

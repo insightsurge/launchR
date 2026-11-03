@@ -1,6 +1,8 @@
-# Values the CLI and the app share.
+# Values the CLI and the app share. branches: the checks run for these; master too, because usethis::use_git() can
+# create it. The CLI's first commit uses the first one. base_packages: names a new package can't take.
 key	value
-kit_version	0.0.5
+kit_version	0.0.6
 site_url	https://launch-r.web.app
 preset	starter
-branches	main
+branches	main, master
+base_packages	R, base, compiler, datasets, graphics, grDevices, grid, methods, parallel, splines, stats, stats4, tcltk, tools, utils

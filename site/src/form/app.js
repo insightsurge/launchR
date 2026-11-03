@@ -1,4 +1,4 @@
-// The form: four questions, Modify, someone with a package already, and what to do after the download.
+// The form: five questions, Modify, someone with a package already, and what to do after the download.
 // Choices live here; engine.js turns them into files, the same way the CLI does.
 import JSZip from 'jszip';
 import { countZip } from '../consent.js';
@@ -23,7 +23,6 @@ const RS = [['release', 'release'], ['oldrel-1', 'oldrel-1'], ['devel', 'devel']
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const WORDS = ['No', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'All seven'];
 const WEEKLY = ['r_cmd_check', 'full_tests', 'extended_tests'];
-const BASE_PACKAGES = ['R', 'base', 'compiler', 'datasets', 'graphics', 'grDevices', 'grid', 'methods', 'parallel', 'splines', 'stats', 'stats4', 'tcltk', 'tools', 'utils'];
 const PARTS = [['ci', 'CI checks'], ['website', 'Website'], ['github', 'Issue forms, labels and checklists']];
 
 let bundle = null;
@@ -50,7 +49,7 @@ function recommended() {
   return {
     checks: Object.fromEntries(lists.checks.map((row) => [row.key, row.starter === 'yes' && !(row.key === 'extended_tests' && plan() === 'd')])),
     matrix: Object.fromEntries(SYSTEMS.flatMap(([s]) => RS.map(([r]) => [`${s}/${r}`, start.includes(`${s}/${r}`)]))),
-    minR: '', samePlatforms: false, day: 'Monday', time: '05:00', website: false, github: true, owner: '', frontend: false,
+    minR: '', samePlatforms: false, day: 'Monday', time: '05:00', website: false, github: true, frontend: false,
   };
 }
 
@@ -78,10 +77,9 @@ function paint() {
       <div class="opt"><label><input type="radio" name="delivery" checked /><b>Shared</b></label>${help('Your files call the checks kept in launchR, so you get fixes and updates by themselves.')}</div>
       <div class="opt"><label class="soon"><input type="radio" name="delivery" disabled /><b>Snapshot</b></label><span class="tag">Coming soon</span>${help("The checks are copied into your repository and frozen, so nothing changes under a validated process. When a new launchR version is released, you won't get any updates, security fixes included.")}</div>
     </div>`;
-  $('#bodySite').innerHTML = `${sw('website', 'Add a website', 'A pkgdown site published to GitHub Pages. It needs your GitHub name below. A private repository needs a paid GitHub plan for this.', S.website)}
+  $('#bodySite').innerHTML = `${sw('website', 'Add a website', 'A pkgdown site published to GitHub Pages. Its address comes from your GitHub name. A private repository needs a paid GitHub plan for this.', S.website)}
     <div class="opt soonline"><span>Navbar choices and theme colours</span><span class="tag">Coming soon</span></div>`;
   $('#bodyGit').innerHTML = `
-    <div class="field"><div class="field-head"><label for="owner">GitHub username or organisation <span class="opt-word">(optional)</span></label>${help('Fills in the links in your README and DESCRIPTION. Left empty, they show your-github-name until you edit them.')}</div><input id="owner" type="text" autocomplete="off" spellcheck="false" value="${esc(S.owner)}" /><p class="err" id="err-owner"></p></div>
     ${sw('github', 'Issue forms, labels and checklists', 'Five issue forms, a pull request template, eleven labels, and the stage checklists.', S.github)}
     <div class="opt soonline"><span>Choosing each form and label</span><span class="tag">Coming soon</span></div>`;
   $('#bodyMore').innerHTML = `${sw('frontend', 'My package ships its own JS or CSS', 'Adds browser tests and the style checks for them.', S.frontend)}
@@ -119,7 +117,6 @@ body.addEventListener('change', (e) => {
 });
 body.addEventListener('input', (e) => {
   if (e.target.id === 'minR') e.target.value = e.target.value.replace(/[^0-9.]/g, '').replace(/^(\d+\.\d*).*/, '$1').slice(0, 4);
-  if (e.target.id === 'owner') { S.owner = e.target.value.trim(); $('#err-owner').textContent = ''; }
 });
 
 function minRProblem() {
@@ -171,9 +168,7 @@ const v = (id) => $(`#${id}`).value.trim();
 
 function nameProblem(name, empty) {
   if (!name) return empty;
-  if (name.length > 60) return 'Keep the name under 60 characters.';
-  if (BASE_PACKAGES.includes(name)) return `${name} is part of R itself, so choose another name.`;
-  return checkPackageName(name);
+  return checkPackageName(name, lists);
 }
 
 function titleProblem(title) {
@@ -199,6 +194,7 @@ function valid() {
     ['first', personProblem(v('first'), 'first')],
     ['last', personProblem(v('last'), 'last')],
     ['email', !v('email') || /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v('email')) ? '' : 'That email looks incomplete, or leave it empty.'],
+    ['owner', v('owner') ? ownerProblem(v('owner')) : 'Give your GitHub user or organisation name, such as insightsurge.'],
   ];
   rules.forEach(([id, text]) => put(id, text));
   const bad = rules.find(([, text]) => text);
@@ -211,12 +207,10 @@ function modifyValid() {
   if (minRProblem()) { open(0); $('#minR').focus(); return false; }
   if (WEEKLY.some((k) => S.checks[k]) && timeProblem()) { open(0); $('#time').focus(); return false; }
   if (S.checks.r_cmd_check && !platforms()) { open(0); $('#minRNote').textContent = 'Choose at least one R version for R CMD check.'; $('[data-matrix]').focus(); return false; }
-  const owner = mode !== 'new' ? '' : ownerProblem(S.owner) || (S.website && !S.owner ? 'A website needs your GitHub name, so it has an address.' : '');
-  if (owner) { open(2); $('#err-owner').textContent = owner; $('#owner').focus(); return false; }
   return true;
 }
 
-['pkg', 'what', 'first', 'last', 'email'].forEach((id) => $(`#${id}`).addEventListener('input', () => put(id, '')));
+['pkg', 'what', 'first', 'last', 'email', 'owner'].forEach((id) => $(`#${id}`).addEventListener('input', () => put(id, '')));
 ['exPkg', 'exOwner'].forEach((id) => $(`#${id}`).addEventListener('input', () => put(id, '')));
 
 function cron() {
@@ -245,7 +239,7 @@ function choices() {
   }]));
   const email = mode === 'new' ? v('email') : '';
   return {
-    ...base, parts, checks, visibility: visibility(), release: release(), owner: mode === 'new' ? S.owner : v('exOwner'),
+    ...base, parts, checks, visibility: visibility(), release: release(), owner: mode === 'new' ? v('owner') : v('exOwner'),
     package: pkg(), title: mode === 'new' ? v('what').replace(/[.\s]+$/, '') : '', given: v('first'), family: v('last'),
     email: email || 'your.email@example.com',
   };
@@ -337,7 +331,7 @@ $('#exBack').addEventListener('click', () => { mode = 'new'; S = recommended(); 
 /* the page after the download */
 const copy = (text) => `<div class="cmd"><code>${esc(text)}</code><button type="button" class="copy" data-copy="${esc(text)}">Copy</button></div>`;
 const code = (t) => `<code>${esc(t)}</code>`;
-const setupButton = 'open Set up this repository, click Run workflow, untick Only show what would change, and run it. This makes your labels and checklists.';
+const setupButton = 'open Set up this repository. Its first run, from your push, only lists what it would make. Click Run workflow, untick Only show what would change, and run it. This makes your labels and checklists.';
 const actions = 'Open the repository on GitHub and go to Actions. Your checks are running.';
 const local = `To run the same checks on your computer before a pull request, see <em>Run the checks on your computer</em> in ${code('.github/workflows/README.md')}. `;
 
@@ -355,13 +349,14 @@ function steps() {
   if (mode === 'existing') { existingSteps(); return; }
   const name = pkg();
   const priv = !isPublic();
-  const open = `Unzip ${code(`${name}.zip`)}, then open ${code(`${name}.Rproj`)} in RStudio, or the folder in Positron. In RStudio, choose Build, then Test Package, to see your first test pass.`;
+  const unzip = `Unzip ${code(`${name}.zip`)}, then open ${code(`${name}.Rproj`)} in RStudio, or the folder in Positron.`;
+  const testPass = 'In RStudio, choose Build, then Test Package, to see your first test pass.';
   const gh = '<a href="https://cli.github.com" target="_blank" rel="noopener">GitHub CLI</a>';
   const route = $('input[name=route]:checked').value;
   const setup = `source("https://raw.githubusercontent.com/insightsurge/launchR/v${lists.settings.kit_version}/cli/github-setup.R")`;
   const running = CHECKS.some(([k]) => S.checks[k]) ? [actions] : [];
   const list = route === 'desktop' ? [
-    open,
+    `${unzip} Install the tools once: choose Tools, then Install Packages, and install ${code('devtools')}. ${testPass}`,
     'Make a free <a href="https://github.com/signup" target="_blank" rel="noopener">GitHub account</a>, if you don\'t have one.',
     `Install <a href="https://desktop.github.com" target="_blank" rel="noopener">GitHub Desktop</a> and sign in. It brings Git with it. ${gh} is optional: your checklists show the repository settings to change by hand, and it lets the setup line tick those boxes for you.`,
     `In GitHub Desktop, choose File, then Add local repository, and pick the ${code(name)} folder. It offers to create the repository: accept.`,
@@ -369,8 +364,8 @@ function steps() {
     ...running,
     ...(S.github ? [`On GitHub, go to Actions, ${setupButton}`] : []),
   ] : [
-    open,
-    `Run these in the R console. GitHub asks you to make a token: paste it when R asks.${copy('install.packages(c("usethis", "gitcreds"))')}${copy('usethis::create_github_token()')}${copy('gitcreds::gitcreds_set()')}`,
+    `${unzip} Install the tools once, then the packages your package needs, in the R console. devtools brings usethis and testthat.${copy('install.packages(c("devtools", "gitcreds"))')}${copy('devtools::install_dev_deps()')}${testPass}`,
+    `Run these in the R console. GitHub asks you to make a token: paste it when R asks.${copy('usethis::create_github_token()')}${copy('gitcreds::gitcreds_set()')}`,
     `Put the package on GitHub.${copy('usethis::use_git()')}${copy(`usethis::use_github(private = ${priv ? 'TRUE' : 'FALSE'})`)}`,
     ...(S.github ? [
       `Install ${gh}, then sign in once from the Terminal tab next to your console.${copy('gh auth login')}`,

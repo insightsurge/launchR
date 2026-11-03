@@ -16,7 +16,7 @@ const cases = [
   { name: 'everything', flags: ['--owner', 'sample-org', '--preset', 'everything'], set: { owner: 'sample-org' }, preset: 'everything' },
   { name: 'public', flags: ['--owner', 'sample-org', '--public', '--preset', 'everything'], set: { owner: 'sample-org', visibility: 'public' }, preset: 'everything' },
   { name: 'internal', flags: ['--owner', 'sample-org', '--internal'], set: { owner: 'sample-org', release: 'internal' } },
-  { name: 'noowner', flags: [], set: {} },
+  { name: 'public-starter', flags: ['--owner', 'sample-org', '--public', '--preset', 'starter'], set: { owner: 'sample-org', visibility: 'public' }, preset: 'starter' },
   { name: 'starter', flags: ['--owner', 'sample-org', '--preset', 'starter'], set: { owner: 'sample-org' }, preset: 'starter' },
 ];
 let failed = 0;

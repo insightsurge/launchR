@@ -10,7 +10,7 @@ and where it runs, so it stays short. Nothing needs installing: GitHub runs thes
 | `no-suggests.yaml` | Checks the package works without its optional packages |
 | `secret-scan.yaml` | Catches passwords and tokens committed by mistake |
 | `coverage.yaml` | Measures how much code your tests run |
-| `full-tests.yaml` | Runs every test, including the browser, snapshot and extended tests CRAN skips, with Chrome |
+| `full-tests.yaml` | Runs every test, including the browser, snapshot and extended tests CRAN skips, with Chrome for browser tests |
 | `extended-tests.yaml` | A full check on other systems, including any detailed tests you have marked |
 
 Your package may not have all of these: a missing file means that check is off.
@@ -52,7 +52,17 @@ skip_if_not(identical(Sys.getenv("EXTENDED_TESTS"), "true"))      # -extended.R 
 ## Run the checks on your computer
 
 The quality gate runs most of these checks locally: style, docs in sync, spelling, tests, coverage and R CMD check as
-CRAN runs it. From the package's folder, in R:
+CRAN runs it. It needs these packages once:
+
+```r
+install.packages(c(
+  "checkmate", "cli", "devtools", "jsonlite", "spelling", "roxygen2", "lintr",
+  "callr", "covr", "withr", "testthat", "pkgbuild", "processx", "rcmdcheck"
+))
+```
+
+The style step also needs [Air](https://posit-dev.github.io/air/), and [Biome](https://biomejs.dev) when the package
+has JS or CSS. A missing one is named in the first FAIL line. Then, from the package's folder, in R:
 
 ```r
 gate <- tempfile(fileext = ".R")

@@ -10,8 +10,12 @@ placeholder_values <- function(choices) {
   repository <- sprintf("https://github.com/%s/%s", owner, choices$package)
   site <- sprintf("https://%s.github.io/%s", owner, choices$package)
   urls <- c(if ("website" %in% choices$parts) paste0(site, "/"), repository)
+  # The spelling check splits a name at digits and dots (demoPkg2 is read as demoPkg), so the parts go in the word list.
+  parts <- unique(strsplit(choices$package, "[^A-Za-z]+")[[1]])
+  parts <- parts[nchar(parts) > 1 & parts != choices$package]
   values <- list(
     package = choices$package,
+    name_words = if (length(parts) > 0) paste0(parts, "\n", collapse = "") else "",
     title = choices$title,
     description = paste0(choices$title, "."),
     author = author,

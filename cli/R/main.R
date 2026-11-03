@@ -28,6 +28,11 @@ cmd_new <- function(args) {
     choices$family <- paste(author[-1], collapse = " ")
     choices$email <- flag_value(args, "email", "you@example.com")
     choices$owner <- flag_value(args, "owner")
+    problem <- check_owner(choices$owner)
+    if (nzchar(problem)) {
+      message(problem, " Pass it with --owner.")
+      return(1L)
+    }
     choices$visibility <- if (has_flag(args, "public")) "public" else "private"
     choices$release <- if (has_flag(args, "internal")) "internal" else "cran"
     choices$year <- flag_value(args, "year", choices$year)

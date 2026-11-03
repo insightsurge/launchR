@@ -24,6 +24,9 @@ permissions:
 jobs:
   coverage:
     runs-on: ubuntu-26.04  # pinned, like the repo's other workflows
+    permissions:
+      actions: read  # finds the default branch's figure for a pull request (a private repository needs it)
+      contents: read
     timeout-minutes: 60  # the tests without Chrome under covr: about a minute, plus room for a slow package mirror
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
@@ -116,7 +119,7 @@ jobs:
         id: cobertura
         if: >-
           always() && steps.changes.outputs.r == 'true' &&
-          (github.event_name == 'push' && github.ref == 'refs/heads/main' ||
+          (github.event_name == 'push' && github.ref_name == github.event.repository.default_branch ||
           github.event_name == 'pull_request' &&
           github.event.pull_request.head.repo.full_name == github.repository &&
           github.event.pull_request.user.login != 'dependabot[bot]')
@@ -188,7 +191,7 @@ jobs:
 
       # The figure pull requests are compared with.
       - name: Keep main's coverage
-        if: success() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: success() && github.event_name == 'push' && github.ref_name == github.event.repository.default_branch
         uses: actions/upload-artifact@v7
         with:
           name: coverage-baseline

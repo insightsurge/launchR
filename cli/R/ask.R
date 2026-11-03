@@ -31,7 +31,12 @@ ask_choices <- function(choices) {
   choices$given <- author[1]
   choices$family <- paste(author[-1], collapse = " ")
   choices$email <- ask("Your email, shown in DESCRIPTION")
-  choices$owner <- ask("GitHub user or organisation, Enter if you have none")
+  repeat {
+    choices$owner <- ask("GitHub user or organisation")
+    problem <- check_owner(choices$owner)
+    if (!nzchar(problem)) break
+    cat(problem, "\n")
+  }
   choices$visibility <- ask_choice("Public or private repository", c("private", "public"))
   choices$release <- ask_choice("Going to CRAN or staying internal", c("cran", "internal"))
   parts <- read_list("parts.tsv")

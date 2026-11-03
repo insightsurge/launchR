@@ -100,12 +100,12 @@ coverage_report <- function() {
   if (is.null(figures)) {
     "\u274c **Coverage:** not measured: the tests failed before covr finished (see the run's log)."
   } else {
-    versus <- if (identical(env("EVENT_NAME"), "pull_request")) " · no figure from `main` yet" else ""
+    versus <- if (identical(env("EVENT_NAME"), "pull_request")) " · no figure from the default branch yet" else ""
     if (identical(env("BASELINE_FOUND"), "true")) {
       base <- read_figures(env("BASELINE_DIR"))
       if (!is.null(base)) {
         versus <- sprintf(
-          " · **%+.1f** points from `main` at %s (%.1f%%)",
+          " · **%+.1f** points from the default branch at %s (%.1f%%)",
           figures$percent - base$percent,
           substr(env("BASELINE_SHA"), 1, 7),
           base$percent

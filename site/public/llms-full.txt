@@ -14,7 +14,7 @@ launchR starts an R package with tests, CI and GitHub files in place, or adds re
 
 ## How it works
 
-1. Answer four questions on the site: package name, description, author and plan.
+1. Answer five questions on the site: package name, description, author, GitHub user or organisation, and plan.
 2. Download a zip named after the package. It is built in the browser, with no account and no server, and nothing typed into the form leaves the browser.
 3. Follow the next-steps page to put the package on GitHub. Only GitHub is supported.
 
@@ -40,7 +40,7 @@ Each check is a short workflow file in the package that calls a shared workflow 
 | `secret-scan` | Catches passwords and tokens committed by mistake | Yes |
 | `coverage` | Measures how much code the tests run | Yes |
 | `no-suggests` | Checks the package works without its optional packages | Yes |
-| `full-tests` | Runs every test, including the browser, snapshot and extended tests CRAN skips, with Chrome | Yes |
+| `full-tests` | Runs every test, including the browser, snapshot and extended tests CRAN skips, with Chrome for browser tests | Yes |
 | `extended-tests` | A weekly full check on Mac and Windows | Yes, except for private packages that won't go to CRAN |
 | `pkgdown` | Builds and publishes a package website | When a website is chosen |
 
