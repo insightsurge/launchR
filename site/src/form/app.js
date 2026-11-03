@@ -16,7 +16,7 @@ const CHECKS = [
   ['coverage', 'coverage', 'Measures how much of your code the tests run.'],
   ['no_suggests', 'no-suggests', 'Checks the package works without its optional packages.'],
   ['full_tests', 'full-tests', 'Runs every test, including the ones CRAN skips: test files ending in -browser, -snap or -extended. Runs on Linux.'],
-  ['extended_tests', 'extended-tests', 'Every week, a full check on Mac and Windows, including test files ending in -extended.'],
+  ['extended_tests', 'extended-tests', 'Every week, a full check on more systems (Mac and Windows for a public package), including test files ending in -extended.'],
 ];
 const SYSTEMS = [['ubuntu', 'Linux'], ['windows', 'Windows'], ['macos', 'Mac']];
 const RS = [['release', 'release'], ['oldrel-1', 'oldrel-1'], ['devel', 'devel']];
@@ -366,8 +366,8 @@ function steps() {
     ...running,
     ...(S.github ? [`On GitHub, go to Actions, ${setupButton}`] : []),
   ] : [
-    `${unzip} Install the tools once, then the packages your package needs, in the R console. devtools brings usethis and testthat.${copy('install.packages(c("devtools", "gitcreds"))')}${copy('devtools::install_dev_deps()')}${testPass}`,
-    `Run these in the R console. GitHub asks you to make a token: paste it when R asks.${copy('usethis::create_github_token()')}${copy('gitcreds::gitcreds_set()')}`,
+    `${unzip} Install the tools once, then the packages your package needs, in the R console. devtools brings usethis and testthat. Then run your first test.${copy('install.packages(c("devtools", "gitcreds"))')}${copy('devtools::install_dev_deps()')}${copy('devtools::test()')}`,
+    `Run these in the R console. GitHub asks you to make a token: paste it when R asks. gitcreds keeps it in your computer's password store (Keychain on a Mac, Credential Manager on Windows), where usethis, gh and pak find it. Don't save it in a file such as ${code('.Renviron')}: that is plain text.${copy('usethis::create_github_token()')}${copy('gitcreds::gitcreds_set()')}`,
     `Put the package on GitHub.${copy('usethis::use_git()')}${copy(`usethis::use_github(private = ${priv ? 'TRUE' : 'FALSE'})`)}`,
     ...(S.github ? [
       `Install ${gh}, then sign in once from the Terminal tab next to your console.${copy('gh auth login')}`,

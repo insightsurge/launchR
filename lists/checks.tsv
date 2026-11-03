@@ -7,4 +7,4 @@ no_suggests	no-suggests	Check the package works without its optional packages	ye
 secret_scan	secret-scan	Catch passwords and tokens committed by mistake	yes	yes	pr,push	0 5 * * 1		
 coverage	coverage	Measure how much code your tests run	yes	yes	pr,push,manual	0 5 * * 1		
 full_tests	full-tests	Run every test, including the browser, snapshot and extended tests CRAN skips, with Chrome for browser tests	yes	yes	pr,push,schedule,manual	0 5 * * 1	ubuntu/release, ubuntu/4.1	ubuntu/release
-extended_tests	extended-tests	On a schedule, run a full check on Mac and Windows, including any detailed tests you have marked	yes	yes	schedule,manual	0 5 * * 1	macos/release, windows/release, windows/4.1	ubuntu/release
+extended_tests	extended-tests	On a schedule, run a full check on more systems (Mac and Windows for a public package), including any detailed tests you have marked	yes	yes	schedule,manual	0 5 * * 1	macos/release, windows/release, windows/4.1	ubuntu/release
