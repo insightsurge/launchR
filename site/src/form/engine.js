@@ -181,9 +181,23 @@ export function placeholderValues(choices, lists) {
     ? `| \`-browser.R\` | Tests that drive a browser (shinytest2, chromote) | \`test-demo-browser.R\` | ${values.runs_browser} |`
     : '';
   values.browser_skip = frontend ? 'skip_on_cran()                                                    # -browser.R files' : '';
-  // codecov.yml comes with new packages only: an existing package's .Rbuildignore doesn't list it.
-  values.codecov_note = ciOn && choices.parts.includes('skeleton') && choices.checks.coverage?.on
-    ? 'The coverage check decides on its own. If you also send coverage to Codecov (the comment in `coverage.yaml` says how),\n`codecov.yml` at the top of the package keeps Codecov to reporting: no blocking status and no second comment.\n\n'
+  // How to send coverage to Codecov; codecov.yml comes with new packages only (an existing package's .Rbuildignore
+  // doesn't list it).
+  values.codecov_note = ciOn && choices.checks.coverage?.on
+    ? `${[
+      '## Codecov',
+      '',
+      'The coverage check decides on its own. To also show coverage on Codecov:',
+      '',
+      '1. Sign in at <https://about.codecov.io> with GitHub and add this repository.',
+      '2. Copy its upload token. On GitHub, add it as a repository secret named `CODECOV_TOKEN` (Settings, then Secrets and',
+      '   variables, then Actions).',
+      '3. In `coverage.yaml`, remove the `#` before the `secrets:` and `CODECOV_TOKEN:` lines.',
+      ...(choices.parts.includes('skeleton') ? [
+        '',
+        '`codecov.yml` at the top of the package keeps Codecov to reporting: no blocking status and no second comment.',
+      ] : []),
+    ].join('\n')}\n\n`
     : '';
   const testKinds = [
     '## Test file kinds',

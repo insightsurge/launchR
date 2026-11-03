@@ -1,4 +1,4 @@
-# The one R line behind the site's "with R" route: fetches launchR at a version, then sets up GitHub for the package in
+# The optional R line on the site's next-steps page: fetches launchR at a version, then sets up GitHub for the package in
 # the current folder. Needs gh signed in. Asks before it changes anything; add --yes to skip the question.
 local({
   version <- "0.0.7"

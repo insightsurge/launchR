@@ -62,12 +62,23 @@ placeholder_values <- function(choices) {
     ""
   }
   values$browser_skip <- if (frontend) "skip_on_cran()                                                    # -browser.R files" else ""
-  # codecov.yml comes with new packages only: an existing package's .Rbuildignore doesn't list it.
-  values$codecov_note <- if (ci_on && "skeleton" %in% choices$parts && isTRUE(choices$checks$coverage$on)) {
-    paste0(
-      "The coverage check decides on its own. If you also send coverage to Codecov (the comment in `coverage.yaml` says how),\n",
-      "`codecov.yml` at the top of the package keeps Codecov to reporting: no blocking status and no second comment.\n\n"
-    )
+  # How to send coverage to Codecov; codecov.yml comes with new packages only (an existing package's .Rbuildignore
+  # doesn't list it).
+  values$codecov_note <- if (ci_on && isTRUE(choices$checks$coverage$on)) {
+    yml <- if ("skeleton" %in% choices$parts) {
+      c("", "`codecov.yml` at the top of the package keeps Codecov to reporting: no blocking status and no second comment.")
+    }
+    paste0(paste(c(
+      "## Codecov",
+      "",
+      "The coverage check decides on its own. To also show coverage on Codecov:",
+      "",
+      "1. Sign in at <https://about.codecov.io> with GitHub and add this repository.",
+      "2. Copy its upload token. On GitHub, add it as a repository secret named `CODECOV_TOKEN` (Settings, then Secrets and",
+      "   variables, then Actions).",
+      "3. In `coverage.yaml`, remove the `#` before the `secrets:` and `CODECOV_TOKEN:` lines.",
+      yml
+    ), collapse = "\n"), "\n\n")
   } else {
     ""
   }

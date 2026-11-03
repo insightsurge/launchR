@@ -3,7 +3,7 @@
       <div class="text">
         <p class="eyebrow">Free and open source, MIT licence</p>
         <h1 id="h-start">Start your R package the way good ones finish</h1>
-        <p class="lede">Good practices from the first commit: tests, CI, GitHub files and checklists, in place before you write a line. Answer a few questions, download a zip named after your package, and carry on. No terminal needed.</p>
+        <p class="lede">Good practices from the first commit: tests, automatic checks on GitHub (CI), GitHub files and checklists, in place before you write a line. Answer a few questions, download a zip named after your package, and carry on. No terminal needed.</p>
         <p class="cue"><span class="cue-line" aria-hidden="true"></span>Scroll to see how it works</p>
       </div>
       <div class="slot"></div>
@@ -40,7 +40,7 @@
           <li class="yes wide"><i>✓</i><code>R/  man/  DESCRIPTION  NAMESPACE  README.md</code></li>
           <li class="yes"><i>✓</i><code>tests/</code><span>testthat, with a first test written</span></li>
           <li class="yes"><i>✓</i><code>.github/workflows/</code><span>Seven checks, plus the website if you add one</span></li>
-          <li class="yes"><i>✓</i><code>.lintr  air.toml</code><span>One style, checked for everyone</span></li>
+          <li class="yes"><i>✓</i><code>.lintr  air.toml</code><span>One code style, checked automatically for everyone</span></li>
           <li class="yes"><i>✓</i><code>LICENSE</code><span>A licence from day one</span></li>
           <li class="yes"><i>✓</i><code>NEWS.md  cran-comments.md</code><span>A change log, and notes for CRAN</span></li>
           <li class="yes"><i>✓</i><code>.Rbuildignore  .gitignore</code><span>Only the right files ship</span></li>
@@ -58,9 +58,9 @@
       <div class="text">
         <p class="eyebrow">Quality checks</p>
         <h2 id="h-checks">Seven checks that run by themselves.</h2>
-        <p class="lede">Each one is a short file on CI. Change it or delete it.</p>
+        <p class="lede">Checks GitHub runs by itself on every change, known as CI (continuous integration). Each is a short file in your package: change it or delete it.</p>
         <ol class="checks" id="checkList">
-          <li><svg class="tick" aria-hidden="true"><use href="#i-tick" /></svg><code>r-cmd-check</code><span>R CMD check, the core check</span></li>
+          <li><svg class="tick" aria-hidden="true"><use href="#i-tick" /></svg><code>r-cmd-check</code><span>R CMD check, the core check: what CRAN runs on every package</span></li>
           <li><svg class="tick" aria-hidden="true"><use href="#i-tick" /></svg><code>lint</code><span>Style, docs in sync, spelling</span></li>
           <li><svg class="tick" aria-hidden="true"><use href="#i-tick" /></svg><code>secret-scan</code><span>Passwords and tokens committed by mistake</span></li>
           <li><svg class="tick" aria-hidden="true"><use href="#i-tick" /></svg><code>coverage</code><span>How much code the tests run</span></li>
@@ -79,7 +79,7 @@
         <p class="lede">Where is the package headed? Each plan sets sensible defaults, and Modify can change any of them.</p>
         <ul class="plans-list">
           <li><i class="chip c1"></i><div><b>Public, going to CRAN</b></div></li>
-          <li><i class="chip c2"></i><div><b>Public, not for CRAN</b><span>GitHub or R-universe</span></div></li>
+          <li><i class="chip c2"></i><div><b>Public, not for CRAN</b><span>Installed from GitHub</span></div></li>
           <li><i class="chip c3"></i><div><b>Private for now</b><span>Public and CRAN later</span></div></li>
           <li><i class="chip c4"></i><div><b>Private for good</b><span>No release features</span></div></li>
         </ul>
@@ -95,8 +95,8 @@
         <p class="lede">Nothing you type leaves your browser, and there is no server. What you download is an ordinary R package that never needs this site again.</p>
         <p class="privacy">If you accept cookies, Google Analytics counts visits and zips built, never what you type. <button type="button" class="reset" id="cookieChoice">Change your cookie choice</button></p>
         <dl class="notes">
-          <div><dt>Already have a package?</dt><dd>Take the CI files only. R/, tests/ and DESCRIPTION are left alone. <button type="button" class="reset" id="existingStart">Set up an existing package</button></dd></div>
-          <div><dt>Need CI to stay frozen?</dt><dd>A snapshot copied into the repository, with no automatic fixes. <span class="tag">Coming soon</span></dd></div>
+          <div><dt>Already have a package?</dt><dd>Take only the automatic checks (CI files). R/, tests/ and DESCRIPTION are left alone. <button type="button" class="reset" id="existingStart">Set up an existing package</button></dd></div>
+          <div><dt>Need the checks to stay frozen?</dt><dd>A snapshot copied into the repository, with no automatic fixes. <span class="tag">Coming soon</span></dd></div>
         </dl>
       </div>
       <div class="slot"></div>

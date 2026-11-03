@@ -16,7 +16,7 @@ const SYSTEMS = [['ubuntu', 'Linux'], ['windows', 'Windows'], ['macos', 'Mac']];
 const RS = [['release', 'release'], ['oldrel-1', 'oldrel-1'], ['devel', 'devel']];
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const WORDS = ['No', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'All seven'];
-const PARTS = [['ci', 'CI checks'], ['website', 'Website'], ['github', 'Issue forms, labels and checklists']];
+const PARTS = [['ci', 'Automatic checks on GitHub (CI)'], ['website', 'Website'], ['github', 'Issue forms, labels and checklists']];
 
 let bundle = null;
 let lists = null;
@@ -59,12 +59,12 @@ function paint() {
   $('#bodyCi').innerHTML = `
     ${head3('Checks to run', CHECKS.map(([, n, w]) => [n, w]))}
     <div class="ticks">${CHECKS.map(([k, name]) => pill(`data-check="${k}"`, `<code>${name}</code>`, S.checks[k])).join('')}</div>
-    ${head3('R versions to check, by system', [['release', 'The current R.'], ['oldrel-1', 'The R release before it. Linux only.'], ['devel', 'The next R, still in development. Linux only.'], ['Minimum R version', 'The oldest R your package supports, from 4.1 up. It is checked on Linux. Leave it empty if you do not know yet.'], ['Systems', 'launchR picks the system version: Ubuntu 26.04, and the latest Windows and macOS on GitHub.'], ['Cost', 'On a private repository, Mac minutes count ten times and Windows twice.']])}
+    ${head3('R versions to check, by system', [['release', 'The current R.'], ['oldrel-1', 'The R release before it. Linux only.'], ['devel', 'The next R, not released yet: it shows early what will break. Linux only.'], ['Minimum R version', 'The oldest R your package supports, from 4.1 up. It is checked on Linux. Leave it empty if you do not know yet.'], ['Systems', 'launchR picks the system version: Ubuntu 26.04, and the latest Windows and macOS on GitHub.'], ['Cost', 'Free on a public repository. A private one gets 2,000 free minutes a month on GitHub\'s free plan, and Mac minutes count ten times, Windows twice.']])}
     <div class="line"><label for="minR">Minimum R version</label><input id="minR" class="short" type="text" inputmode="decimal" autocomplete="off" placeholder="4.1" value="${esc(S.minR)}" /></div>
     <p class="fieldnote" id="minRNote" role="status"></p>
     <table class="rmatrix"><thead><tr><td></td>${RS.map(([, x]) => `<th scope="col"><code>${x}</code></th>`).join('')}</tr></thead><tbody>${SYSTEMS.map(([k, t]) => `<tr><th scope="row">${t}</th>${RS.map(([v, x]) => (k === 'ubuntu' || v === 'release' ? `<td><label class="cell"><input type="checkbox" data-matrix="${k}/${v}" aria-label="${t}, ${x}"${S.matrix[`${k}/${v}`] ? ' checked' : ''} /><span><svg aria-hidden="true"><use href="#i-tick" /></svg></span></label></td>` : '<td class="none"></td>')).join('')}</tr>`).join('')}</tbody></table>
     ${extra ? sw('samePlatforms', 'Use the same systems for browser and extended tests', 'Runs full-tests and r-cmd-check-extended on the systems and R versions above, as R CMD check does. Off keeps their recommended ones.', S.samePlatforms) : ''}
-    ${weekly ? `<div class="line"><label for="day">Weekly checks run on</label>${help('The weekly run of r-cmd-check, full-tests and r-cmd-check-extended, whichever are on. It shows here when any of them is on, and the workflows README lists the time. Time is in 24-hour UTC, which is what GitHub uses. It may run some minutes late when GitHub is busy.')}<span class="when"><select id="day">${[...DAYS.slice(1), DAYS[0]].map((d) => `<option${d === S.day ? ' selected' : ''}>${d}</option>`).join('')}</select><label class="sr" for="time">Time in 24-hour UTC</label><input id="time" class="short" type="text" inputmode="numeric" autocomplete="off" maxlength="5" value="${esc(S.time)}" /><span class="unit">UTC</span></span></div><p class="fieldnote" id="timeNote" role="status"></p>` : ''}
+    ${weekly ? `<div class="line"><label for="day">Weekly checks run on</label>${help('The weekly run of r-cmd-check, full-tests and r-cmd-check-extended, whichever are on. Why weekly: R and the packages yours uses keep changing, so it shows a break even when you changed nothing. It shows here when any of them is on, and the workflows README lists the time. Time is in 24-hour UTC, which is what GitHub uses. It may run some minutes late when GitHub is busy.')}<span class="when"><select id="day">${[...DAYS.slice(1), DAYS[0]].map((d) => `<option${d === S.day ? ' selected' : ''}>${d}</option>`).join('')}</select><label class="sr" for="time">Time in 24-hour UTC</label><input id="time" class="short" type="text" inputmode="numeric" autocomplete="off" maxlength="5" value="${esc(S.time)}" /><span class="unit">UTC</span></span></div><p class="fieldnote" id="timeNote" role="status"></p>` : ''}
     ${head3('How the checks reach your package')}
     <div class="pick">
       <div class="opt"><label><input type="radio" name="delivery" checked /><b>Shared</b></label>${help('Your files call the checks kept in launchR, so you get fixes and updates by themselves.')}</div>
@@ -175,7 +175,7 @@ function valid() {
     ['first', checkPerson(v('first'), 'first')],
     ['last', checkPerson(v('last'), 'last')],
     ['email', checkEmail(v('email'))],
-    ['owner', v('owner') ? ownerProblem(v('owner')) : 'Give your GitHub user or organisation name, such as insightsurge.'],
+    ['owner', v('owner') ? ownerProblem(v('owner')) : 'Give your GitHub username or organisation, such as insightsurge. No account yet? Sign up free at github.com/signup.'],
   ];
   rules.forEach(([id, text]) => put(id, text));
   const bad = rules.find(([, text]) => text);
@@ -316,10 +316,10 @@ const setupButton = 'open Set up this repository. Its first run, from your push,
 const actions = 'Open the repository on GitHub and go to Actions. Your checks are running.';
 const local = `To run the same checks on your computer before a pull request, see <em>Run the checks on your computer</em> in ${code('.github/workflows/README.md')}. `;
 // Optional, and only with the coverage check: the check works without Codecov.
-const codecov = () => (S.checks.coverage ? `Optional: to see coverage on <a href="https://about.codecov.io" target="_blank" rel="noopener">Codecov</a>, sign in there with GitHub and add your repository, save its upload token on GitHub as a repository secret named ${code('CODECOV_TOKEN')} (Settings, then Secrets and variables, then Actions), and remove the ${code('#')} before the ${code('secrets:')} and ${code('CODECOV_TOKEN:')} lines in ${code('.github/workflows/coverage.yaml')}. ` : '');
+const codecov = () => (S.checks.coverage ? `Optional: to show coverage on Codecov too, follow <em>Codecov</em> in ${code('.github/workflows/README.md')}. ` : '');
 
 function existingSteps() {
-  const list = [`Unzip ${code('launchR-files.zip')} and copy what's inside into your package folder. Nothing in ${code('R/')}, ${code('tests/')} or ${code('DESCRIPTION')} changes.`];
+  const list = [`Unzip ${code('launchR-files.zip')} and copy what's inside into your package folder. Nothing in ${code('R/')}, ${code('tests/')} or ${code('DESCRIPTION')} changes. On a Mac, Finder hides folders whose name starts with a dot, such as ${code('.github')}: press Cmd+Shift+. to see them before you copy.`];
   if (add.ci) list.push(`Delete any old files in ${code('.github/workflows')} that do the same job. If your package already has ${code('.github/workflows/README.md')}, keep yours and copy in only the new rows from the one in the zip.`);
   if (add.ci && release() === 'internal') list.push(`Your package won't go to CRAN, so add this line to ${code('DESCRIPTION')}: the checks then leave out what only CRAN asks for.${copy('Config/quality-gate/target: internal')}`);
   list.push("Commit and push, from RStudio's Git pane or GitHub Desktop.");
@@ -341,26 +341,23 @@ function steps() {
   const running = CHECKS.some(([k]) => S.checks[k]) ? [actions] : [];
   const list = route === 'desktop' ? [
     `${unzip} Install the tools once: choose Tools, then Install Packages, and install ${code('devtools')}. ${testPass}`,
-    'Make a free <a href="https://github.com/signup" target="_blank" rel="noopener">GitHub account</a>, if you don\'t have one.',
-    `Install <a href="https://desktop.github.com" target="_blank" rel="noopener">GitHub Desktop</a> and sign in. It brings Git with it. ${gh} is optional: your checklists show the repository settings to change by hand, and it lets the setup line tick those boxes for you.`,
+    `Install <a href="https://desktop.github.com" target="_blank" rel="noopener">GitHub Desktop</a> and sign in with your GitHub account. It brings Git with it.`,
     `In GitHub Desktop, choose File, then Add local repository, and pick the ${code(name)} folder. It offers to create the repository: accept.`,
     `Click Publish repository. ${priv ? 'Leave Keep this code private ticked.' : 'Untick Keep this code private.'}`,
     ...running,
     ...(S.github ? [`On GitHub, go to Actions, ${setupButton}`] : []),
   ] : [
     `${unzip} Install the tools once, then the packages your package needs, in the R console. devtools brings usethis and testthat. Then run your first test.${copy('install.packages(c("devtools", "gitcreds"))')}${copy('devtools::install_dev_deps()')}${copy('devtools::test()')}`,
-    `Run these in the R console. GitHub asks you to make a token: paste it when R asks. gitcreds keeps it in your computer's password store (Keychain on a Mac, Credential Manager on Windows), where usethis, gh and pak find it. Don't save it in a file such as ${code('.Renviron')}: that is plain text.${copy('usethis::create_github_token()')}${copy('gitcreds::gitcreds_set()')}`,
-    `Put the package on GitHub.${copy('usethis::use_git()')}${copy(`usethis::use_github(private = ${priv ? 'TRUE' : 'FALSE'})`)}`,
-    ...(S.github ? [
-      `Install ${gh}, then sign in once from the Terminal tab next to your console.${copy('gh auth login')}`,
-      `Back in the R console, set up the labels and checklists. It asks before it changes anything. Your checklists then show the repository settings to change.${copy(setup)}`,
-    ] : []),
+    `Let R talk to GitHub, once. The first line opens a GitHub page with the right boxes already ticked: scroll down, click Generate token, and copy the token. The second asks for it: paste it there. It is kept in your computer's password store (Keychain on a Mac, Credential Manager on Windows), where usethis and pak find it. Don't save it in a file such as ${code('.Renviron')}: that is plain text.${copy('usethis::create_github_token()')}${copy('gitcreds::gitcreds_set()')}`,
+    `Put the package on GitHub. The first line asks to commit your files and then to restart RStudio: answer yes to both (the yes answer moves around). After the restart, run the second line.${copy('usethis::use_git()')}${copy(`usethis::use_github(private = ${priv ? 'TRUE' : 'FALSE'})`)}`,
     ...running,
+    ...(S.github ? [`On GitHub, go to Actions, ${setupButton}`] : []),
   ];
   $('#stepList').innerHTML = list.map((t) => `<li>${t}</li>`).join('');
   const first = planRow(lists, plan()).first_checklist;
   const email = v('email') ? '' : `Replace the placeholder email in ${code('DESCRIPTION')} before you release. `;
-  $('#nextAfter').innerHTML = `<b>After that.</b> ${email}${first && S.github ? `Open the <em>${first}</em> checklist in your repository's issues when you reach that stage. ` : ''}${running.length ? local : ''}${codecov()}To add something later, such as a website, come back and choose only that.`;
+  const settings = S.github ? `Your checklists list a few repository settings to change by hand. Optional: with ${gh} installed and signed in, ${code(setup)} in the R console ticks those boxes for you. ` : '';
+  $('#nextAfter').innerHTML = `<b>After that.</b> ${email}${first && S.github ? `Open the <em>${first}</em> checklist in your repository's issues when you reach that stage. ` : ''}${settings}${running.length ? local : ''}${codecov()}To add something later, such as a website, come back and choose only that.`;
 }
 
 $('#routes').addEventListener('change', steps);

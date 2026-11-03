@@ -613,6 +613,8 @@ input.short.bad { border-color: var(--no); }
 
 .fieldnote { min-height: 0; margin: 2px 0 0; font-size: 13.5px; color: var(--no); }
 .fieldnote:empty { display: none; }
+.field-note { margin: 6px 0 0; font-size: 13.5px; color: var(--soft); }
+.field-note a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
 .pill:has(input:disabled) { opacity: 0.5; cursor: not-allowed; }
 .pill:has(input:disabled) input { cursor: not-allowed; }
 

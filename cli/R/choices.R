@@ -101,7 +101,10 @@ check_package_name <- function(name) {
 # add. The same rule as the site's form.
 check_owner <- function(owner) {
   if (!nzchar(owner)) {
-    return("Give your GitHub user or organisation name, such as insightsurge.")
+    return(paste(
+      "Give your GitHub username or organisation, such as insightsurge.",
+      "No account yet? Sign up free at github.com/signup."
+    ))
   }
   if (!grepl("^[A-Za-z0-9][A-Za-z0-9-]{0,38}$", owner)) {
     return("Use only your GitHub name, such as insightsurge, not a link.")

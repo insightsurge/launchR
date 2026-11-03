@@ -21,7 +21,7 @@ A properly set up R package from a form, with no terminal and nothing to delete 
 ## Operating Context
 
 - People arrive from search or AI answers, on a work computer, often with RStudio or Positron open.
-- After the zip they open the package in RStudio or Positron, then choose a route to GitHub: with R (`usethis`), or without typing.
+- After the zip they open the package in RStudio or Positron, then choose a route to GitHub: in the R console (`usethis`), or with GitHub Desktop.
 - Terminal users have a separate route through the CLI, which makes the same files.
 - People come back months later to add a website or go public. They should be asked only the new choice.
 
