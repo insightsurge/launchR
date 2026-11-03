@@ -1,4 +1,4 @@
-# Stage checklists. kind: file (path exists), placeholder (file|text that must be gone), setting (endpoint|jq that prints true or false), ci (latest check runs on the default branch pass), site (website answers), cran (package is on CRAN), manual (a person ticks it).
+# Stage checklists. kind: file (path exists), placeholder (file|text that must be gone), setting (endpoint|jq that prints true or false), ci (latest check runs on the default branch pass), site (website answers), cran (package is on CRAN), description (DESCRIPTION's Description says more than its Title), manual (a person ticks it).
 # id is the box's permanent name in the issue. needs: a path the package must have for the box to appear. release: cran boxes are left out for internal packages. where, link and pick: the settings page, its address ({repo}, {owner}, {branch} are filled in) and the value to choose.
 # Keep every row at 11 tab-separated cells, and no hash sign inside a cell (lists treat it as a comment).
 id	stage	section	kind	target	release	needs	text	where	link	pick
@@ -24,7 +24,7 @@ timing	Before CRAN	Checks	manual		cran		Time the tests with CRAN's settings
 gate-full	Before CRAN	Checks	manual		cran		The quality gate's `full` mode passes (`.github/workflows/README.md`, "Run the checks on your computer")			
 urls	Before CRAN	Checks	manual		cran		urlchecker and spelling report nothing			
 builders	Before CRAN	Checks	manual		cran		win-builder and mac-builder are clean			
-description	Before CRAN	Wording	placeholder	DESCRIPTION|First version	cran		Description says what only this package does			
+description	Before CRAN	Wording	description	DESCRIPTION	cran		Description says what only this package does			
 cran-comments	Before CRAN	Wording	file	cran-comments.md	cran		cran-comments.md is ready			
 on-cran	Before CRAN	Submission	cran		cran		The package is on CRAN			
 cran-badges	After acceptance	Launch	manual		cran		CRAN status and downloads badges			

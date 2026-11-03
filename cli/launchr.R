@@ -3,7 +3,8 @@
 #
 #   Rscript cli/launchr.R new mypkg       create a package; asks its questions, or --yes --owner NAME [--plan a-d] (README.md lists the flags)
 #   Rscript cli/launchr.R gate [mode]     run the quality gate in the current package
-#   Rscript cli/launchr.R github-setup    show, then make, the GitHub changes (--dry-run, --yes, --repo owner/name)
+#   Rscript cli/launchr.R github-setup    show, then make, the GitHub changes (--dry-run, --yes, --repo owner/name,
+#                                         --remove-other-labels)
 #   Rscript cli/launchr.R eject           copy launchR's CI into the current package
 
 script <- sub("^--file=", "", grep("^--file=", commandArgs(FALSE), value = TRUE)[1])

@@ -6,6 +6,10 @@ on:
         description: Only show what would change
         type: boolean
         default: true
+      remove-other-labels:
+        description: Also remove labels that aren't launchR's, such as GitHub's own
+        type: boolean
+        default: false
 
 name: github-setup
 
@@ -19,6 +23,10 @@ jobs:
     runs-on: ubuntu-26.04
     timeout-minutes: 15
     steps:
+      # Each checkout starts with git init, which prints a hint about the default branch's name when none is set.
+      - name: Name git's default branch
+        run: git config --global init.defaultBranch main
+
       - uses: actions/checkout@v7
       # launchr-fetch-start
       - name: Fetch launchR at this workflow's version
@@ -35,9 +43,12 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DRY_RUN: ${{ inputs.dry-run }}
+          REMOVE_LABELS: ${{ inputs.remove-other-labels }}
         run: |
+          remove=""
+          if [ "${REMOVE_LABELS}" = "true" ]; then remove="--remove-other-labels"; fi
           if [ "${DRY_RUN}" = "true" ]; then
-            Rscript .launchr/cli/launchr.R github-setup --dry-run
+            Rscript .launchr/cli/launchr.R github-setup --dry-run ${remove}
           else
-            Rscript .launchr/cli/launchr.R github-setup --yes
+            Rscript .launchr/cli/launchr.R github-setup --yes ${remove}
           fi

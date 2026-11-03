@@ -15,7 +15,7 @@ flag_value <- function(args, name, default = "") {
 }
 
 flag_example <- list(
-  title = '"Tools For Tables"', author = '"Asha Rao"', email = "asha@example.com", owner = "insightsurge",
+  title = '"Tools For Tables"', description = '"Builds tables for clinical reports."', author = '"Asha Rao"', email = "asha@example.com", owner = "insightsurge",
   path = "mypkg", preset = "starter", plan = "d", year = "2026", repo = "owner/name", `min-r` = "4.3"
 )
 
@@ -55,6 +55,7 @@ cmd_new <- function(args) {
   choices <- default_choices(package, preset, plan)
   if (has_flag(args, "yes")) {
     choices$title <- flag_value(args, "title", "An R Package")
+    choices$description <- flag_value(args, "description")
     author <- split_name(flag_value(args, "author", "Your Name"))
     choices$given <- author[1]
     choices$family <- author[2]
@@ -65,6 +66,7 @@ cmd_new <- function(args) {
     problems <- c(
       `min-r` = check_min_r(choices$min_r),
       title = check_title(choices$title),
+      description = check_description(choices$description, package),
       author = check_person(choices$given, "first"),
       author = check_person(choices$family, "last"),
       email = check_email(choices$email),

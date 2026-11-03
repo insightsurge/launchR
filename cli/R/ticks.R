@@ -26,6 +26,16 @@ tick_placeholder <- function(target) {
   file.exists(parts[1]) && !grepl(parts[2], read_text(parts[1]), fixed = TRUE)
 }
 
+# DESCRIPTION's Description says more than its Title (a new package's Description repeats the Title until it's written).
+tick_description <- function(target) {
+  fields <- tryCatch(read.dcf(target, fields = c("Title", "Description")), error = function(e) NULL)
+  if (is.null(fields) || anyNA(fields)) {
+    return(NA)
+  }
+  plain <- function(text) tolower(sub("[.[:space:]]+$", "", gsub("[[:space:]]+", " ", text)))
+  unname(plain(fields[1, "Description"]) != plain(fields[1, "Title"]))
+}
+
 # target is "endpoint|jq"; the jq expression must print true or false (or nothing, when the field is hidden).
 tick_setting <- function(target, ctx) {
   if (!ctx$connected) {
@@ -97,6 +107,7 @@ tick_state <- function(row, ctx) {
   switch(row$kind,
     file = tick_file(row$target),
     placeholder = tick_placeholder(row$target),
+    description = tick_description(row$target),
     setting = tick_setting(row$target, ctx),
     ci = tick_ci(ctx),
     site = tick_site(ctx),

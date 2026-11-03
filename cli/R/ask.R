@@ -39,6 +39,7 @@ ask_until <- function(question, check, default = "") {
 
 ask_choices <- function(choices) {
   choices$title <- ask_until("One-line title, in title case", check_title)
+  choices$description <- ask_until("Describe it in a sentence or two (Enter to use the title)", function(text) check_description(text, choices$package))
   author <- split_name(ask_until("Your first and last name", function(name) {
     parts <- split_name(name)
     problem <- check_person(parts[1], "first")

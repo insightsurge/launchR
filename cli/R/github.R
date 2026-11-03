@@ -42,6 +42,7 @@ package_context <- function(args) {
     branch = if (found$connected) found$branch else "main",
     package = description[1, "Package"],
     public = public,
+    remove_labels = has_flag(args, "remove-other-labels"),
     internal = identical(unname(description[1, "Config/quality-gate/target"]), "internal")
   )
 }
@@ -174,6 +175,9 @@ github_plan <- function(ctx) {
     current <- have[[labels$name[i]]]
     if (is.null(current)) "create" else if (current[["color"]] != tolower(labels$color[i]) || current[["description"]] != labels$description[i]) "update" else "same"
   }, "")
+  # Labels that aren't launchR's, such as GitHub's own and the person's: kept unless they ask to remove them. GitHub
+  # matches label names ignoring case, and Dependabot's labels are always kept.
+  other_labels <- names(have)[!tolower(names(have)) %in% tolower(c(labels$name, "dependencies", "github_actions"))]
   issues <- if (ctx$connected) existing_issues(ctx) else data.frame(number = character(), state = character(), title = character())
   root <- pick_issue(issues, root_title)
   cran <- if (ctx$internal) FALSE else on_cran(ctx$package, if (ctx$connected) ctx$repo else NA_character_)
@@ -199,13 +203,17 @@ github_plan <- function(ctx) {
   }
   closed <- unique(issues$title[issues$state == "CLOSED" & startsWith(issues$title, "Checklist: ")])
   closed <- setdiff(closed, vapply(checklists, function(x) checklist_title(x$stage), ""))
-  list(labels = labels, label_action = label_action, root = root, checklists = checklists, closed = closed, issues = issues)
+  list(labels = labels, label_action = label_action, other_labels = other_labels, root = root, checklists = checklists, closed = closed, issues = issues)
 }
 
 print_plan <- function(ctx, plan) {
   cat(sprintf("launchR will set up %s:\n", if (ctx$connected) ctx$repo else "your repository (not connected yet)"))
   counts <- table(factor(plan$label_action, levels = c("create", "update", "same")))
   cat(sprintf("- labels: create %d, update %d, %d already right\n", counts[["create"]], counts[["update"]], counts[["same"]]))
+  if (length(plan$other_labels) > 0) {
+    cat(sprintf("- other labels (%s): %s\n", paste(plan$other_labels, collapse = ", "),
+      if (ctx$remove_labels) "remove them" else "kept; --remove-other-labels removes them"))
+  }
   cat(sprintf("- the root issue \"%s\": %s\n", root_title, if (is.null(plan$root)) "create it" else sprintf("already there (#%s), left alone", plan$root$number)))
   for (item in plan$checklists) {
     what <- switch(item$action,
@@ -231,6 +239,12 @@ apply_labels <- function(ctx, plan) {
     row <- plan$labels[i, ]
     gh_must(c("label", "create", row$name, "-R", ctx$repo, "--force", "--color", row$color, "--description", row$description))
     kit_pause(0.5)
+  }
+  if (ctx$remove_labels) {
+    for (name in plan$other_labels) {
+      gh_must(c("label", "delete", name, "-R", ctx$repo, "--yes"))
+      kit_pause(0.5)
+    }
   }
 }
 

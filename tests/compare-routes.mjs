@@ -19,6 +19,8 @@ const cases = lists.plans.flatMap(({ plan }) => ['starter', 'everything'].map((p
 })));
 cases.push({ name: 'no-email', plan: 'd', preset: 'starter', flags: ['--plan', 'd'], title: 'Tools For Tables.', email: '' });
 cases.push({ name: 'min-r', plan: 'a', preset: 'everything', flags: ['--plan', 'a', '--preset', 'everything', '--min-r', '4.3'], minR: '4.3' });
+cases.push({ name: 'min-r-private', plan: 'c', preset: 'starter', flags: ['--plan', 'c', '--min-r', '4.4'], minR: '4.4' });
+cases.push({ name: 'description', plan: 'd', preset: 'starter', flags: ['--plan', 'd', '--description', 'Builds   tables for clinical reports'], description: 'Builds   tables for clinical reports' });
 let failed = 0;
 for (const item of cases) {
   const r = join(out, item.name, 'r');
@@ -29,7 +31,8 @@ for (const item of cases) {
     ...(email ? ['--email', email] : []), '--owner', 'sample-org', '--year', base.year, '--no-git', '--path', r, ...item.flags,
   ], { stdio: 'ignore' });
   const choices = { ...defaultChoices(lists, item.preset, item.plan), package: 'samplepkg', title, given: base.author[0],
-    family: base.author[1], email, owner: 'sample-org', year: base.year, ...(item.minR ? { minR: item.minR } : {}) };
+    family: base.author[1], email, owner: 'sample-org', year: base.year, ...(item.minR ? { minR: item.minR } : {}),
+    ...(item.description ? { description: item.description } : {}) };
   const js = join(out, item.name, 'js');
   const files = buildPackage(choices, bundle);
   for (const [path, text] of Object.entries(files)) {

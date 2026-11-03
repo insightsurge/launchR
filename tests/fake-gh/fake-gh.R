@@ -43,6 +43,11 @@ if (args[1] == "label" && args[2] == "create") {
   writeLines(c(rows, paste(args[3], opt("--color"), opt("--description"), sep = "|")), path("labels.txt"))
   quit(status = 0L)
 }
+if (args[1] == "label" && args[2] == "delete") {
+  rows <- read_lines("labels.txt")
+  writeLines(rows[!startsWith(rows, paste0(args[3], "|"))], path("labels.txt"))
+  quit(status = 0L)
+}
 if (args[1] == "issue" && args[2] == "list") {
   cat(read_lines("issues.txt"), sep = "\n")
   quit(status = 0L)

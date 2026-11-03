@@ -14,7 +14,7 @@ launchR starts an R package with tests, CI and GitHub files in place, or adds re
 
 ## How it works
 
-1. Answer five questions on the site: package name, description, author, GitHub user or organisation, and plan.
+1. Answer five questions on the site: package name, a one-line title (plus an optional longer description), author, GitHub user or organisation, and plan.
 2. Download a zip named after the package. It is built in the browser, with no account and no server, and nothing typed into the form leaves the browser.
 3. Follow the next-steps page to put the package on GitHub. Only GitHub is supported.
 
