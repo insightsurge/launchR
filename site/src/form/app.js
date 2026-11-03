@@ -2,7 +2,7 @@
 // Choices live here; engine.js turns them into files, the same way the CLI does.
 import JSZip from 'jszip';
 import { countZip } from '../consent.js';
-import { buildPackage, checkEmail, checkPackageName, checkPerson, checkTitle, defaultChoices, planRow, readLists } from './engine.js';
+import { buildPackage, checkEmail, checkMinR, checkPackageName, checkPerson, checkTitle, defaultChoices, planRow, readLists } from './engine.js';
 
 const $ = (q) => document.querySelector(q);
 const $$ = (q) => [...document.querySelectorAll(q)];
@@ -109,15 +109,14 @@ body.addEventListener('change', (e) => {
   if (t.id === 'time') { touched(() => { S.time = t.value; }); timeProblem(); }
 });
 body.addEventListener('input', (e) => {
-  if (e.target.id === 'minR') e.target.value = e.target.value.replace(/[^0-9.]/g, '').replace(/^(\d+\.\d*).*/, '$1').slice(0, 4);
+  if (e.target.id === 'minR') e.target.value = e.target.value.replace(/[^0-9.]/g, '').slice(0, 8);
 });
 
 function minRProblem() {
-  const [major, minor] = S.minR.split('.').map(Number);
-  const ok = !S.minR || (/^\d+\.\d+$/.test(S.minR) && (major > 4 || (major === 4 && minor >= 1)));
+  const ok = !S.minR || !checkMinR(S.minR);
   $('#minR')?.classList.toggle('bad', !ok);
   const note = $('#minRNote');
-  if (note) note.textContent = ok ? '' : 'Use a version from R 4.1 up, such as 4.3.';
+  if (note) note.textContent = ok ? '' : checkMinR(S.minR);
   return !ok;
 }
 

@@ -39,6 +39,13 @@ export function checkEmail(email) {
   return !email || /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) ? '' : 'That email looks incomplete, or leave it empty.';
 }
 
+// The oldest R a package supports: major.minor or major.minor.patch, from 4.1.0 on. cli/R/choices.R has the same.
+export function checkMinR(minR) {
+  const parts = minR.split('.').map(Number);
+  const ok = /^\d+\.\d+(\.\d+)?$/.test(minR) && (parts[0] > 4 || (parts[0] === 4 && parts[1] >= 1));
+  return ok ? '' : 'Use a version from R 4.1.0 up, such as 4.3 or 4.4.1.';
+}
+
 // A title without its full stop: DESCRIPTION's Description adds one.
 export const cleanTitle = (title) => title.replace(/[.\s]+$/, '');
 
@@ -167,7 +174,7 @@ export function placeholderValues(choices, lists) {
   };
   // The oldest R supported: in DESCRIPTION, and in place of 4.1 in the default platforms.
   const minR = choices.minR || lists.settings.min_r;
-  values.min_r = `${minR}.0`;
+  values.min_r = minR.split('.').length === 2 ? `${minR}.0` : minR;
   const ciOn = choices.parts.includes('ci');
   const onRows = ciOn ? lists.checks.filter((row) => choices.checks[row.key].on) : [];
   values.checks_table = onRows.length

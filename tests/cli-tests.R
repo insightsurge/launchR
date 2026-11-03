@@ -102,6 +102,13 @@ expect(all(rows$kind %in% c("file", "placeholder", "setting", "ci", "site", "cra
 expect(all(nzchar(rows$id[rows$kind == "setting"]) & nzchar(rows$link[rows$kind == "setting"]) & nzchar(rows$pick[rows$kind == "setting"])), "every settings box has a link and a value to pick")
 
 # --- cmd_new ------------------------------------------------------------------------------------------------------
+section("Template files are in git")
+# A file the lists name but git doesn't track is missing from a clean checkout, so the site's zip can't be built there
+# (a .gitignore inside template/ can hide one, as it did .Renviron).
+listed <- file.path("template", read_list("files.tsv")$path)
+tracked <- system2("git", c("-C", quote_arg(kit_root), "ls-files", "--", "template"), stdout = TRUE)
+expect(all(listed %in% tracked), paste("every template file in files.tsv is in git:", toString(setdiff(listed, tracked))))
+
 section("launchr.R new")
 expect(quiet(cmd_new(character()))$value == 1L, "new without a name fails")
 expect(quiet(cmd_new("1bad"))$value == 1L, "new with a bad name fails")

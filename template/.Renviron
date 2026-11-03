@@ -1,0 +1,7 @@
+# Settings for this package on your computer. Kept out of git and out of the built package.
+# While you work in this project, R reads this file instead of your personal ~/.Renviron: copy any line you need
+# from there, such as a proxy or R_LIBS_USER.
+# Runs the slow extended tests (files ending in -extended.R) on your computer too, as CI does. Delete or comment out
+# the line to skip them while you work.
+{{extended_env}}
+# Don't put tokens here: gitcreds::gitcreds_set() keeps them in your computer's password store.
