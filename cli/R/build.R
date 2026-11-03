@@ -61,7 +61,7 @@ placeholder_values <- function(choices) {
   extended_in_ci <- ci_on && any(vapply(c("full_tests", "coverage", "r_cmd_check_extended"), function(key) isTRUE(choices$checks[[key]]$on), logical(1)))
   values$extended_env <- if (extended_in_ci) "EXTENDED_TESTS=true" else "# EXTENDED_TESTS=true"
   values$browser_row <- if (frontend) {
-    sprintf("| `-browser.R` | Tests that drive a browser (shinytest2, chromote) | `test-demo-browser.R` | %s |", values$runs_browser)
+    sprintf("| `-browser.R` | Tests that drive a browser (shinytest2, chromote); start them with `options(chromote.timeout = 60)`, as Chrome can start slowly on CI | `test-demo-browser.R` | %s |", values$runs_browser)
   } else {
     ""
   }
@@ -93,7 +93,7 @@ placeholder_values <- function(choices) {
     "",
     "| File name ends in | What it holds | Runs in |",
     "| --- | --- | --- |",
-    sprintf("| `-browser.R` | Tests that drive a browser (shinytest2, chromote) | %s |", values$runs_browser),
+    sprintf("| `-browser.R` | Tests that drive a browser (shinytest2, chromote); start them with `options(chromote.timeout = 60)`, as Chrome can start slowly on CI | %s |", values$runs_browser),
     sprintf("| `-snap.R` | Snapshot tests (`expect_snapshot()`) | %s |", values$runs_snap),
     sprintf("| `-extended.R` | Slow or detailed tests | %s |", values$runs_extended),
     "",
