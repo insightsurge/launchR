@@ -45,3 +45,24 @@ runs:
         header: ${{ steps.build.outputs.header }}
         path: ${{ runner.temp }}/pr-report-comment.md
         GITHUB_TOKEN: ${{ inputs.github-token }}
+
+    # Two checks can post at the same moment on a new pull request: keep the oldest report comment, which every later
+    # report edits, and delete any second one.
+    - name: Keep one report comment
+      if: steps.build.outputs.post == 'true'
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        REPO: ${{ github.repository }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
+        MARKER: "<!-- Sticky Pull Request Comment${{ steps.build.outputs.header }} -->"
+      run: |
+        ids=$(gh api --paginate "repos/${REPO}/issues/${PR_NUMBER}/comments" |
+          jq -r --arg m "${MARKER}" '.[] | select(.body | contains($m)) | .id' || true)
+        for id in $(echo "${ids}" | tail -n +2); do
+          if gh api -X DELETE "repos/${REPO}/issues/comments/${id}" >/dev/null; then
+            echo "Deleted a second report comment (${id})."
+          else
+            echo "::warning::Could not delete a second report comment (${id})."
+          fi
+        done

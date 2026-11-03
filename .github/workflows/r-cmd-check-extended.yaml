@@ -88,6 +88,17 @@ jobs:
           extra-packages: any::rcmdcheck
           needs: check
 
+      # As CRAN (--as-cran) unless DESCRIPTION says the package won't go there: Config/quality-gate/target: internal.
+      - name: Read the package's release target
+        id: target
+        run: |
+          if grep -qiE '^Config/quality-gate/target:[[:space:]]*internal[[:space:]]*$' DESCRIPTION; then
+            echo "as-cran=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "as-cran=true" >> "$GITHUB_OUTPUT"
+          fi
+        shell: bash
+
       - uses: r-lib/actions/check-r-package@v2
         env:
           _R_CHECK_CRAN_INCOMING_REMOTE_: false
@@ -96,7 +107,7 @@ jobs:
           EXTENDED_TESTS: true
           _R_CHECK_TESTS_NLINES_: 0
         with:
-          args: 'c("--no-manual", "--as-cran")'
+          args: ${{ steps.target.outputs.as-cran == 'true' && 'c("--no-manual", "--as-cran")' || 'c("--no-manual")' }}
           # The extended tests make the check slower than CRAN's: only errors and warnings count here.
           error-on: '"warning"'
           build_args: 'c("--no-manual", "--compact-vignettes=gs+qpdf")'
