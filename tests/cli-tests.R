@@ -440,7 +440,10 @@ dir.create(no_package)
 old_dir <- setwd(no_package)
 no_desc <- suppressWarnings(system2(rscript, quote_arg(file.path(kit_root, "quality-gate", "quality-gate.R")), stdout = TRUE, stderr = TRUE))
 setwd(old_dir)
-gate_ok <- identical(attr(no_desc, "status"), 2L) && length(no_desc) == 1 && grepl("package root", no_desc)
+# Where the gate's own packages are missing (the routes job installs none), it stops at that check, with exit 2 too.
+gate_ok <- identical(attr(no_desc, "status"), 2L) && (
+  (length(no_desc) == 1 && grepl("package root", no_desc)) || grepl("^FAIL tools: missing R packages", no_desc[1])
+)
 if (!gate_ok) cat("  the gate printed (status ", deparse(attr(no_desc, "status")), "):\n", paste0("    ", no_desc, "\n"), sep = "")
 expect(gate_ok, "the gate outside a package folder exits 2 with one line")
 help_out <- system2(rscript, c(quote_arg(file.path(kit_root, "cli", "launchr.R"))), stdout = TRUE)

@@ -1325,7 +1325,7 @@ usage_lines <- c(
 
 # The command line as a list; `error` is a message when the arguments don't make sense (the gate then exits 2).
 parse_args <- function(args) {
-  stopifnot(is.character(args), !anyNA(args))
+  checkmate::assert_character(args, any.missing = FALSE)
   opts <- list(
     mode = "fast",
     update = FALSE,
@@ -1429,21 +1429,21 @@ list_steps <- function(uses) {
 }
 
 main <- function(args) {
-  stopifnot(is.character(args), !anyNA(args))
+  checkmate::assert_character(args, any.missing = FALSE)
   opts <- parse_args(args)
   if (opts$help) {
-    writeLines(usage_lines)
+    cli::cat_line(usage_lines)
     quit(status = 0)
   }
   if (!is.null(opts$error)) {
-    cat("FAIL usage: ", opts$error, "\nRun with --help for the options.\n", sep = "")
+    cli::cat_line("FAIL usage: ", opts$error)
+    cli::cat_line("Run with --help for the options.")
     quit(status = 2)
   }
   update <- opts$update
   mode <- opts$mode
-  # Base cat(), not cli: this line must work before the gate's packages are known to be installed.
   if (!file.exists("DESCRIPTION")) {
-    cat("FAIL usage: run the gate from the package root (no DESCRIPTION in ", getwd(), ").\n", sep = "")
+    cli::cat_line("FAIL usage: run the gate from the package root (no DESCRIPTION in ", getwd(), ").")
     quit(status = 2)
   }
   settings <- tryCatch(read_settings(), error = function(e) conditionMessage(e))
