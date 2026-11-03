@@ -141,7 +141,13 @@ jobs:
           if (length(list.files("tests/testthat", "^test-(.*-)?browser[.]R$")) > 0L) {
             chrome <- chromote::find_chrome()
             if (is.null(chrome)) stop("No Chrome on this runner: the browser tests would all skip.", call. = FALSE)
-            message("Chrome: ", system2(chrome, "--version", stdout = TRUE))
+            # On Windows, chrome.exe --version opens Chrome and never returns: read the file's version instead.
+            version <- if (.Platform$OS.type == "windows") {
+              system2("powershell", c("-NoProfile", "-Command", shQuote(sprintf("(Get-Item '%s').VersionInfo.ProductVersion", chrome))), stdout = TRUE, timeout = 60)
+            } else {
+              system2(chrome, "--version", stdout = TRUE, timeout = 60)
+            }
+            message("Chrome: ", paste(version, collapse = " "))
           }
           library(testthat)
           # The package's name from DESCRIPTION, so the workflow names no package.
