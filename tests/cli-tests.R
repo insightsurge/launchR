@@ -147,6 +147,7 @@ expect(!file.exists(file.path(plan_d, ".github", "workflows", "r-cmd-check-exten
   any(grepl("target: internal", readLines(file.path(plan_d, "DESCRIPTION")))), "plan d is private and internal, without r-cmd-check-extended")
 min_r <- new_package("minrpkg", "--min-r", "4.3")
 expect(any(grepl("R (>= 4.3.0)", readLines(file.path(min_r, "DESCRIPTION")), fixed = TRUE)), "the minimum R version reaches DESCRIPTION")
+expect(nzchar(check_min_r("4.4.1")) && nzchar(check_min_r("4.10")) && nzchar(check_min_r("4.0")) && !nzchar(check_min_r("4.4")), "the oldest R is x.y, one digit each, from 4.1 on")
 owned <- read.dcf(file.path(new_package("ownedpkg"), "DESCRIPTION"))
 expect(identical(unname(owned[1, "BugReports"]), "https://github.com/sample-org/ownedpkg/issues"), "DESCRIPTION has BugReports from the start")
 expect(nzchar(check_package_name("stats")) && nzchar(check_package_name(strrep("a", 61))), "a base R name or a very long name is refused")

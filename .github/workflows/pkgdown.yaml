@@ -57,10 +57,29 @@ jobs:
       - name: Build the site
         run: Rscript .launchr/.github/scripts/build-site.R
 
+      # A private repository on GitHub's free plan can't turn Pages on: the site is still built, so a broken site still
+      # fails here, but it isn't published, and the run says so instead of failing.
+      - name: Find out whether GitHub Pages is on
+        id: pages
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          if gh api "repos/${REPO}/pages" --silent 2>/dev/null; then
+            echo "on=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "on=false" >> "$GITHUB_OUTPUT"
+            message="The site was built but not published: GitHub Pages is off for this repository. Turn it on in Settings, then Pages, with Source: GitHub Actions. A private repository needs a paid GitHub plan for Pages."
+            echo "::notice title=Website not published::${message}"
+            echo "${message}" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
       - uses: actions/upload-pages-artifact@v5
+        if: steps.pages.outputs.on == 'true'
         with:
           path: site/
 
       - name: Deploy to GitHub Pages
+        if: steps.pages.outputs.on == 'true'
         id: deployment
         uses: actions/deploy-pages@v5

@@ -147,7 +147,7 @@ Rscript cli/launchr.R eject                           # copy launchR's checks in
 | `--owner NAME` | Your GitHub username or organisation (needed with `--yes`) |
 | `--plan a` to `d` | The plan, as on the site: a public CRAN (default), b public not for CRAN, c private for now, d private for good |
 | `--title`, `--author`, `--email`, `--year` | DESCRIPTION fields; the same rules as the site's form |
-| `--min-r 4.3` | The oldest R the package supports (default 4.1) |
+| `--min-r 4.3` | The oldest R the package supports, as x.y (default 4.1); DESCRIPTION gets 4.3.0 |
 | `--preset starter` / `everything` | Which parts and checks are on |
 | `--public`, `--internal` | Older spelling of the plan: public, and not going to CRAN |
 | `--path DIR` | Where to write the package (default: a folder named after it) |
