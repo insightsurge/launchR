@@ -83,3 +83,9 @@ jobs:
         if: steps.pages.outputs.on == 'true'
         id: deployment
         uses: actions/deploy-pages@v5
+
+      - name: Link the site in the summary
+        if: steps.pages.outputs.on == 'true'
+        env:
+          URL: ${{ steps.deployment.outputs.page_url }}
+        run: echo "The website is published at ${URL}" >> "$GITHUB_STEP_SUMMARY"
