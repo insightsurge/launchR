@@ -6,8 +6,7 @@ To change something yourself, read the workflow below and open a pull request.
 ## Setup
 
 - **R**: the current release is recommended. The minimum version is in `DESCRIPTION`.
-- **Development packages**: from the package root, run `pak::local_install_dev_deps()` (or
-  `devtools::install_dev_deps()`).
+- **Development packages**: from the package root, run `pak::local_install_dev_deps()`.
 - **Air**, the formatter for R code: <https://posit-dev.github.io/air/>. The settings are in `air.toml`.
 - **Biome**, only if the repository has a `biome.json`: the formatter and linter for JavaScript and CSS in `inst/`,
   <https://biomejs.dev>.

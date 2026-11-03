@@ -177,6 +177,9 @@ export function placeholderValues(choices, lists) {
     const names = onRows.filter((row) => keys.includes(row.key)).map((row) => `\`${row.check}\``);
     values[`runs_${kind}`] = names.length ? names.join(', ') : 'none of the checks yet';
   }
+  // .Renviron runs the extended tests locally when a check runs them in CI.
+  const extendedInCi = ['full_tests', 'coverage', 'r_cmd_check_extended'].some((key) => ciOn && choices.checks[key]?.on);
+  values.extended_env = extendedInCi ? 'EXTENDED_TESTS=true' : '# EXTENDED_TESTS=true';
   values.browser_row = frontend
     ? `| \`-browser.R\` | Tests that drive a browser (shinytest2, chromote) | \`test-demo-browser.R\` | ${values.runs_browser} |`
     : '';

@@ -347,7 +347,7 @@ function steps() {
     ...running,
     ...(S.github ? [`On GitHub, go to Actions, ${setupButton}`] : []),
   ] : [
-    `${unzip} Install the tools once, then the packages your package needs, in the R console. devtools brings usethis and testthat. Then run your first test.${copy('install.packages(c("devtools", "gitcreds"))')}${copy('devtools::install_dev_deps()')}${copy('devtools::test()')}`,
+    `${unzip} Install the tools once, then the packages your package needs, in the R console. devtools brings usethis and testthat. Then run your first test.${copy('install.packages(c("devtools", "gitcreds", "pak"))')}${copy('pak::local_install_dev_deps()')}${copy('devtools::test()')}`,
     `Let R talk to GitHub, once. The first line opens a GitHub page with the right boxes already ticked: scroll down, click Generate token, and copy the token. The second asks for it: paste it there. It is kept in your computer's password store (Keychain on a Mac, Credential Manager on Windows), where usethis and pak find it. Don't save it in a file such as ${code('.Renviron')}: that is plain text.${copy('usethis::create_github_token()')}${copy('gitcreds::gitcreds_set()')}`,
     `Put the package on GitHub. The first line asks to commit your files and then to restart RStudio: answer yes to both (the yes answer moves around). After the restart, run the second line.${copy('usethis::use_git()')}${copy(`usethis::use_github(private = ${priv ? 'TRUE' : 'FALSE'})`)}`,
     ...running,

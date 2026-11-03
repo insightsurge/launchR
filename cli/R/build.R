@@ -56,6 +56,9 @@ placeholder_values <- function(choices) {
     rows <- on_rows[checks$key[on_rows] %in% test_kinds[[kind]]]
     values[[paste0("runs_", kind)]] <- if (length(rows) > 0) paste0("`", checks$check[rows], "`", collapse = ", ") else "none of the checks yet"
   }
+  # .Renviron runs the extended tests locally when a check runs them in CI.
+  extended_in_ci <- ci_on && any(vapply(c("full_tests", "coverage", "r_cmd_check_extended"), function(key) isTRUE(choices$checks[[key]]$on), logical(1)))
+  values$extended_env <- if (extended_in_ci) "EXTENDED_TESTS=true" else "# EXTENDED_TESTS=true"
   values$browser_row <- if (frontend) {
     sprintf("| `-browser.R` | Tests that drive a browser (shinytest2, chromote) | `test-demo-browser.R` | %s |", values$runs_browser)
   } else {

@@ -45,8 +45,8 @@ download.file("https://raw.githubusercontent.com/insightsurge/launchR/v{{kit_ver
 system2(file.path(R.home("bin"), "Rscript"), c(gate, "full"))
 ```
 
-Use `fast` instead of `full` for a quicker run. It prints one PASS or FAIL line per step. Like CRAN, it skips the
-extended tests: run those with `Sys.setenv(EXTENDED_TESTS = "true")`, then `devtools::test()`.
+Use `fast` instead of `full` for a quicker run. It prints one PASS or FAIL line per step. It runs the extended tests
+when `EXTENDED_TESTS` is `true`, which the package's `.Renviron` sets (`tests/README.md`).
 
 ## Updates
 
