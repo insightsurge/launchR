@@ -36,16 +36,25 @@ tick_description <- function(target) {
   unname(plain(fields[1, "Description"]) != plain(fields[1, "Title"]))
 }
 
-# The caller's platforms line lists a Windows and a Mac system (r-cmd-check.yaml starts with Linux only).
+# The caller's platforms value (on the key's line or the lines indented under it, without comments) lists a Windows
+# and a Mac system (r-cmd-check.yaml starts with Linux only).
 tick_platforms <- function(target) {
   if (!file.exists(target)) {
     return(NA)
   }
-  line <- grep("^\\s*platforms:", strsplit(read_text(target), "\n", fixed = TRUE)[[1]], value = TRUE)
-  if (length(line) == 0) {
+  lines <- strsplit(read_text(target), "\n", fixed = TRUE)[[1]]
+  at <- grep("^\\s*platforms:", lines)
+  if (length(at) == 0) {
     return(NA)
   }
-  grepl("windows/", line[1], fixed = TRUE) && grepl("macos/", line[1], fixed = TRUE)
+  indent <- function(line) nchar(sub("[^ ].*$", "", line))
+  value <- sub("^\\s*platforms:", "", lines[at[1]])
+  for (line in lines[-seq_len(at[1])]) {
+    if (nzchar(trimws(line)) && indent(line) <= indent(lines[at[1]])) break
+    value <- c(value, line)
+  }
+  entries <- unlist(strsplit(trimws(sub("(^|\\s)#.*$", "", value)), "[,[:space:]]+"))
+  any(startsWith(entries, "windows/")) && any(startsWith(entries, "macos/"))
 }
 
 # target is "endpoint|jq"; the jq expression must print true or false (or nothing, when the field is hidden).

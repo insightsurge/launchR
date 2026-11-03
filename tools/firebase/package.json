@@ -1,0 +1,8 @@
+{
+  "name": "launchr-firebase-deploy",
+  "private": true,
+  "description": "Only firebase-tools, pinned, for deploy-site.yaml: installed with npm ci --ignore-scripts",
+  "dependencies": {
+    "firebase-tools": "15.34.2"
+  }
+}

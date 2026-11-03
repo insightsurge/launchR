@@ -21,9 +21,6 @@ concurrency:
   group: deploy-site
   cancel-in-progress: false
 
-env:
-  FIREBASE_TOOLS: firebase-tools@15.34.2
-
 jobs:
   # Builds with the repository's npm packages and only the right to read, so nothing they run can ask Google for a token.
   build:
@@ -85,7 +82,10 @@ jobs:
         with:
           node-version: 24
 
-      # firebase-tools stays an npx download pinned in FIREBASE_TOOLS: adding it to site/package.json would pull in a
-      # large dependency tree for every build and test run of the site.
+      # firebase-tools comes from its own small folder with a lockfile, installed with its install scripts off (it
+      # works without them), so nothing downloaded here runs code before the deploy while this job can sign in.
+      - name: Install firebase-tools
+        run: npm ci --ignore-scripts --prefix tools/firebase
+
       - name: Publish
-        run: npx --yes "$FIREBASE_TOOLS" deploy --only hosting --non-interactive
+        run: tools/firebase/node_modules/.bin/firebase deploy --only hosting --non-interactive

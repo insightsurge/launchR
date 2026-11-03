@@ -143,9 +143,13 @@ jobs:
         shell: Rscript {0}
 
       # Codecov being down is not a test failure: fail_ci_if_error stays false, so a failed upload only warns. Without a
-      # CODECOV_TOKEN (the package didn't pass one) the step is skipped, so the run carries no warning.
+      # CODECOV_TOKEN (the package didn't pass one) the step is skipped, so the run carries no warning, except for a pull
+      # request from a fork: it has no token, but Codecov accepts its upload without one.
       - name: Upload coverage to Codecov
-        if: always() && steps.cobertura.outputs.written == 'true' && env.HAS_CODECOV == 'true'
+        if: >-
+          always() && steps.cobertura.outputs.written == 'true' &&
+          (env.HAS_CODECOV == 'true' ||
+          github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository)
         uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}

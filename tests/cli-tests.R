@@ -120,7 +120,8 @@ section("launchr.R new")
 expect(quiet(cmd_new(character()))$value == 1L, "new without a name fails")
 expect(quiet(cmd_new("1bad"))$value == 1L, "new with a bad name fails")
 steps <- quiet(cmd_new(c("stepspkg", "--yes", "--owner", "sample-org", "--plan", "c", "--path", file.path(work, "stepspkg"), "--no-git")))
-expect(any(grepl("usethis::use_github(organisation = \"sample-org\", private = TRUE)", steps$out, fixed = TRUE)) && any(grepl("pak::local_install_dev_deps()", steps$out, fixed = TRUE)) && any(grepl("Set up this repository", steps$out, fixed = TRUE)),
+expect(any(grepl("usethis::use_github(organisation = \"sample-org\", private = TRUE)", steps$out, fixed = TRUE)) && any(grepl("pak::local_install_dev_deps()", steps$out, fixed = TRUE)) && any(grepl("Set up this repository", steps$out, fixed = TRUE)) &&
+  any(grepl("install.packages(c(\"devtools\", \"gitcreds\", \"pak\"))", steps$out, fixed = TRUE)) && any(grepl("gitcreds::gitcreds_set()", steps$out, fixed = TRUE)) && any(grepl("Only show what would change", steps$out, fixed = TRUE)),
   "new prints the next steps, with the organisation line and the plan's visibility")
 expect(!any(grepl("^Next:", quiet(cmd_new(c("stepspkg", "--yes", "--path", file.path(work, "stepspkg2"))))$out)), "no next steps when new failed")
 expect(any(grepl("usethis::use_git()", steps$out, fixed = TRUE)), "with --no-git the next steps start with use_git()")
@@ -233,6 +234,10 @@ writeLines(c("with:", "  platforms: ubuntu/release"), plat_file)
 expect(identical(tick_state(plat_row, list(connected = FALSE)), FALSE), "platforms: Linux only is not ticked")
 writeLines(c("with:", "  platforms: ubuntu/release, macos/release, windows/release"), plat_file)
 expect(identical(tick_state(plat_row, list(connected = FALSE)), TRUE), "platforms: Windows and Mac tick the box")
+writeLines(c("with:", "  platforms: >-", "    ubuntu/release", "    macos/release,", "    windows/4.1", "  timeout-minutes: 0"), plat_file)
+expect(identical(tick_state(plat_row, list(connected = FALSE)), TRUE), "platforms: a multi-line value ticks")
+writeLines(c("with:", "  platforms: ubuntu/release  # later: macos/release, windows/release"), plat_file)
+expect(identical(tick_state(plat_row, list(connected = FALSE)), FALSE), "platforms: a comment does not tick")
 # the website box only appears when the package has a website
 expect(!any(grepl("launchr:site", checklist_lines("After public", ctx)$lines, fixed = TRUE)) == !file.exists("_pkgdown.yml"), "website boxes appear only with a website")
 setwd(old)

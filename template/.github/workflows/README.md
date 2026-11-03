@@ -21,7 +21,9 @@ that check.
 - **Turn a check off:** delete its file.
 - **Keep a check but run it only by hand:** keep only `workflow_dispatch:` under `on:`.
 - **A secret-scan false alarm:** the scan uses launchR's rules, not a `.gitleaks.toml` in the package. Silence a false alarm
-  with a `gitleaks:allow` comment on that line; a real secret must be removed and its key rotated.
+  with a `gitleaks:allow` comment on that line; a real secret must be removed and its key rotated. To clear a false alarm already in history, add its fingerprint
+  line (in the scan's log, as `file:rule:line` or `commit:file:rule:line`) to `.gitleaksignore` in a pull request; it applies once
+  merged.
 - **Keep the `permissions:` block as it is:** a check that reports on pull requests needs what it lists, or it stops before it starts.
 
 Scheduled runs use the default branch only, and GitHub pauses them on public repositories after 60 days with no activity.

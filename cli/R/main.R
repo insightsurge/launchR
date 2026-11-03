@@ -116,10 +116,12 @@ print_next_steps <- function(choices, package, out, committed) {
   cat(
     "Next:\n",
     "  1. Open ", out, " (", package, ".Rproj in RStudio, or the folder in Positron).\n",
-    "  2. In R: pak::local_install_dev_deps(), then devtools::test()\n",
-    "  3. Put it on GitHub: ", if (!committed) "usethis::use_git() (answer yes to commit), then ", "usethis::use_github(private = ", private, ")\n",
+    "  2. In R: install.packages(c(\"devtools\", \"gitcreds\", \"pak\")) (skip any you have), then\n",
+    "     pak::local_install_dev_deps() and devtools::test()\n",
+    "  3. Let R reach GitHub, once (skip if it can): usethis::create_github_token(), then gitcreds::gitcreds_set()\n",
+    "  4. Put it on GitHub: ", if (!committed) "usethis::use_git() (answer yes to commit), then ", "usethis::use_github(private = ", private, ")\n",
     "     for an organisation: usethis::use_github(organisation = \"", choices$owner, "\", private = ", private, ")\n",
-    if ("github" %in% choices$parts) "  4. On GitHub, open the Actions tab and run \"Set up this repository\".\n",
+    if ("github" %in% choices$parts) "  5. On GitHub, go to Actions, open \"Set up this repository\", click Run workflow, untick \"Only show what would change\", and run it.\n",
     sep = ""
   )
 }
