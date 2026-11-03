@@ -63,11 +63,12 @@ check_email <- function(email) {
   "That email looks incomplete, or leave it empty."
 }
 
-# The oldest R a package supports: major.minor or major.minor.patch, from 4.1.0 on. site/src/form/engine.js has the same.
+# The oldest R a package supports, as x.y (one digit each) from 4.1 on; DESCRIPTION gets x.y.0. site/src/form/engine.js
+# has the same.
 check_min_r <- function(min_r) {
   parts <- suppressWarnings(as.integer(strsplit(min_r, ".", fixed = TRUE)[[1]]))
-  ok <- grepl("^[0-9]+\\.[0-9]+(\\.[0-9]+)?$", min_r) && (parts[1] > 4 || (parts[1] == 4 && parts[2] >= 1))
-  if (ok) "" else "Use a version from R 4.1.0 up, such as 4.3 or 4.4.1."
+  ok <- grepl("^[0-9]\\.[0-9]$", min_r) && (parts[1] > 4 || (parts[1] == 4 && parts[2] >= 1))
+  if (ok) "" else "Give x.y from 4.1 on, such as 4.3. The .0 is added for you."
 }
 
 # A title without its full stop: DESCRIPTION's Description adds one.

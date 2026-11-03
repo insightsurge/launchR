@@ -39,11 +39,12 @@ export function checkEmail(email) {
   return !email || /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) ? '' : 'That email looks incomplete, or leave it empty.';
 }
 
-// The oldest R a package supports: major.minor or major.minor.patch, from 4.1.0 on. cli/R/choices.R has the same.
+// The oldest R a package supports, as x.y (one digit each) from 4.1 on; DESCRIPTION gets x.y.0. cli/R/choices.R has
+// the same.
 export function checkMinR(minR) {
   const parts = minR.split('.').map(Number);
-  const ok = /^\d+\.\d+(\.\d+)?$/.test(minR) && (parts[0] > 4 || (parts[0] === 4 && parts[1] >= 1));
-  return ok ? '' : 'Use a version from R 4.1.0 up, such as 4.3 or 4.4.1.';
+  const ok = /^\d\.\d$/.test(minR) && (parts[0] > 4 || (parts[0] === 4 && parts[1] >= 1));
+  return ok ? '' : 'Give x.y from 4.1 on, such as 4.3. The .0 is added for you.';
 }
 
 // A title without its full stop: DESCRIPTION's Description adds one.
@@ -170,11 +171,12 @@ export function placeholderValues(choices, lists) {
       ? `[![R-CMD-check](${repository}/actions/workflows/r-cmd-check.yaml/badge.svg)](${repository}/actions/workflows/r-cmd-check.yaml)`
       : '',
     credit_badge: isPublic ? `[![Set up with launchR](https://img.shields.io/badge/set%20up%20with-launchR-f6ab85)](${siteUrl})\n` : '',
-    credit_line: isPublic ? `\nSet up with [launchR](${siteUrl}).` : '',
+    credit_line: `\nSet up with [launchR](${siteUrl}).`,
   };
   // The oldest R supported: in DESCRIPTION, and in place of 4.1 in the default platforms.
   const minR = choices.minR || lists.settings.min_r;
-  values.min_r = minR.split('.').length === 2 ? `${minR}.0` : minR;
+  // DESCRIPTION takes major.minor.0: R CMD check warns about any other patch level. CI runs the newest patch of it.
+    values.min_r = `${minR}.0`;
   const ciOn = choices.parts.includes('ci');
   const onRows = ciOn ? lists.checks.filter((row) => choices.checks[row.key].on) : [];
   values.checks_table = onRows.length

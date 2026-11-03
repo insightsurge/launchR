@@ -19,7 +19,6 @@ const cases = lists.plans.flatMap(({ plan }) => ['starter', 'everything'].map((p
 })));
 cases.push({ name: 'no-email', plan: 'd', preset: 'starter', flags: ['--plan', 'd'], title: 'Tools For Tables.', email: '' });
 cases.push({ name: 'min-r', plan: 'a', preset: 'everything', flags: ['--plan', 'a', '--preset', 'everything', '--min-r', '4.3'], minR: '4.3' });
-cases.push({ name: 'min-r-patch', plan: 'd', preset: 'starter', flags: ['--plan', 'd', '--min-r', '4.4.1'], minR: '4.4.1' });
 let failed = 0;
 for (const item of cases) {
   const r = join(out, item.name, 'r');

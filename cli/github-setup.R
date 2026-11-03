@@ -1,7 +1,7 @@
 # The optional R line on the site's next-steps page: fetches launchR at a version, then sets up GitHub for the package in
 # the current folder. Needs gh signed in. Asks before it changes anything; add --yes to skip the question.
 local({
-  version <- "0.0.8"
+  version <- "0.0.9"
   url <- Sys.getenv("KIT_ARCHIVE_URL", sprintf("https://github.com/insightsurge/launchR/archive/refs/tags/v%s.tar.gz", version))
   folder <- tempfile("launchR")
   dir.create(folder)
