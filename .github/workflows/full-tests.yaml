@@ -213,6 +213,8 @@ jobs:
       # When the tests didn't report: a documentation-only change, or a failure before the tests finished.
       - name: Write the report (when the tests didn't)
         if: always()
+        # bash on every system: Windows runs a step in PowerShell unless told otherwise.
+        shell: bash
         env:
           R_STEPS: ${{ steps.changes.outputs.r }}
           R_LABEL: ${{ matrix.config.r }}

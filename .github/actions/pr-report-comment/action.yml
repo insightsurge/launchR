@@ -40,6 +40,8 @@ runs:
 
     - name: Post or edit the comment
       if: steps.build.outputs.post == 'true'
+      # A GitHub error while posting must not turn a passing check red: the next workflow to finish edits the comment.
+      continue-on-error: true
       uses: marocchino/sticky-pull-request-comment@5770ad5eb8f42dd2c4f34da00c94c5381e49af88 # v3.0.5
       with:
         header: ${{ steps.build.outputs.header }}
