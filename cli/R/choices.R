@@ -84,8 +84,8 @@ description_text <- function(choices) {
   if (grepl("[.!?]$", text)) text else paste0(text, ".")
 }
 
-# The longer description is optional: left empty, DESCRIPTION repeats the title. CRAN asks that it doesn't start with
-# the package's name or "This package".
+# The longer description is optional: left empty, DESCRIPTION repeats the title. R CMD check --as-cran notes a
+# Description that starts with the package's name, with "This package", "A package" and the like, or in lower case.
 check_description <- function(text, name = "") {
   if (!nzchar(text)) {
     return("")
@@ -96,9 +96,11 @@ check_description <- function(text, name = "") {
   if (grepl("[\"\\\\{}%]", text)) {
     return("Use plain words here: no double quotes, backslashes, braces or percent signs.")
   }
-  start <- tolower(text)
-  if (startsWith(start, "this package") || (nzchar(name) && startsWith(start, tolower(name)))) {
-    return("Start with what it does, not with \"This package\" or its name: CRAN asks for that.")
+  if (grepl("^(the|this|a|in this|in the) package", text, ignore.case = TRUE) || (nzchar(name) && startsWith(tolower(text), tolower(name)))) {
+    return("Start with what it does, not with \"This package\", \"A package\" or its name: CRAN asks for that.")
+  }
+  if (!grepl("^['A-Z]", text)) {
+    return("Start with a capital letter, as CRAN asks.")
   }
   ""
 }

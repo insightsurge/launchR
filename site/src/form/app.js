@@ -203,7 +203,7 @@ function cron() {
 
 function platforms() {
   const list = Object.entries(S.matrix).filter(([, on]) => on).map(([entry]) => entry);
-  if (S.minR) list.push(`ubuntu/${S.minR}`);
+  if (S.minR && S.minR !== lists.settings.min_r) list.push(`ubuntu/${S.minR}`);
   return list.join(', ');
 }
 
@@ -315,7 +315,7 @@ $('#exBack').addEventListener('click', () => { mode = 'new'; S = recommended(); 
 const copy = (text) => `<div class="cmd"><code>${esc(text)}</code><button type="button" class="copy" data-copy="${esc(text)}">Copy</button></div>`;
 const code = (t) => `<code>${esc(t)}</code>`;
 const setupButton = 'On GitHub, go to Actions, open <em>Set up this repository</em>, click Run workflow, untick <em>Only show what would change</em>, and run it.';
-const setupMore = "Its first run, from your push, only listed what it would make. This run makes your labels and checklists. GitHub's own labels stay next to launchR's: to remove them, also tick <em>Also remove labels that aren't launchR's</em>.";
+const setupMore = "Its first run, from your push, only listed what it would make. This run makes your labels and checklists. Labels that aren't launchR's, such as GitHub's own and any you made, stay. To remove them, also tick <em>Also remove labels that aren't launchR's</em>; Dependabot's labels are kept.";
 const actions = 'Open the repository on GitHub and go to Actions: your checks are running.';
 const local = `To run the same checks on your computer before a pull request, see <em>Run the checks on your computer</em> in ${code('.github/workflows/README.md')}. `;
 // Optional, and only with the coverage check: the check works without Codecov.
@@ -347,7 +347,7 @@ function steps() {
   const running = CHECKS.some(([k]) => S.checks[k]) ? [step(actions)] : [];
   const label = (text) => `<p class="cmd-label">${text}</p>`;
   const list = route === 'desktop' ? [
-    step(`${unzip} Then choose Build, then Test Package, to see your first test pass.`, '', `The first time, install the tools: choose Tools, then Install Packages, and install ${code('devtools')}. Skip this if you already have it.`),
+    step(`${unzip} Then, in RStudio, choose Build, then Test Package, to see your first test pass; in Positron, run ${code('devtools::test()')} in the console.`, '', `The first time, install the tools: in RStudio choose Tools, then Install Packages, and install ${code('devtools')}; in Positron, run ${code('install.packages("devtools")')}. Skip this if you already have it.`),
     step('Install <a href="https://desktop.github.com" target="_blank" rel="noopener">GitHub Desktop</a> and sign in with your GitHub account.', '', 'It brings Git with it. Skip this if you already use it.'),
     step(`In GitHub Desktop, choose File, then Add local repository, pick the ${code(name)} folder, and accept when it offers to create the repository.`),
     step(`Click Publish repository. ${priv ? 'Leave Keep this code private ticked.' : 'Untick Keep this code private.'} If ${code(owner)} is an organisation, pick it under Organization.`),

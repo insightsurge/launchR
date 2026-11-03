@@ -30,16 +30,16 @@ export function checkTitle(title) {
   return '';
 }
 
-// The longer description is optional: left empty, DESCRIPTION repeats the title. CRAN asks that it doesn't start with
-// the package's name or "This package".
+// The longer description is optional: left empty, DESCRIPTION repeats the title. R CMD check --as-cran notes a
+// Description that starts with the package's name, with "This package", "A package" and the like, or in lower case.
 export function checkDescription(text, name) {
   if (!text) return '';
   if (text.length > 500) return `Keep it to 500 characters. It is ${text.length} now.`;
   if (/["\\{}%]/.test(text)) return 'Use plain words here: no double quotes, backslashes, braces or percent signs.';
-  const start = text.toLowerCase();
-  if (start.startsWith('this package') || (name && start.startsWith(name.toLowerCase()))) {
-    return 'Start with what it does, not with "This package" or its name: CRAN asks for that.';
+  if (/^(the|this|a|in this|in the) package/i.test(text) || (name && text.toLowerCase().startsWith(name.toLowerCase()))) {
+    return 'Start with what it does, not with "This package", "A package" or its name: CRAN asks for that.';
   }
+  if (!/^['A-Z]/.test(text)) return 'Start with a capital letter, as CRAN asks.';
   return '';
 }
 

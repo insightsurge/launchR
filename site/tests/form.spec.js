@@ -108,6 +108,9 @@ test('the longer description reaches DESCRIPTION and the help page, and CRAN wor
   await page.locator('#details').fill('This package builds tables.');
   await page.locator('#download').click();
   await expect(page.locator('#err-details')).toHaveText(/not with "This package"/);
+  await page.locator('#details').fill('builds tables.');
+  await page.locator('#download').click();
+  await expect(page.locator('#err-details')).toHaveText(/capital letter/);
   await page.locator('#details').fill('Builds   tables for clinical study reports');
   const { files } = await download(page, '#download');
   expect(files['tablePkg/DESCRIPTION']).toContain('Description: Builds tables for clinical study reports.');
@@ -163,6 +166,12 @@ test('Modify: on a public plan, no check runs on an R older than the oldest R ch
 test('Modify refuses an oldest R below 4.1 or with a patch number', async ({ page }) => {
   await openForm(page);
   await fillForm(page);
+  await page.locator('#modify').click();
+  await page.locator('#minR').fill('4.1');
+  await page.locator('#minR').dispatchEvent('change');
+  const { files } = await download(page, '#modDownload');
+  expect(files['tablePkg/.github/workflows/r-cmd-check.yaml'], 'the default oldest R adds no extra system').not.toContain('ubuntu/4.1');
+  await page.locator('#nextChange').click();
   await page.locator('#modify').click();
   await page.locator('#minR').fill('4.0');
   await page.locator('#minR').dispatchEvent('change');

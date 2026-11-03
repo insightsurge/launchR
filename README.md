@@ -120,8 +120,8 @@ With the GitHub setup part, your repository gets a **Set up this repository** wo
 push, only lists what it would make. Run it from the Actions tab to create the labels, a root issue and the stage
 checklists (Before public, After public, Before CRAN, ...). It ticks the boxes it can check, such as "CI is green on
 the default branch", and links each repository setting it can't change. Run it again at any time: it edits only the
-lines it wrote. GitHub's own labels (duplicate, question, ...) stay next to launchR's; to remove them, tick **Also
-remove labels that aren't launchR's** when you click Run workflow.
+lines it wrote. Labels that aren't launchR's, such as GitHub's own (duplicate, question, ...) and any you made, stay; to
+remove them, tick **Also remove labels that aren't launchR's** when you click Run workflow. Dependabot's labels are kept.
 
 The same from R, with the [GitHub CLI](https://cli.github.com) signed in, from your package's folder; this can also
 tick the settings boxes:
@@ -139,7 +139,7 @@ Rscript cli/launchr.R new mypkg                       # asks its questions
 Rscript cli/launchr.R new mypkg --yes --owner my-org  # takes the defaults
 Rscript cli/launchr.R gate full                       # run the quality gate in the current package
 Rscript cli/launchr.R github-setup --dry-run          # show the GitHub changes, change nothing
-Rscript cli/launchr.R github-setup --remove-other-labels  # also remove labels that aren't launchR's
+Rscript cli/launchr.R github-setup --remove-other-labels  # also remove labels that aren't launchR's (not Dependabot's)
 Rscript cli/launchr.R eject                           # copy launchR's checks into the current package
 ```
 

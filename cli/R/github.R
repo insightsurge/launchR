@@ -175,8 +175,9 @@ github_plan <- function(ctx) {
     current <- have[[labels$name[i]]]
     if (is.null(current)) "create" else if (current[["color"]] != tolower(labels$color[i]) || current[["description"]] != labels$description[i]) "update" else "same"
   }, "")
-  # Labels that aren't launchR's, such as GitHub's own: kept unless the person asks to remove them.
-  other_labels <- setdiff(names(have), labels$name)
+  # Labels that aren't launchR's, such as GitHub's own and the person's: kept unless they ask to remove them. GitHub
+  # matches label names ignoring case, and Dependabot's labels are always kept.
+  other_labels <- names(have)[!tolower(names(have)) %in% tolower(c(labels$name, "dependencies", "github_actions"))]
   issues <- if (ctx$connected) existing_issues(ctx) else data.frame(number = character(), state = character(), title = character())
   root <- pick_issue(issues, root_title)
   cran <- if (ctx$internal) FALSE else on_cran(ctx$package, if (ctx$connected) ctx$repo else NA_character_)

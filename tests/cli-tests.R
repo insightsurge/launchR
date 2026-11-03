@@ -160,6 +160,9 @@ expect(identical(unname(plain_description[1, "Description"]), "Sample Tools."), 
 expect(nzchar(check_description("This package builds tables.", "descpkg")) && nzchar(check_description("descpkg builds tables.", "descpkg")) &&
   nzchar(check_description('Say "hi".')) && !nzchar(check_description("")) && !nzchar(check_description("Builds tables.", "descpkg")),
   "a description that starts with the name or \"This package\", or holds quotes, is refused; an empty one is fine")
+expect(nzchar(check_description("A package for clinical tables.")) && nzchar(check_description("The package builds tables.")) &&
+  nzchar(check_description("builds tables for reports.")) && !nzchar(check_description("'Shiny' apps for tables.")),
+  "a description R CMD check --as-cran would note (A/The package, a lower-case start) is refused")
 expect(nzchar(check_min_r("4.4.1")) && nzchar(check_min_r("4.10")) && nzchar(check_min_r("4.0")) && !nzchar(check_min_r("4.4")), "the oldest R is x.y, one digit each, from 4.1 on")
 owned <- read.dcf(file.path(new_package("ownedpkg"), "DESCRIPTION"))
 expect(identical(unname(owned[1, "BugReports"]), "https://github.com/sample-org/ownedpkg/issues"), "DESCRIPTION has BugReports from the start")
@@ -253,12 +256,19 @@ expect(any(grepl("^- \\[x\\] Search the history", body(fake, 2))), "a judgement 
 section("Labels that aren't launchR's")
 fake_labels <- fake_github()
 writeLines(c("question|d876e3|Further information is requested", "wontfix|ffffff|This will not be worked on"), file.path(fake_labels, "labels.txt"))
+dry_remove <- run_github(pkg, fake_labels, "--dry-run", "--remove-other-labels")
+expect(dry_remove$value == 0L && length(writes(log_lines(fake_labels))) == 0L && any(grepl("question, wontfix): remove them", dry_remove$out, fixed = TRUE)),
+  "--dry-run --remove-other-labels names the labels and deletes nothing")
 kept_run <- run_github(pkg, fake_labels, "--yes")
 expect(any(grepl("other labels (question, wontfix): kept", kept_run$out, fixed = TRUE)) &&
   all(c("question", "wontfix") %in% sub("[|].*", "", readLines(file.path(fake_labels, "labels.txt")))), "GitHub's own labels are kept by default, and named")
 removed_run <- run_github(pkg, fake_labels, "--yes", "--remove-other-labels")
 left <- sub("[|].*", "", readLines(file.path(fake_labels, "labels.txt")))
 expect(removed_run$value == 0L && !any(c("question", "wontfix") %in% left) && length(left) == 11L, "--remove-other-labels removes them and keeps launchR's eleven")
+writeLines(c(readLines(file.path(fake_labels, "labels.txt")), "dependencies|0366d6|Dependabot", "Epic|3e4b9e|Same name, other case"), file.path(fake_labels, "labels.txt"))
+run_github(pkg, fake_labels, "--yes", "--remove-other-labels")
+left <- sub("[|].*", "", readLines(file.path(fake_labels, "labels.txt")))
+expect(all(c("dependencies", "Epic") %in% left), "Dependabot's label is kept, and a launchR label in other case isn't taken for another")
 section("Settings that don't hold, or can't be read")
 fake2 <- fake_github(settings_ok = FALSE, token_visible = FALSE)
 run_github(pkg, fake2, "--yes")
