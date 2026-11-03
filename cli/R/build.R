@@ -43,7 +43,7 @@ placeholder_values <- function(choices) {
   )
   # The oldest R supported: in DESCRIPTION, and in place of 4.1 in the default platforms.
   min_r <- if (nzchar(choices$min_r %||% "")) choices$min_r else kit_setting("min_r")
-  values$min_r <- paste0(min_r, ".0")
+  values$min_r <- if (length(strsplit(min_r, ".", fixed = TRUE)[[1]]) == 2) paste0(min_r, ".0") else min_r
   ci_on <- "ci" %in% choices$parts
   on_rows <- if (ci_on) which(vapply(checks$key, function(key) isTRUE(choices$checks[[key]]$on), logical(1))) else integer()
   values$checks_table <- paste(

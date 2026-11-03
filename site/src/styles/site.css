@@ -512,7 +512,13 @@ p { text-wrap: pretty; }
 .sw em, .line em, .pick em { display: block; font-style: normal; font-size: 13.5px; color: var(--soft); font-weight: 400; line-height: 1.3; }
 .line { display: flex; justify-content: space-between; align-items: center; gap: 14px; padding: 6px 0; margin-top: 6px; }
 .line label { display: block; margin: 0; font-weight: 400; }
-select { padding: 7px 10px; font: inherit; font-size: 14.5px; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; }
+select {
+  padding: 7px 34px 7px 10px; font: inherit; font-size: 14.5px; color: var(--ink); background-color: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+  /* our own arrow, with room around it: the browser's sits on the edge */
+  appearance: none; -webkit-appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--soft) 50%), linear-gradient(135deg, var(--soft) 50%, transparent 50%);
+  background-position: calc(100% - 18px) 55%, calc(100% - 13px) 55%; background-size: 5px 5px, 5px 5px; background-repeat: no-repeat;
+}
 select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .pick { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .pick label { align-items: flex-start; gap: 9px; margin: 0; padding: 11px 12px; background: var(--surface); border: 1.5px solid var(--line); border-radius: 12px; cursor: pointer; }
@@ -649,6 +655,7 @@ input.short.bad { border-color: var(--no); }
 #modifyView .field label, #modifyView .field-head label { font-size: 14.5px; font-weight: 500; }
 #modifyView .sw b, #modifyView .pick b, #modifyView .line, #modifyView .line label, .rmatrix tbody th { font-size: 14.5px; font-weight: 400; }
 #modifyView input[type='text'], #modifyView select { padding: 7px 10px; font-size: 14.5px; }
+#modifyView select { padding-right: 34px; }
 #modifyView .field input[type='text'] { width: min(100%, 420px); }
 #modifyView .pill span { font-size: 14.5px; }
 #modifyView .pill code, .rmatrix code { font-size: 13px; }
