@@ -1436,14 +1436,14 @@ main <- function(args) {
     quit(status = 0)
   }
   if (!is.null(opts$error)) {
-    cli::cat_line("FAIL usage: ", opts$error)
-    cli::cat_line("Run with --help for the options.")
+    cat("FAIL usage: ", opts$error, "\nRun with --help for the options.\n", sep = "")
     quit(status = 2)
   }
   update <- opts$update
   mode <- opts$mode
+  # Base cat(), not cli: this line must work before the gate's packages are known to be installed.
   if (!file.exists("DESCRIPTION")) {
-    cli::cat_line("FAIL usage: run the gate from the package root (no DESCRIPTION in ", getwd(), ").")
+    cat("FAIL usage: run the gate from the package root (no DESCRIPTION in ", getwd(), ").\n", sep = "")
     quit(status = 2)
   }
   settings <- tryCatch(read_settings(), error = function(e) conditionMessage(e))
