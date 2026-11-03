@@ -2,27 +2,20 @@
 // Choices live here; engine.js turns them into files, the same way the CLI does.
 import JSZip from 'jszip';
 import { countZip } from '../consent.js';
-import { buildPackage, checkPackageName, defaultChoices, readLists } from './engine.js';
+import { buildPackage, checkEmail, checkPackageName, checkPerson, checkTitle, defaultChoices, planRow, readLists } from './engine.js';
 
 const $ = (q) => document.querySelector(q);
 const $$ = (q) => [...document.querySelectorAll(q)];
 const esc = (text) => String(text).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 
 const dialog = $('#setup');
-const CHECKS = [
-  ['r_cmd_check', 'r-cmd-check', 'R CMD check, the core check. It runs on every pull request and push, and weekly.'],
-  ['lint', 'lint', 'Checks style, that the docs are in sync, and spelling.'],
-  ['secret_scan', 'secret-scan', 'Catches passwords and tokens committed by mistake.'],
-  ['coverage', 'coverage', 'Measures how much of your code the tests run.'],
-  ['no_suggests', 'no-suggests', 'Checks the package works without its optional packages.'],
-  ['full_tests', 'full-tests', 'Runs every test, including the ones CRAN skips: test files ending in -browser, -snap or -extended. Runs on Linux.'],
-  ['r_cmd_check_extended', 'r-cmd-check-extended', 'Every week, R CMD check on more systems (Mac and Windows for a public package), with the test files ending in -extended.'],
-];
+// The checks and which run weekly come from lists/checks.tsv once the kit is loaded: [key, name, tip].
+let CHECKS = [];
+let WEEKLY = [];
 const SYSTEMS = [['ubuntu', 'Linux'], ['windows', 'Windows'], ['macos', 'Mac']];
 const RS = [['release', 'release'], ['oldrel-1', 'oldrel-1'], ['devel', 'devel']];
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const WORDS = ['No', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'All seven'];
-const WEEKLY = ['r_cmd_check', 'full_tests', 'r_cmd_check_extended'];
 const PARTS = [['ci', 'CI checks'], ['website', 'Website'], ['github', 'Issue forms, labels and checklists']];
 
 let bundle = null;
@@ -33,9 +26,9 @@ let S = null;
 const add = { ci: true, website: false, github: false };
 
 const plan = () => $('input[name=plan]:checked').value;
-const isPublic = () => 'ab'.includes(plan());
-const release = () => ('ac'.includes(plan()) ? 'cran' : 'internal');
-const visibility = () => (isPublic() ? 'public' : 'private');
+const visibility = () => planRow(lists, plan()).visibility;
+const release = () => planRow(lists, plan()).release;
+const isPublic = () => visibility() === 'public';
 const pkg = () => (mode === 'new' ? $('#pkg').value.trim() : $('#exPkg').value.trim()) || 'fooBarPkg';
 
 function kitPlatforms() {
@@ -43,11 +36,11 @@ function kitPlatforms() {
   return row[`platforms_${visibility()}`].split(',').map((entry) => entry.trim());
 }
 
-/* what each plan starts from: the starter column in lists/, so an untouched form matches the CLI */
+/* what each plan starts from: the starter column and lists/plans.tsv, read by engine.js as the CLI reads them */
 function recommended() {
   const start = kitPlatforms();
   return {
-    checks: Object.fromEntries(lists.checks.map((row) => [row.key, row.starter === 'yes' && !(row.key === 'r_cmd_check_extended' && plan() === 'd')])),
+    checks: Object.fromEntries(Object.entries(defaultChoices(lists, 'starter', plan()).checks).map(([key, check]) => [key, check.on])),
     matrix: Object.fromEntries(SYSTEMS.flatMap(([s]) => RS.map(([r]) => [`${s}/${r}`, start.includes(`${s}/${r}`)]))),
     minR: '', samePlatforms: false, day: 'Monday', time: '05:00', website: false, github: true, frontend: false,
   };
@@ -171,18 +164,6 @@ function nameProblem(name, empty) {
   return checkPackageName(name, lists);
 }
 
-function titleProblem(title) {
-  if (!title) return 'Say in one line what it does. This goes in DESCRIPTION.';
-  if (title.length > 65) return `Keep it to 65 characters. It is ${title.length} now.`;
-  if (/["\\{}%]/.test(title)) return 'Use plain words here: no double quotes, backslashes, braces or percent signs.';
-  return '';
-}
-
-function personProblem(name, which) {
-  if (!name) return `Add a ${which} name. DESCRIPTION needs an author.`;
-  return /["\\]/.test(name) ? 'Names can\'t contain double quotes or backslashes.' : '';
-}
-
 function ownerProblem(owner) {
   return !owner || /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})$/.test(owner) ? '' : 'Use only your GitHub name, such as insightsurge, not a link.';
 }
@@ -190,10 +171,10 @@ function ownerProblem(owner) {
 function valid() {
   const rules = [
     ['pkg', nameProblem(v('pkg'), 'Give your package a name, such as fooBarPkg.')],
-    ['what', titleProblem(v('what'))],
-    ['first', personProblem(v('first'), 'first')],
-    ['last', personProblem(v('last'), 'last')],
-    ['email', !v('email') || /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v('email')) ? '' : 'That email looks incomplete, or leave it empty.'],
+    ['what', checkTitle(v('what'))],
+    ['first', checkPerson(v('first'), 'first')],
+    ['last', checkPerson(v('last'), 'last')],
+    ['email', checkEmail(v('email'))],
     ['owner', v('owner') ? ownerProblem(v('owner')) : 'Give your GitHub user or organisation name, such as insightsurge.'],
   ];
   rules.forEach(([id, text]) => put(id, text));
@@ -225,7 +206,7 @@ function platforms() {
 }
 
 function choices() {
-  const base = defaultChoices(lists);
+  const base = defaultChoices(lists, 'starter', plan());
   const start = kitPlatforms().join(', ');
   const parts = mode === 'new'
     ? ['skeleton', 'ci', ...(S.github ? ['github'] : []), ...(S.website ? ['website'] : []), ...(S.frontend ? ['frontend'] : [])]
@@ -240,8 +221,8 @@ function choices() {
   const email = mode === 'new' ? v('email') : '';
   return {
     ...base, parts, checks, visibility: visibility(), release: release(), owner: mode === 'new' ? v('owner') : v('exOwner'),
-    package: pkg(), title: mode === 'new' ? v('what').replace(/[.\s]+$/, '') : '', given: v('first'), family: v('last'),
-    email: email || 'your.email@example.com',
+    package: pkg(), title: mode === 'new' ? v('what') : '', given: v('first'), family: v('last'), email,
+    minR: minRProblem() ? base.minR : S.minR || base.minR,
   };
 }
 
@@ -339,7 +320,8 @@ const codecov = () => (S.checks.coverage ? `Optional: to see coverage on <a href
 
 function existingSteps() {
   const list = [`Unzip ${code('launchR-files.zip')} and copy what's inside into your package folder. Nothing in ${code('R/')}, ${code('tests/')} or ${code('DESCRIPTION')} changes.`];
-  if (add.ci) list.push(`Delete any old files in ${code('.github/workflows')} that do the same job.`);
+  if (add.ci) list.push(`Delete any old files in ${code('.github/workflows')} that do the same job. If your package already has ${code('.github/workflows/README.md')}, keep yours and copy in only the new rows from the one in the zip.`);
+  if (add.ci && release() === 'internal') list.push(`Your package won't go to CRAN, so add this line to ${code('DESCRIPTION')}: the checks then leave out what only CRAN asks for.${copy('Config/quality-gate/target: internal')}`);
   list.push("Commit and push, from RStudio's Git pane or GitHub Desktop.");
   if (add.ci && CHECKS.some(([k]) => S.checks[k])) list.push(actions);
   if (add.github) list.push(`On GitHub, go to Actions, ${setupButton}`);
@@ -376,7 +358,7 @@ function steps() {
     ...running,
   ];
   $('#stepList').innerHTML = list.map((t) => `<li>${t}</li>`).join('');
-  const first = { a: 'After public', b: 'After public', c: 'Before public' }[plan()];
+  const first = planRow(lists, plan()).first_checklist;
   const email = v('email') ? '' : `Replace the placeholder email in ${code('DESCRIPTION')} before you release. `;
   $('#nextAfter').innerHTML = `<b>After that.</b> ${email}${first && S.github ? `Open the <em>${first}</em> checklist in your repository's issues when you reach that stage. ` : ''}${running.length ? local : ''}${codecov()}To add something later, such as a website, come back and choose only that.`;
 }
@@ -420,6 +402,8 @@ async function loadKit() {
     if (!response.ok) return false;
     bundle = await response.json();
     lists = readLists(bundle);
+    CHECKS = lists.checks.map((row) => [row.key, row.check, row.help]);
+    WEEKLY = lists.checks.filter((row) => row.events.split(',').includes('schedule')).map((row) => row.key);
     S ??= recommended();
     paint();
     return true;

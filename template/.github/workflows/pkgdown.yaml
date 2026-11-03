@@ -9,6 +9,11 @@ on:
 permissions:
   contents: read
 
+# A new push to a pull request stops this check's older run for it; pushes and weekly runs are never stopped.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   site:
     uses: insightsurge/launchR/.github/workflows/pkgdown.yaml@v{{kit_version}}

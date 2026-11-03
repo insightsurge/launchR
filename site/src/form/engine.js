@@ -17,8 +17,30 @@ export function readLists(bundle) {
     parts: list('parts.tsv'),
     checks: list('checks.tsv'),
     files: list('files.tsv'),
+    plans: list('plans.tsv'),
   };
 }
+
+// The rules for what a person types, with the same messages in cli/R/choices.R. DESCRIPTION holds these as text and as
+// R code (Authors@R), so quotes and backslashes would break it.
+export function checkTitle(title) {
+  if (!title) return 'Say in one line what it does. This goes in DESCRIPTION.';
+  if (title.length > 65) return `Keep it to 65 characters. It is ${title.length} now.`;
+  if (/["\\{}%]/.test(title)) return 'Use plain words here: no double quotes, backslashes, braces or percent signs.';
+  return '';
+}
+
+export function checkPerson(name, which) {
+  if (!name) return `Add a ${which} name. DESCRIPTION needs an author.`;
+  return /["\\]/.test(name) ? "Names can't contain double quotes or backslashes." : '';
+}
+
+export function checkEmail(email) {
+  return !email || /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) ? '' : 'That email looks incomplete, or leave it empty.';
+}
+
+// A title without its full stop: DESCRIPTION's Description adds one.
+export const cleanTitle = (title) => title.replace(/[.\s]+$/, '');
 
 // R's rules for a package name, plus a length limit and the names of R's own packages. cli/R/choices.R has the same.
 export function checkPackageName(name, lists) {
@@ -33,7 +55,13 @@ export function checkPackageName(name, lists) {
   return '';
 }
 
-export function defaultChoices(lists, preset = lists.settings.preset) {
+// What a plan starts from: visibility, release, and whether r-cmd-check-extended is on (lists/plans.tsv).
+export function planRow(lists, plan = lists.settings.plan) {
+  return lists.plans.find((row) => row.plan === plan) ?? lists.plans.find((row) => row.plan === lists.settings.plan);
+}
+
+export function defaultChoices(lists, preset = lists.settings.preset, plan = lists.settings.plan) {
+  const chosen = planRow(lists, plan);
   return {
     package: '',
     title: '',
@@ -41,15 +69,21 @@ export function defaultChoices(lists, preset = lists.settings.preset) {
     family: '',
     email: '',
     owner: '',
-    visibility: 'private',
-    release: 'cran',
+    visibility: chosen.visibility,
+    release: chosen.release,
     year: String(new Date().getFullYear()),
     branches: lists.settings.branches,
+    minR: lists.settings.min_r,
     parts: lists.parts.filter((row) => row[preset] === 'yes').map((row) => row.part),
     checks: Object.fromEntries(
       lists.checks.map((row) => [
         row.key,
-        { on: row[preset] === 'yes', events: row.events.split(','), cron: row.cron, platforms: null },
+        {
+          on: row[preset] === 'yes' && !(row.key === 'r_cmd_check_extended' && chosen.extended === 'no'),
+          events: row.events.split(','),
+          cron: row.cron,
+          platforms: null,
+        },
       ]),
     ),
   };
@@ -108,12 +142,12 @@ export function placeholderValues(choices, lists) {
   const values = {
     package: choices.package,
     name_words: parts.map((part) => `${part}\n`).join(''),
-    title: choices.title,
-    description: `${choices.title}.`,
+    title: cleanTitle(choices.title),
+    description: `${cleanTitle(choices.title)}.`,
     author: `${choices.given} ${choices.family}`,
     given: choices.given,
     family: choices.family,
-    email: choices.email,
+    email: choices.email || lists.settings.placeholder_email,
     owner,
     owner_or_you: owner,
     year: choices.year,
@@ -131,6 +165,9 @@ export function placeholderValues(choices, lists) {
     credit_badge: isPublic ? `[![Set up with launchR](https://img.shields.io/badge/set%20up%20with-launchR-f6ab85)](${siteUrl})\n` : '',
     credit_line: isPublic ? `\nSet up with [launchR](${siteUrl}).` : '',
   };
+  // The oldest R supported: in DESCRIPTION, and in place of 4.1 in the default platforms.
+  const minR = choices.minR || lists.settings.min_r;
+  values.min_r = `${minR}.0`;
   const ciOn = choices.parts.includes('ci');
   const onRows = ciOn ? lists.checks.filter((row) => choices.checks[row.key].on) : [];
   values.checks_table = onRows.length
@@ -175,7 +212,7 @@ export function placeholderValues(choices, lists) {
       values[`c_${row.key}_${event}`] = check.events.includes(event) ? '' : '# ';
     }
     values[`cron_${row.key}`] = check.cron;
-    values[`platforms_${row.key}`] = check.platforms ?? row[`platforms_${choices.visibility}`];
+    values[`platforms_${row.key}`] = check.platforms ?? row[`platforms_${choices.visibility}`].replaceAll(`/${lists.settings.min_r}`, `/${minR}`);
   }
   return values;
 }
@@ -202,7 +239,7 @@ export function selectedFiles(choices, lists) {
     .filter(
       (row) =>
         choices.parts.includes(row.part) &&
-        (row.check === '' || onChecks.has(row.check)) &&
+        (row.check === '' || (choices.parts.includes('ci') && onChecks.has(row.check))) &&
         (row.release === 'any' || row.release === choices.release),
     )
     .map((row) => row.path);

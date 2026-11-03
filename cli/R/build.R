@@ -16,12 +16,12 @@ placeholder_values <- function(choices) {
   values <- list(
     package = choices$package,
     name_words = if (length(parts) > 0) paste0(parts, "\n", collapse = "") else "",
-    title = choices$title,
-    description = paste0(choices$title, "."),
+    title = clean_title(choices$title),
+    description = paste0(clean_title(choices$title), "."),
     author = author,
     given = choices$given,
     family = choices$family,
-    email = choices$email,
+    email = if (nzchar(choices$email)) choices$email else kit_setting("placeholder_email"),
     owner = owner,
     owner_or_you = owner,
     year = choices$year,
@@ -41,6 +41,9 @@ placeholder_values <- function(choices) {
     credit_badge = if (public) sprintf("[![Set up with launchR](https://img.shields.io/badge/set%%20up%%20with-launchR-f6ab85)](%s)\n", site_url) else "",
     credit_line = if (public) sprintf("\nSet up with [launchR](%s).", site_url) else ""
   )
+  # The oldest R supported: in DESCRIPTION, and in place of 4.1 in the default platforms.
+  min_r <- if (nzchar(choices$min_r %||% "")) choices$min_r else kit_setting("min_r")
+  values$min_r <- paste0(min_r, ".0")
   ci_on <- "ci" %in% choices$parts
   on_rows <- if (ci_on) which(vapply(checks$key, function(key) isTRUE(choices$checks[[key]]$on), logical(1))) else integer()
   values$checks_table <- paste(
@@ -108,6 +111,7 @@ placeholder_values <- function(choices) {
     }
     values[[paste0("cron_", key)]] <- check$cron
     default <- checks[[paste0("platforms_", choices$visibility)]][i]
+    default <- gsub(paste0("/", kit_setting("min_r")), paste0("/", min_r), default, fixed = TRUE)
     values[[paste0("platforms_", key)]] <- if (is.null(check$platforms)) default else check$platforms
   }
   values
@@ -149,6 +153,8 @@ man_seealso <- function(urls, repository) {
 }
 
 render_text <- function(text, values) {
+  missing <- names(values)[vapply(values, function(value) length(value) != 1 || is.na(value), logical(1))]
+  if (length(missing) > 0) stop("No value for: ", paste(missing, collapse = ", "), call. = FALSE)
   lines <- strsplit(text, "\n", fixed = TRUE)[[1]]
   ends_with_newline <- endsWith(text, "\n")
   empty <- names(values)[vapply(values, function(value) !nzchar(value), logical(1))]
@@ -166,7 +172,7 @@ selected_files <- function(choices) {
   on_checks <- checks$check[vapply(checks$key, function(key) choices$checks[[key]]$on, logical(1))]
   keep <- files$part %in%
     choices$parts &
-    (!nzchar(files$check) | files$check %in% on_checks) &
+    (!nzchar(files$check) | ("ci" %in% choices$parts & files$check %in% on_checks)) &
     (files$release == "any" | files$release == choices$release)
   files$path[keep]
 }

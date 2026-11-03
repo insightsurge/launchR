@@ -69,6 +69,8 @@ jobs:
         env:
           # The whole test output when a test fails, not only its last 13 lines.
           _R_CHECK_TESTS_NLINES_: 0
+        # bash with pipefail: without it, the gate's exit status is lost in the pipe to tee and a failure looks passed.
+        shell: bash
         run: |
           Rscript .launchr/quality-gate/quality-gate.R nosuggests | tee "${RUNNER_TEMP}/gate.txt"
           if grep -q "^SKIP nosuggests" "${RUNNER_TEMP}/gate.txt"; then
