@@ -73,6 +73,27 @@ function manSeealso(urls, repository) {
   ].join('\n');
 }
 
+// When a check runs, in words for the workflows README: "pull requests, pushes, Mondays at 05:00 UTC, by hand".
+const WEEKDAYS = ['Sundays', 'Mondays', 'Tuesdays', 'Wednesdays', 'Thursdays', 'Fridays', 'Saturdays'];
+function whenText(check) {
+  const [minute, hour, , , day] = check.cron.split(' ');
+  const time = `${hour.padStart(2, '0')}:${minute.padStart(2, '0')} UTC`;
+  const parts = [];
+  if (check.events.includes('pr')) parts.push('pull requests');
+  if (check.events.includes('push')) parts.push('pushes');
+  if (check.events.includes('schedule')) parts.push(day === '*' ? `every day at ${time}` : `${WEEKDAYS[Number(day)]} at ${time}`);
+  if (check.events.includes('manual')) parts.push('by hand');
+  return parts.join(', ');
+}
+
+// Which of the package's checks run each kind of test file, for tests/README.md.
+const TEST_KINDS = {
+  plain: ['r_cmd_check', 'coverage', 'full_tests', 'r_cmd_check_extended'],
+  browser: ['full_tests'],
+  snap: ['full_tests'],
+  extended: ['coverage', 'full_tests', 'r_cmd_check_extended'],
+};
+
 export function placeholderValues(choices, lists) {
   const hasOwner = choices.owner !== '';
   const isPublic = choices.visibility === 'public';
@@ -110,6 +131,23 @@ export function placeholderValues(choices, lists) {
     credit_badge: isPublic ? `[![Set up with launchR](https://img.shields.io/badge/set%20up%20with-launchR-f6ab85)](${siteUrl})\n` : '',
     credit_line: isPublic ? `\nSet up with [launchR](${siteUrl}).` : '',
   };
+  const ciOn = choices.parts.includes('ci');
+  const onRows = ciOn ? lists.checks.filter((row) => choices.checks[row.key].on) : [];
+  values.checks_table = onRows.map((row) => `| \`${row.check}.yaml\` | ${row.label} | ${whenText(choices.checks[row.key])} |`).join('\n');
+  for (const [kind, keys] of Object.entries(TEST_KINDS)) {
+    const names = onRows.filter((row) => keys.includes(row.key)).map((row) => `\`${row.check}\``);
+    values[`runs_${kind}`] = names.length ? names.join(', ') : 'none of the checks yet';
+  }
+  values.browser_row = frontend
+    ? `| \`-browser.R\` | Tests that drive a browser (shinytest2, chromote) | \`test-demo-browser.R\` | ${values.runs_browser} |`
+    : '';
+  values.browser_skip = frontend ? 'skip_on_cran()                                                    # -browser.R files' : '';
+  values.codecov_note = ciOn && choices.checks.coverage?.on
+    ? 'The coverage check decides on its own. If you also send coverage to Codecov (the comment in `coverage.yaml` says how),\n`codecov.yml` at the top of the package keeps Codecov to reporting: no blocking status and no second comment.\n\n'
+    : '';
+  values.time_limit_section = ciOn && choices.checks.r_cmd_check?.on
+    ? '## The time limit\n\n`r-cmd-check` fails when the tests take longer than `test-time-limit` seconds on Linux with R release (180 by default;\n0 turns it off). CRAN asks for quick checks. Move slow tests to a `-extended.R` file, or make them faster.\n\n'
+    : '';
   for (const row of lists.checks) {
     const check = choices.checks[row.key];
     for (const event of ['pr', 'push', 'schedule', 'manual']) {

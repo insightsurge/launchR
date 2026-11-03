@@ -16,13 +16,13 @@ const CHECKS = [
   ['coverage', 'coverage', 'Measures how much of your code the tests run.'],
   ['no_suggests', 'no-suggests', 'Checks the package works without its optional packages.'],
   ['full_tests', 'full-tests', 'Runs every test, including the ones CRAN skips: test files ending in -browser, -snap or -extended. Runs on Linux.'],
-  ['extended_tests', 'extended-tests', 'Every week, a full check on more systems (Mac and Windows for a public package), including test files ending in -extended.'],
+  ['r_cmd_check_extended', 'r-cmd-check-extended', 'Every week, R CMD check on more systems (Mac and Windows for a public package), with the test files ending in -extended.'],
 ];
 const SYSTEMS = [['ubuntu', 'Linux'], ['windows', 'Windows'], ['macos', 'Mac']];
 const RS = [['release', 'release'], ['oldrel-1', 'oldrel-1'], ['devel', 'devel']];
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const WORDS = ['No', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'All seven'];
-const WEEKLY = ['r_cmd_check', 'full_tests', 'extended_tests'];
+const WEEKLY = ['r_cmd_check', 'full_tests', 'r_cmd_check_extended'];
 const PARTS = [['ci', 'CI checks'], ['website', 'Website'], ['github', 'Issue forms, labels and checklists']];
 
 let bundle = null;
@@ -47,7 +47,7 @@ function kitPlatforms() {
 function recommended() {
   const start = kitPlatforms();
   return {
-    checks: Object.fromEntries(lists.checks.map((row) => [row.key, row.starter === 'yes' && !(row.key === 'extended_tests' && plan() === 'd')])),
+    checks: Object.fromEntries(lists.checks.map((row) => [row.key, row.starter === 'yes' && !(row.key === 'r_cmd_check_extended' && plan() === 'd')])),
     matrix: Object.fromEntries(SYSTEMS.flatMap(([s]) => RS.map(([r]) => [`${s}/${r}`, start.includes(`${s}/${r}`)]))),
     minR: '', samePlatforms: false, day: 'Monday', time: '05:00', website: false, github: true, frontend: false,
   };
@@ -62,7 +62,7 @@ const head3 = (text, why) => `<h4>${text}${Array.isArray(why) ? bullets(why) : w
 function paint() {
   if (!S) return;
   const weekly = WEEKLY.some((k) => S.checks[k]);
-  const extra = S.checks.full_tests || S.checks.extended_tests;
+  const extra = S.checks.full_tests || S.checks.r_cmd_check_extended;
   $('#bodyCi').innerHTML = `
     ${head3('Checks to run', CHECKS.map(([, n, w]) => [n, w]))}
     <div class="ticks">${CHECKS.map(([k, name]) => pill(`data-check="${k}"`, `<code>${name}</code>`, S.checks[k])).join('')}</div>
@@ -71,7 +71,7 @@ function paint() {
     <p class="fieldnote" id="minRNote" role="status"></p>
     <table class="rmatrix"><thead><tr><td></td>${RS.map(([, x]) => `<th scope="col"><code>${x}</code></th>`).join('')}</tr></thead><tbody>${SYSTEMS.map(([k, t]) => `<tr><th scope="row">${t}</th>${RS.map(([v, x]) => (k === 'ubuntu' || v === 'release' ? `<td><label class="cell"><input type="checkbox" data-matrix="${k}/${v}" aria-label="${t}, ${x}"${S.matrix[`${k}/${v}`] ? ' checked' : ''} /><span><svg aria-hidden="true"><use href="#i-tick" /></svg></span></label></td>` : '<td class="none"></td>')).join('')}</tr>`).join('')}</tbody></table>
     ${extra ? sw('samePlatforms', 'Use the same systems for browser and extended tests', 'Runs test files ending in -browser or -extended on the systems above. Off keeps the recommended ones.', S.samePlatforms) : ''}
-    ${weekly ? `<div class="line"><label for="day">Weekly checks run on</label>${help('Time is in 24-hour UTC, which is what GitHub uses. It may run some minutes late when GitHub is busy.')}<span class="when"><select id="day">${[...DAYS.slice(1), DAYS[0]].map((d) => `<option${d === S.day ? ' selected' : ''}>${d}</option>`).join('')}</select><label class="sr" for="time">Time in 24-hour UTC</label><input id="time" class="short" type="text" inputmode="numeric" autocomplete="off" maxlength="5" value="${esc(S.time)}" /><span class="unit">UTC</span></span></div><p class="fieldnote" id="timeNote" role="status"></p>` : ''}
+    ${weekly ? `<div class="line"><label for="day">Weekly checks run on</label>${help('The weekly run of R-CMD-check, full-tests and r-cmd-check-extended, whichever are on. It shows here when any of them is on, and the workflows README lists the time. Time is in 24-hour UTC, which is what GitHub uses. It may run some minutes late when GitHub is busy.')}<span class="when"><select id="day">${[...DAYS.slice(1), DAYS[0]].map((d) => `<option${d === S.day ? ' selected' : ''}>${d}</option>`).join('')}</select><label class="sr" for="time">Time in 24-hour UTC</label><input id="time" class="short" type="text" inputmode="numeric" autocomplete="off" maxlength="5" value="${esc(S.time)}" /><span class="unit">UTC</span></span></div><p class="fieldnote" id="timeNote" role="status"></p>` : ''}
     ${head3('How the checks reach your package')}
     <div class="pick">
       <div class="opt"><label><input type="radio" name="delivery" checked /><b>Shared</b></label>${help('Your files call the checks kept in launchR, so you get fixes and updates by themselves.')}</div>
@@ -235,7 +235,7 @@ function choices() {
     ...row,
     on: S.checks[key],
     cron: cron(),
-    platforms: key === 'r_cmd_check' || (S.samePlatforms && (key === 'full_tests' || key === 'extended_tests')) ? chosen : null,
+    platforms: key === 'r_cmd_check' || (S.samePlatforms && (key === 'full_tests' || key === 'r_cmd_check_extended')) ? chosen : null,
   }]));
   const email = mode === 'new' ? v('email') : '';
   return {

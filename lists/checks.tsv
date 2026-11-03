@@ -1,4 +1,4 @@
-# CI checks. starter is the default for everyone, on the site and in the CLI; the site turns extended-tests off for
+# CI checks. starter is the default for everyone, on the site and in the CLI; the site turns r-cmd-check-extended off for
 # private internal packages. events: pr, push, schedule, manual, comma separated. platforms is empty for Linux-only checks.
 key	check	label	starter	everything	events	cron	platforms_public	platforms_private
 r_cmd_check	r-cmd-check	R CMD check, the core check	yes	yes	pr,push,schedule,manual	0 5 * * 1	ubuntu/release, windows/release, macos/release	ubuntu/release, ubuntu/oldrel-1
@@ -7,4 +7,4 @@ no_suggests	no-suggests	Check the package works without its optional packages	ye
 secret_scan	secret-scan	Catch passwords and tokens committed by mistake	yes	yes	pr,push	0 5 * * 1		
 coverage	coverage	Measure how much code your tests run	yes	yes	pr,push,manual	0 5 * * 1		
 full_tests	full-tests	Run every test, including the browser, snapshot and extended tests CRAN skips, with Chrome for browser tests	yes	yes	pr,push,schedule,manual	0 5 * * 1	ubuntu/release, ubuntu/4.1	ubuntu/release
-extended_tests	extended-tests	On a schedule, run a full check on more systems (Mac and Windows for a public package), including any detailed tests you have marked	yes	yes	schedule,manual	0 5 * * 1	macos/release, windows/release, windows/4.1	ubuntu/release
+r_cmd_check_extended	r-cmd-check-extended	Run R CMD check on more systems (Mac and Windows for a public package), with the extended tests	yes	yes	schedule,manual	0 5 * * 1	macos/release, windows/release, windows/4.1	ubuntu/release

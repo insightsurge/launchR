@@ -2,7 +2,7 @@
 # and R 4.1, so nothing skips:
 # the plain tests and the three kinds CRAN skips, the browser tests (shinytest2 and chromote, in
 # tests/testthat/test-*-browser.R), the snapshot tests (test-*-snap.R) and the slow or detailed tests (test-*-extended.R).
-# R CMD check skips those three, as CRAN does; coverage.yaml and extended-tests.yaml run the extended tests too. One line per test file as it finishes shows the
+# R CMD check skips those three, as CRAN does; coverage.yaml and r-cmd-check-extended.yaml run the extended tests too. One line per test file as it finishes shows the
 # progress while the job runs, and a failing test prints in full. A pull request that changes only documentation
 # starts the jobs and skips their steps (.github/scripts/r-changes.sh).
 # Each R version writes its part of the pull request's CI report (.github/pr-report.json): counts, failing and skipped
@@ -131,7 +131,7 @@ jobs:
           BASELINE_SHA: ${{ steps.baseline.outputs.sha }}
         run: |
           # Chrome only for a package with browser tests: chromote is in its Suggests then, and not otherwise.
-          if (length(list.files("tests/testthat", "^test-.*-browser[.]R$")) > 0L) {
+          if (length(list.files("tests/testthat", "^test-(.*-)?browser[.]R$")) > 0L) {
             chrome <- chromote::find_chrome()
             if (is.null(chrome)) stop("No Chrome on this runner: the browser tests would all skip.", call. = FALSE)
             message("Chrome: ", system2(chrome, "--version", stdout = TRUE))

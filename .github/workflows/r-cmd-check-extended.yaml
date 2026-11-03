@@ -1,4 +1,4 @@
-# R CMD check with the extended tests on macOS and Windows, on a schedule and on demand (the package's .github/workflows/README.md, "Test file kinds"). A
+# R CMD check with the extended tests on macOS and Windows, on a schedule and on demand (the package's tests/README.md). A
 # workflow of its own, so a failure here leaves R-CMD-check and its badge alone. macOS runs R release only: R 4.1 there
 # has no ready-built packages, and building them from source broke on the runner's OpenSSL.
 on:
@@ -9,7 +9,7 @@ on:
         type: string
         default: macos/release, windows/release, windows/4.1
 
-name: extended-tests
+name: r-cmd-check-extended
 
 permissions:
   contents: read  # the most this workflow can use; a job that needs more asks for it itself
