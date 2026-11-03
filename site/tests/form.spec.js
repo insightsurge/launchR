@@ -123,7 +123,7 @@ test('Modify refuses an oldest R below 4.1 or with a patch number', async ({ pag
   await expect(page.locator('#minR')).toHaveValue('4.4');
 });
 
-test('the next steps give both routes and the first commands', async ({ page }) => {
+test("the next steps give both routes, the first commands and an organisation's line", async ({ page }) => {
   await openForm(page);
   await fillForm(page);
   await download(page, '#download');
@@ -131,8 +131,11 @@ test('the next steps give both routes and the first commands', async ({ page }) 
   await expect(steps).toContainText('pak::local_install_dev_deps()');
   await expect(steps).toContainText('devtools::test()');
   await expect(steps).toContainText('usethis::use_github(private = FALSE)');
+  // The GitHub name may be an organisation: the site can't tell without asking GitHub, so both lines are there.
+  await expect(steps).toContainText('usethis::use_github(organisation = "sample-org", private = FALSE)');
   await page.getByText('With GitHub Desktop').click();
   await expect(steps).toContainText('Publish repository');
+  await expect(steps).toContainText('If sample-org is an organisation, pick it under Organization.');
 });
 
 test('an existing package gets only the CI files', async ({ page }) => {

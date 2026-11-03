@@ -333,6 +333,8 @@ function steps() {
   if (mode === 'existing') { existingSteps(); return; }
   const name = pkg();
   const priv = !isPublic();
+  const privArg = priv ? 'TRUE' : 'FALSE';
+  const owner = v('owner');
   const unzip = `Unzip ${code(`${name}.zip`)}, then open ${code(`${name}.Rproj`)} in RStudio, or the folder in Positron.`;
   const testPass = 'In RStudio, choose Build, then Test Package, to see your first test pass.';
   const gh = '<a href="https://cli.github.com" target="_blank" rel="noopener">GitHub CLI</a>';
@@ -343,13 +345,13 @@ function steps() {
     `${unzip} Install the tools once: choose Tools, then Install Packages, and install ${code('devtools')}. ${testPass}`,
     `Install <a href="https://desktop.github.com" target="_blank" rel="noopener">GitHub Desktop</a> and sign in with your GitHub account. It brings Git with it.`,
     `In GitHub Desktop, choose File, then Add local repository, and pick the ${code(name)} folder. It offers to create the repository: accept.`,
-    `Click Publish repository. ${priv ? 'Leave Keep this code private ticked.' : 'Untick Keep this code private.'}`,
+    `Click Publish repository. ${priv ? 'Leave Keep this code private ticked.' : 'Untick Keep this code private.'} If ${code(owner)} is an organisation, pick it under Organization.`,
     ...running,
     ...(S.github ? [`On GitHub, go to Actions, ${setupButton}`] : []),
   ] : [
     `${unzip} Install the tools once, then the packages your package needs, in the R console. devtools brings usethis and testthat. Then run your first test.${copy('install.packages(c("devtools", "gitcreds", "pak"))')}${copy('pak::local_install_dev_deps()')}${copy('devtools::test()')}`,
     `Let R talk to GitHub, once. The first line opens a GitHub page with the right boxes already ticked: scroll down, click Generate token, and copy the token. The second asks for it: paste it there. It is kept in your computer's password store (Keychain on a Mac, Credential Manager on Windows), where usethis and pak find it. Don't save it in a file such as ${code('.Renviron')}: that is plain text.${copy('usethis::create_github_token()')}${copy('gitcreds::gitcreds_set()')}`,
-    `Put the package on GitHub. The first line asks to commit your files and then to restart RStudio: answer yes to both (the yes answer moves around). After the restart, run the second line.${copy('usethis::use_git()')}${copy(`usethis::use_github(private = ${priv ? 'TRUE' : 'FALSE'})`)}`,
+    `Put the package on GitHub. The first line asks to commit your files and then to restart RStudio: answer yes to both (the yes answer moves around). After the restart, run the line for your account: your own, or an organisation such as a company's.${copy('usethis::use_git()')}Your own account:${copy(`usethis::use_github(private = ${privArg})`)}An organisation:${copy(`usethis::use_github(organisation = "${owner}", private = ${privArg})`)}`,
     ...running,
     ...(S.github ? [`On GitHub, go to Actions, ${setupButton}`] : []),
   ];
