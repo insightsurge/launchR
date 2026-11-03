@@ -192,7 +192,14 @@ Rscript tests/cli-tests.R          # the command line, against a stand-in for gh
 node tests/compare-routes.mjs      # the site and the command line build the same files, for every plan
 node tests/check-zip.mjs           # the zip is sound
 tests/gate-matrix.sh               # generated packages pass the quality gate
+
+npx --prefix site playwright install chromium   # once: the browser for the site's tests
+npm --prefix site run build
+(cd site && npx playwright test)   # the form, each plan's download and its zip, in a real browser
 ```
+
+Every pull request runs the browser tests, the route comparison, the zip check and the command line's tests
+(`.github/workflows/site-tests.yaml`).
 
 The site is published to Firebase Hosting by `.github/workflows/deploy-site.yaml` when a change to `site/`,
 `template/` or `lists/` reaches `main`, or when the workflow is started by hand. Google Analytics loads only on that

@@ -4,3 +4,5 @@ site/.astro/
 site/public/kit/
 .DS_Store
 .firebase/
+site/test-results/
+site/playwright-report/

@@ -1,0 +1,82 @@
+# launchR's own checks on every pull request (not a check that packages call): the site works in a browser the way a
+# visitor uses it, and the site and the command line still make the same packages. A change that breaks the form or a
+# zip then fails here before it reaches the live site.
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+name: site-tests
+
+permissions:
+  contents: read
+
+# A new push to a pull request stops the older run; pushes to main always finish.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  browser:
+    # Builds the site and runs site/tests/*.spec.js with Playwright against the built site; then checks the zip.
+    runs-on: ubuntu-26.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+
+      - name: Install the site's packages
+        run: npm --prefix site ci
+
+      - name: Build the site
+        run: npm --prefix site run build
+
+      - name: Install the test browser
+        run: npx --prefix site playwright install --with-deps chromium
+
+      - name: Test the site in a browser
+        working-directory: site
+        run: npx playwright test
+
+      - name: Keep the test report when a test fails
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: site/test-results/
+          retention-days: 7
+
+      - name: Check the zip
+        run: node tests/check-zip.mjs
+
+  routes:
+    # The site's engine and the command line build the same files for every plan; the command line's own tests.
+    runs-on: ubuntu-26.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - name: Compare the site and the command line
+        run: node tests/compare-routes.mjs
+
+      - name: Test the command line
+        run: Rscript tests/cli-tests.R
