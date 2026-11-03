@@ -69,7 +69,7 @@ use_fake <- function(dir) {
   Sys.setenv(PATH = paste(file.path(here, "fake-gh"), old_path, sep = .Platform$path.sep), FAKE_GH_DIR = dir, FAKE_GH_SIGNED_OUT = "", FAKE_GH_RATE_LIMIT = "")
 }
 log_lines <- function(dir) if (file.exists(file.path(dir, "log.txt"))) readLines(file.path(dir, "log.txt")) else character()
-writes <- function(lines) lines[grepl("^(issue (create|edit|close)|label create|api -X POST)", lines)]
+writes <- function(lines) lines[grepl("^(issue (create|edit|close)|label (create|delete)|api -X POST)", lines)]
 issues <- function(dir) readLines(file.path(dir, "issues.txt"))
 body <- function(dir, n) readLines(file.path(dir, sprintf("body-%d.md", n)))
 
@@ -98,7 +98,7 @@ expect(read_text(crlf) == "one\ntwo\n", "text with Windows line endings is read 
 expect(all(c("id", "stage", "kind", "needs", "link", "pick") %in% names(read_list("checklists.tsv"))), "checklists.tsv has its columns")
 rows <- read_list("checklists.tsv")
 expect(!anyDuplicated(rows$id), "every checklist row has its own id")
-expect(all(rows$kind %in% c("file", "placeholder", "setting", "ci", "site", "cran", "manual")), "only the decided check kinds are used")
+expect(all(rows$kind %in% c("file", "placeholder", "setting", "ci", "site", "cran", "description", "manual")), "only the decided check kinds are used")
 expect(all(nzchar(rows$id[rows$kind == "setting"]) & nzchar(rows$link[rows$kind == "setting"]) & nzchar(rows$pick[rows$kind == "setting"])), "every settings box has a link and a value to pick")
 
 # --- cmd_new ------------------------------------------------------------------------------------------------------
@@ -147,6 +147,16 @@ expect(!file.exists(file.path(plan_d, ".github", "workflows", "r-cmd-check-exten
   any(grepl("target: internal", readLines(file.path(plan_d, "DESCRIPTION")))), "plan d is private and internal, without r-cmd-check-extended")
 min_r <- new_package("minrpkg", "--min-r", "4.3")
 expect(any(grepl("R (>= 4.3.0)", readLines(file.path(min_r, "DESCRIPTION")), fixed = TRUE)), "the minimum R version reaches DESCRIPTION")
+private_min_r <- new_package("privminrpkg", "--plan", "c", "--min-r", "4.4")
+expect(any(grepl("platforms: ubuntu/release, ubuntu/oldrel-1, ubuntu/4.4", readLines(file.path(private_min_r, ".github", "workflows", "r-cmd-check.yaml")), fixed = TRUE)),
+  "a private package checks its oldest R on Linux, as the site does")
+described <- read.dcf(file.path(new_package("descpkg", "--description", "Builds  tables for reports"), "DESCRIPTION"))
+expect(identical(unname(described[1, "Description"]), "Builds tables for reports."), "--description fills DESCRIPTION's Description, ending in a full stop")
+plain_description <- read.dcf(file.path(new_package("plaindescpkg"), "DESCRIPTION"))
+expect(identical(unname(plain_description[1, "Description"]), "Sample Tools."), "without --description, Description repeats the title")
+expect(nzchar(check_description("This package builds tables.", "descpkg")) && nzchar(check_description("descpkg builds tables.", "descpkg")) &&
+  nzchar(check_description('Say "hi".')) && !nzchar(check_description("")) && !nzchar(check_description("Builds tables.", "descpkg")),
+  "a description that starts with the name or \"This package\", or holds quotes, is refused; an empty one is fine")
 expect(nzchar(check_min_r("4.4.1")) && nzchar(check_min_r("4.10")) && nzchar(check_min_r("4.0")) && !nzchar(check_min_r("4.4")), "the oldest R is x.y, one digit each, from 4.1 on")
 owned <- read.dcf(file.path(new_package("ownedpkg"), "DESCRIPTION"))
 expect(identical(unname(owned[1, "BugReports"]), "https://github.com/sample-org/ownedpkg/issues"), "DESCRIPTION has BugReports from the start")
@@ -188,6 +198,13 @@ expect(any(grepl("^- \\[x\\] Squash merge only", kept$lines)), "a box the kit ca
 short <- first$lines[!grepl("launchr:history", first$lines, fixed = TRUE)]
 added <- checklist_lines("Before public", ctx, paste(short, collapse = "\n"))
 expect(any(grepl("launchr:history", added$lines, fixed = TRUE)) && which(grepl("launchr:history", added$lines, fixed = TRUE)) < which(startsWith(added$lines, "### CI")), "a box new to the list is added inside its section")
+# the Description box is ticked only once Description says more than the Title
+desc_row <- list(kind = "description", target = "DESCRIPTION")
+expect(identical(tick_state(desc_row, ctx), FALSE), "a Description that repeats the Title leaves its box unticked")
+dcf <- read.dcf("DESCRIPTION")
+dcf[1, "Description"] <- "Builds tables for clinical reports from analysis datasets."
+write.dcf(dcf, "DESCRIPTION")
+expect(identical(tick_state(desc_row, ctx), TRUE), "a written Description ticks its box")
 # the website box only appears when the package has a website
 expect(!any(grepl("launchr:site", checklist_lines("After public", ctx)$lines, fixed = TRUE)) == !file.exists("_pkgdown.yml"), "website boxes appear only with a website")
 setwd(old)
@@ -230,6 +247,15 @@ invisible(file.rename(file.path(pkg, "LICENSE.bak"), file.path(pkg, "LICENSE")))
 expect(any(grepl("^- \\[ \\] Licence is in place", body(fake, 2))), "a missing file is unticked on GitHub")
 expect(any(grepl("untick 1", third_run$out)), "the plan names what it will untick")
 expect(any(grepl("^- \\[x\\] Search the history", body(fake, 2))), "a judgement box ticked by a person is untouched")
+section("Labels that aren't launchR's")
+fake_labels <- fake_github()
+writeLines(c("question|d876e3|Further information is requested", "wontfix|ffffff|This will not be worked on"), file.path(fake_labels, "labels.txt"))
+kept_run <- run_github(pkg, fake_labels, "--yes")
+expect(any(grepl("other labels (question, wontfix): kept", kept_run$out, fixed = TRUE)) &&
+  all(c("question", "wontfix") %in% sub("[|].*", "", readLines(file.path(fake_labels, "labels.txt")))), "GitHub's own labels are kept by default, and named")
+removed_run <- run_github(pkg, fake_labels, "--yes", "--remove-other-labels")
+left <- sub("[|].*", "", readLines(file.path(fake_labels, "labels.txt")))
+expect(removed_run$value == 0L && !any(c("question", "wontfix") %in% left) && length(left) == 11L, "--remove-other-labels removes them and keeps launchR's eleven")
 section("Settings that don't hold, or can't be read")
 fake2 <- fake_github(settings_ok = FALSE, token_visible = FALSE)
 run_github(pkg, fake2, "--yes")

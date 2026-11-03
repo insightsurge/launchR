@@ -2,7 +2,7 @@
 // Choices live here; engine.js turns them into files, the same way the CLI does.
 import JSZip from 'jszip';
 import { countZip } from '../consent.js';
-import { buildPackage, checkEmail, checkMinR, checkPackageName, checkPerson, checkTitle, defaultChoices, planRow, readLists } from './engine.js';
+import { buildPackage, checkDescription, checkEmail, checkMinR, checkPackageName, checkPerson, checkTitle, defaultChoices, planRow, readLists } from './engine.js';
 
 const $ = (q) => document.querySelector(q);
 const $$ = (q) => [...document.querySelectorAll(q)];
@@ -42,7 +42,7 @@ function recommended() {
   return {
     checks: Object.fromEntries(Object.entries(defaultChoices(lists, 'starter', plan()).checks).map(([key, check]) => [key, check.on])),
     matrix: Object.fromEntries(SYSTEMS.flatMap(([s]) => RS.map(([r]) => [`${s}/${r}`, start.includes(`${s}/${r}`)]))),
-    minR: '', samePlatforms: false, day: 'Monday', time: '05:00', website: false, github: true, frontend: false,
+    minR: '', samePlatforms: false, day: 'Monday', time: '05:00', website: false, github: true, frontend: false, ai: false,
   };
 }
 
@@ -74,10 +74,11 @@ function paint() {
   $('#bodySite').innerHTML = `${sw('website', 'Add a website', 'A pkgdown site published to GitHub Pages. Its address comes from your GitHub name. A private repository needs a paid GitHub plan for this.', S.website)}${pagesNote}
     <div class="opt soonline"><span>Navbar choices and theme colours</span><span class="tag">Coming soon</span></div>`;
   $('#bodyGit').innerHTML = `
-    ${sw('github', 'Issue forms, labels and checklists', 'Five issue forms, a pull request template, eleven labels, and the stage checklists.', S.github)}
+    ${sw('github', 'Issue forms, labels and checklists', 'Five issue forms, a pull request template, eleven labels next to GitHub\'s own (the Set up this repository button can remove those), and the stage checklists.', S.github)}
     <div class="opt soonline"><span>Choosing each form and label</span><span class="tag">Coming soon</span></div>`;
   $('#bodyMore').innerHTML = `${sw('frontend', 'My package ships its own JS or CSS', 'Adds browser tests and the style checks for them.', S.frontend)}
-    <div class="opt soonline"><span>Badges, licence choice, PR report choice, AI instruction files</span><span class="tag">Coming soon</span></div>`;
+    ${sw('ai', 'Instructions for AI assistants', 'AGENTS.md with the package\'s house rules, read by Codex, Gemini, Copilot and others, and a CLAUDE.md that loads it for Claude. Also an issue form for changing them.', S.ai)}
+    <div class="opt soonline"><span>Badges, licence choice, PR report choice</span><span class="tag">Coming soon</span></div>`;
   summary();
 }
 
@@ -88,7 +89,7 @@ function summary() {
   $('#sumCi').textContent = `${WORDS[on]} ${on === 1 ? 'check' : 'checks'} on ${sysText}`;
   $('#sumSite').textContent = S.website ? 'On' : 'Off';
   $('#sumGit').textContent = S.github ? 'Forms, labels and checklists' : 'Off';
-  $('#sumMore').textContent = S.frontend ? 'JS or CSS' : 'Nothing added';
+  $('#sumMore').textContent = [S.frontend && 'JS or CSS', S.ai && 'AI instructions'].filter(Boolean).join(', ') || 'Nothing added';
   $('#pvChecks').textContent = on === 7 ? 'All seven' : WORDS[on];
   $('#pvSystems').textContent = sysText;
   $('#pvSite').textContent = S.website ? 'On' : 'Off';
@@ -172,6 +173,7 @@ function valid() {
   const rules = [
     ['pkg', nameProblem(v('pkg'), 'Give your package a name, such as fooBarPkg.')],
     ['what', checkTitle(v('what'))],
+    ['details', checkDescription(v('details'), v('pkg'))],
     ['first', checkPerson(v('first'), 'first')],
     ['last', checkPerson(v('last'), 'last')],
     ['email', checkEmail(v('email'))],
@@ -191,7 +193,7 @@ function modifyValid() {
   return true;
 }
 
-['pkg', 'what', 'first', 'last', 'email', 'owner'].forEach((id) => $(`#${id}`).addEventListener('input', () => put(id, '')));
+['pkg', 'what', 'details', 'first', 'last', 'email', 'owner'].forEach((id) => $(`#${id}`).addEventListener('input', () => put(id, '')));
 ['exPkg', 'exOwner'].forEach((id) => $(`#${id}`).addEventListener('input', () => put(id, '')));
 
 function cron() {
@@ -209,7 +211,7 @@ function choices() {
   const base = defaultChoices(lists, 'starter', plan());
   const start = kitPlatforms().join(', ');
   const parts = mode === 'new'
-    ? ['skeleton', 'ci', ...(S.github ? ['github'] : []), ...(S.website ? ['website'] : []), ...(S.frontend ? ['frontend'] : [])]
+    ? ['skeleton', 'ci', ...(S.github ? ['github'] : []), ...(S.website ? ['website'] : []), ...(S.frontend ? ['frontend'] : []), ...(S.ai ? ['ai'] : [])]
     : PARTS.map(([k]) => k).filter((k) => add[k]);
   const chosen = platforms() === start ? null : platforms();
   const checks = Object.fromEntries(Object.entries(base.checks).map(([key, row]) => [key, {
@@ -221,7 +223,7 @@ function choices() {
   const email = mode === 'new' ? v('email') : '';
   return {
     ...base, parts, checks, visibility: visibility(), release: release(), owner: mode === 'new' ? v('owner') : v('exOwner'),
-    package: pkg(), title: mode === 'new' ? v('what') : '', given: v('first'), family: v('last'), email,
+    package: pkg(), title: mode === 'new' ? v('what') : '', description: mode === 'new' ? v('details') : '', given: v('first'), family: v('last'), email,
     minR: minRProblem() ? base.minR : S.minR || base.minR,
   };
 }
@@ -312,20 +314,23 @@ $('#exBack').addEventListener('click', () => { mode = 'new'; S = recommended(); 
 /* the page after the download */
 const copy = (text) => `<div class="cmd"><code>${esc(text)}</code><button type="button" class="copy" data-copy="${esc(text)}">Copy</button></div>`;
 const code = (t) => `<code>${esc(t)}</code>`;
-const setupButton = 'open Set up this repository. Its first run, from your push, only lists what it would make. Click Run workflow, untick Only show what would change, and run it. This makes your labels and checklists.';
-const actions = 'Open the repository on GitHub and go to Actions. Your checks are running.';
+const setupButton = 'On GitHub, go to Actions, open <em>Set up this repository</em>, click Run workflow, untick <em>Only show what would change</em>, and run it.';
+const setupMore = "Its first run, from your push, only listed what it would make. This run makes your labels and checklists. GitHub's own labels stay next to launchR's: to remove them, also tick <em>Also remove labels that aren't launchR's</em>.";
+const actions = 'Open the repository on GitHub and go to Actions: your checks are running.';
 const local = `To run the same checks on your computer before a pull request, see <em>Run the checks on your computer</em> in ${code('.github/workflows/README.md')}. `;
 // Optional, and only with the coverage check: the check works without Codecov.
 const codecov = () => (S.checks.coverage ? `Optional: to show coverage on Codecov too, follow <em>Codecov</em> in ${code('.github/workflows/README.md')}. ` : '');
+// One step: what to do in a line, the commands, and the explanations folded away.
+const step = (lead, cmds = '', more = '') => `<li><p class="lead">${lead}</p>${cmds}${more ? `<details class="more"><summary>Why, and more</summary><p>${more}</p></details>` : ''}</li>`;
 
 function existingSteps() {
-  const list = [`Unzip ${code('launchR-files.zip')} and copy what's inside into your package folder. Nothing in ${code('R/')}, ${code('tests/')} or ${code('DESCRIPTION')} changes. On a Mac, Finder hides folders whose name starts with a dot, such as ${code('.github')}: press Cmd+Shift+. to see them before you copy.`];
-  if (add.ci) list.push(`Delete any old files in ${code('.github/workflows')} that do the same job. If your package already has ${code('.github/workflows/README.md')}, keep yours and copy in only the new rows from the one in the zip.`);
-  if (add.ci && release() === 'internal') list.push(`Your package won't go to CRAN, so add this line to ${code('DESCRIPTION')}: the checks then leave out what only CRAN asks for.${copy('Config/quality-gate/target: internal')}`);
-  list.push("Commit and push, from RStudio's Git pane or GitHub Desktop.");
-  if (add.ci && CHECKS.some(([k]) => S.checks[k])) list.push(actions);
-  if (add.github) list.push(`On GitHub, go to Actions, ${setupButton}`);
-  $('#stepList').innerHTML = list.map((t) => `<li>${t}</li>`).join('');
+  const list = [step(`Unzip ${code('launchR-files.zip')} and copy what's inside into your package folder.`, '', `Nothing in ${code('R/')}, ${code('tests/')} or ${code('DESCRIPTION')} changes. On a Mac, Finder hides folders whose name starts with a dot, such as ${code('.github')}: press Cmd+Shift+. to see them before you copy.`)];
+  if (add.ci) list.push(step(`Delete any old files in ${code('.github/workflows')} that do the same job.`, '', `If your package already has ${code('.github/workflows/README.md')}, keep yours and copy in only the new rows from the one in the zip.`));
+  if (add.ci && release() === 'internal') list.push(step(`Add this line to ${code('DESCRIPTION')}.`, copy('Config/quality-gate/target: internal'), "Your package won't go to CRAN, so the checks then leave out what only CRAN asks for."));
+  list.push(step("Commit and push, from RStudio's Git pane or GitHub Desktop."));
+  if (add.ci && CHECKS.some(([k]) => S.checks[k])) list.push(step(actions));
+  if (add.github) list.push(step(setupButton, '', setupMore));
+  $('#stepList').innerHTML = list.join('');
   $('#nextAfter').innerHTML = `<b>After that.</b> ${add.ci ? local + codecov() : ''}To add something later, come back and choose only that.`;
 }
 
@@ -335,27 +340,33 @@ function steps() {
   const priv = !isPublic();
   const privArg = priv ? 'TRUE' : 'FALSE';
   const owner = v('owner');
-  const unzip = `Unzip ${code(`${name}.zip`)}, then open ${code(`${name}.Rproj`)} in RStudio, or the folder in Positron.`;
-  const testPass = 'In RStudio, choose Build, then Test Package, to see your first test pass.';
+  const unzip = `Unzip ${code(`${name}.zip`)} and open ${code(`${name}.Rproj`)} in RStudio, or the folder in Positron.`;
   const gh = '<a href="https://cli.github.com" target="_blank" rel="noopener">GitHub CLI</a>';
   const route = $('input[name=route]:checked').value;
   const setup = `source("https://raw.githubusercontent.com/insightsurge/launchR/v${lists.settings.kit_version}/cli/github-setup.R")`;
-  const running = CHECKS.some(([k]) => S.checks[k]) ? [actions] : [];
+  const running = CHECKS.some(([k]) => S.checks[k]) ? [step(actions)] : [];
+  const label = (text) => `<p class="cmd-label">${text}</p>`;
   const list = route === 'desktop' ? [
-    `${unzip} Install the tools once: choose Tools, then Install Packages, and install ${code('devtools')}. ${testPass}`,
-    `Install <a href="https://desktop.github.com" target="_blank" rel="noopener">GitHub Desktop</a> and sign in with your GitHub account. It brings Git with it.`,
-    `In GitHub Desktop, choose File, then Add local repository, and pick the ${code(name)} folder. It offers to create the repository: accept.`,
-    `Click Publish repository. ${priv ? 'Leave Keep this code private ticked.' : 'Untick Keep this code private.'} If ${code(owner)} is an organisation, pick it under Organization.`,
+    step(`${unzip} Then choose Build, then Test Package, to see your first test pass.`, '', `The first time, install the tools: choose Tools, then Install Packages, and install ${code('devtools')}. Skip this if you already have it.`),
+    step('Install <a href="https://desktop.github.com" target="_blank" rel="noopener">GitHub Desktop</a> and sign in with your GitHub account.', '', 'It brings Git with it. Skip this if you already use it.'),
+    step(`In GitHub Desktop, choose File, then Add local repository, pick the ${code(name)} folder, and accept when it offers to create the repository.`),
+    step(`Click Publish repository. ${priv ? 'Leave Keep this code private ticked.' : 'Untick Keep this code private.'} If ${code(owner)} is an organisation, pick it under Organization.`),
     ...running,
-    ...(S.github ? [`On GitHub, go to Actions, ${setupButton}`] : []),
+    ...(S.github ? [step(setupButton, '', setupMore)] : []),
   ] : [
-    `${unzip} Install the tools once, then the packages your package needs, in the R console. devtools brings usethis and testthat. Then run your first test.${copy('install.packages(c("devtools", "gitcreds", "pak"))')}${copy('pak::local_install_dev_deps()')}${copy('devtools::test()')}`,
-    `Let R talk to GitHub, once. The first line opens a GitHub page with the right boxes already ticked: scroll down, click Generate token, and copy the token. The second asks for it: paste it there. It is kept in your computer's password store (Keychain on a Mac, Credential Manager on Windows), where usethis and pak find it. Don't save it in a file such as ${code('.Renviron')}: that is plain text.${copy('usethis::create_github_token()')}${copy('gitcreds::gitcreds_set()')}`,
-    `Put the package on GitHub. The first line asks to commit your files and then to restart RStudio: answer yes to both (the yes answer moves around). After the restart, run the line for your account: your own, or an organisation such as a company's.${copy('usethis::use_git()')}Your own account:${copy(`usethis::use_github(private = ${privArg})`)}An organisation:${copy(`usethis::use_github(organisation = "${owner}", private = ${privArg})`)}`,
+    step(`${unzip} Then, in the R console, install the tools (skip any you already have) and run your first test.`,
+      `${copy('install.packages(c("devtools", "gitcreds", "pak"))')}${copy('pak::local_install_dev_deps()')}${copy('devtools::test()')}`,
+      'devtools brings usethis and testthat. The second line installs the packages your package uses. In RStudio, Build, then Test Package, does the same as the third line.'),
+    step('Let R talk to GitHub, once. Skip this if R already can.',
+      `${copy('usethis::create_github_token()')}${copy('gitcreds::gitcreds_set()')}`,
+      `The first line opens a GitHub page with the right boxes already ticked: scroll down, click Generate token, and copy the token. The second asks for it: paste it there. It is kept in your computer's password store (Keychain on a Mac, Credential Manager on Windows), where usethis and pak find it. Don't save it in a file such as ${code('.Renviron')}: that is plain text.`),
+    step('Put the package on GitHub: run the first line and answer yes to each question; after RStudio restarts, run the line for your account.',
+      `${copy('usethis::use_git()')}${label('Your own account:')}${copy(`usethis::use_github(private = ${privArg})`)}${label('An organisation, such as a company\'s:')}${copy(`usethis::use_github(organisation = "${owner}", private = ${privArg})`)}`,
+      `The first line asks to commit your files and then to restart RStudio; the yes answer moves around, so read each one. ${code('DESCRIPTION')} already links to ${code(`github.com/${owner}/${name}`)}, so the repository should be made there.`),
     ...running,
-    ...(S.github ? [`On GitHub, go to Actions, ${setupButton}`] : []),
+    ...(S.github ? [step(setupButton, '', setupMore)] : []),
   ];
-  $('#stepList').innerHTML = list.map((t) => `<li>${t}</li>`).join('');
+  $('#stepList').innerHTML = list.join('');
   const first = planRow(lists, plan()).first_checklist;
   const email = v('email') ? '' : `Replace the placeholder email in ${code('DESCRIPTION')} before you release. `;
   const settings = S.github ? `Your checklists list a few repository settings to change by hand. Optional: with ${gh} installed and signed in, ${code(setup)} in the R console ticks those boxes for you. ` : '';

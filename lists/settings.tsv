@@ -3,7 +3,7 @@
 # untouched form and the CLI start from (lists/plans.tsv). placeholder_email: DESCRIPTION's email when none is given. min_r: the oldest R
 # a new package supports unless chosen; the /4.1 entries in checks.tsv's platforms follow it.
 key	value
-kit_version	0.0.10
+kit_version	0.0.11
 site_url	https://launch-r.web.app
 preset	starter
 branches	main, master

@@ -93,8 +93,39 @@ for (const [plan, want] of Object.entries(PLANS)) {
     expect(readme.includes('img.shields.io/badge/set%20up%20with-launchR')).toBe(want.public);
     expect(files['tablePkg/inst/WORDLIST']).toContain('CMD');
     expect(files['tablePkg/.Renviron']).toMatch(/^EXTENDED_TESTS=true$/m);
+    // No AI files unless asked for, and the issue forms are numbered without a gap.
+    expect(has('AGENTS.md')).toBe(false);
+    const forms = Object.keys(files).filter((path) => /ISSUE_TEMPLATE\/\d\d-/.test(path)).map((path) => path.match(/(\d\d)-/)[1]).sort();
+    expect(forms).toEqual(['01', '02', '03', '04', '05']);
+    // Without a longer description, DESCRIPTION's Description repeats the title.
+    expect(description).toContain('Description: Tools For Tables.');
   });
 }
+
+test('the longer description reaches DESCRIPTION and the help page, and CRAN wording is checked', async ({ page }) => {
+  await openForm(page);
+  await fillForm(page);
+  await page.locator('#details').fill('This package builds tables.');
+  await page.locator('#download').click();
+  await expect(page.locator('#err-details')).toHaveText(/not with "This package"/);
+  await page.locator('#details').fill('Builds   tables for clinical study reports');
+  const { files } = await download(page, '#download');
+  expect(files['tablePkg/DESCRIPTION']).toContain('Description: Builds tables for clinical study reports.');
+  expect(files['tablePkg/man/tablePkg-package.Rd']).toContain('Builds tables for clinical study reports.');
+});
+
+test('Modify: the AI switch adds AGENTS.md, CLAUDE.md and their issue form', async ({ page }) => {
+  await openForm(page);
+  await fillForm(page);
+  await page.locator('#modify').click();
+  await page.locator('#modifyView summary', { hasText: 'Extras' }).click();
+  await page.locator('label.sw', { hasText: 'Instructions for AI assistants' }).click();
+  await expect(page.locator('#sumMore')).toHaveText('AI instructions');
+  const { files } = await download(page, '#modDownload');
+  expect(files['tablePkg/AGENTS.md']).toContain('# tablePkg');
+  expect(files['tablePkg/CLAUDE.md']).toContain('@AGENTS.md');
+  expect('tablePkg/.github/ISSUE_TEMPLATE/06-ai-instructions.yml' in files).toBe(true);
+});
 
 test('Modify: the oldest R reaches DESCRIPTION, and the download works from there', async ({ page }) => {
   await openForm(page);
@@ -110,6 +141,8 @@ test('Modify: the oldest R reaches DESCRIPTION, and the download works from ther
   const { files } = await download(page, '#modDownload');
   await expect(page.locator('#nextView')).toBeVisible();
   expect(files['tablePkg/DESCRIPTION']).toContain('R (>= 4.3.0)');
+  // A private plan checks the oldest R on Linux too.
+  expect(files['tablePkg/.github/workflows/r-cmd-check.yaml']).toContain('platforms: ubuntu/release, ubuntu/oldrel-1, ubuntu/4.3');
 });
 
 test('Modify refuses an oldest R below 4.1 or with a patch number', async ({ page }) => {
@@ -136,6 +169,12 @@ test("the next steps give both routes, the first commands and an organisation's 
   await page.getByText('With GitHub Desktop').click();
   await expect(steps).toContainText('Publish repository');
   await expect(steps).toContainText('If sample-org is an organisation, pick it under Organization.');
+  // Each step says what to do in a line; the explanations fold away until asked for.
+  const more = steps.locator('details.more').first();
+  await expect(more).not.toHaveAttribute('open', '');
+  await expect(more.locator('p')).toBeHidden();
+  await more.locator('summary').click();
+  await expect(more.locator('p')).toBeVisible();
 });
 
 test('an existing package gets only the CI files', async ({ page }) => {

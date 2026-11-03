@@ -30,6 +30,19 @@ export function checkTitle(title) {
   return '';
 }
 
+// The longer description is optional: left empty, DESCRIPTION repeats the title. CRAN asks that it doesn't start with
+// the package's name or "This package".
+export function checkDescription(text, name) {
+  if (!text) return '';
+  if (text.length > 500) return `Keep it to 500 characters. It is ${text.length} now.`;
+  if (/["\\{}%]/.test(text)) return 'Use plain words here: no double quotes, backslashes, braces or percent signs.';
+  const start = text.toLowerCase();
+  if (start.startsWith('this package') || (name && start.startsWith(name.toLowerCase()))) {
+    return 'Start with what it does, not with "This package" or its name: CRAN asks for that.';
+  }
+  return '';
+}
+
 export function checkPerson(name, which) {
   if (!name) return `Add a ${which} name. DESCRIPTION needs an author.`;
   return /["\\]/.test(name) ? "Names can't contain double quotes or backslashes." : '';
@@ -49,6 +62,8 @@ export function checkMinR(minR) {
 
 // A title without its full stop: DESCRIPTION's Description adds one.
 export const cleanTitle = (title) => title.replace(/[.\s]+$/, '');
+// DESCRIPTION's Description: the person's own sentences, or the title, ending in a full stop either way.
+export const descriptionText = (choices) => (choices.description?.trim() ? choices.description.trim().replace(/\s+/g, ' ').replace(/([^.!?])$/, '$1.') : `${cleanTitle(choices.title)}.`);
 
 // R's rules for a package name, plus a length limit and the names of R's own packages. cli/R/choices.R has the same.
 export function checkPackageName(name, lists) {
@@ -73,6 +88,7 @@ export function defaultChoices(lists, preset = lists.settings.preset, plan = lis
   return {
     package: '',
     title: '',
+    description: '',
     given: '',
     family: '',
     email: '',
@@ -151,7 +167,7 @@ export function placeholderValues(choices, lists) {
     package: choices.package,
     name_words: parts.map((part) => `${part}\n`).join(''),
     title: cleanTitle(choices.title),
-    description: `${cleanTitle(choices.title)}.`,
+    description: descriptionText(choices),
     author: `${choices.given} ${choices.family}`,
     given: choices.given,
     family: choices.family,
@@ -238,7 +254,9 @@ export function placeholderValues(choices, lists) {
       values[`c_${row.key}_${event}`] = check.events.includes(event) ? '' : '# ';
     }
     values[`cron_${row.key}`] = check.cron;
-    values[`platforms_${row.key}`] = check.platforms ?? row[`platforms_${choices.visibility}`].replaceAll(`/${lists.settings.min_r}`, `/${minR}`);
+    // A chosen oldest R is checked on Linux by R CMD check, as the site's Modify page does. cli/R/build.R has the same.
+    const oldest = row.key === 'r_cmd_check' && minR !== lists.settings.min_r ? `, ubuntu/${minR}` : '';
+    values[`platforms_${row.key}`] = check.platforms ?? `${row[`platforms_${choices.visibility}`]}${oldest}`;
   }
   return values;
 }

@@ -6,7 +6,7 @@
 \alias{{{package}}-package}
 \title{{{package}}: {{title}}}
 \description{
-{{title}}.
+{{description}}
 }
 {{man_seealso}}
 \author{

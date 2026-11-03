@@ -7,6 +7,7 @@ default_choices <- function(package, preset = kit_setting("preset"), plan = kit_
   list(
     package = package,
     title = "",
+    description = "",
     given = "",
     family = "",
     email = "",
@@ -73,6 +74,34 @@ check_min_r <- function(min_r) {
 
 # A title without its full stop: DESCRIPTION's Description adds one.
 clean_title <- function(title) sub("[.[:space:]]+$", "", title)
+
+# DESCRIPTION's Description: the person's own sentences, or the title, ending in a full stop either way.
+description_text <- function(choices) {
+  text <- gsub("[[:space:]]+", " ", trimws(choices$description %||% ""))
+  if (!nzchar(text)) {
+    return(paste0(clean_title(choices$title), "."))
+  }
+  if (grepl("[.!?]$", text)) text else paste0(text, ".")
+}
+
+# The longer description is optional: left empty, DESCRIPTION repeats the title. CRAN asks that it doesn't start with
+# the package's name or "This package".
+check_description <- function(text, name = "") {
+  if (!nzchar(text)) {
+    return("")
+  }
+  if (nchar(text) > 500) {
+    return(sprintf("Keep it to 500 characters. It is %d now.", nchar(text)))
+  }
+  if (grepl("[\"\\\\{}%]", text)) {
+    return("Use plain words here: no double quotes, backslashes, braces or percent signs.")
+  }
+  start <- tolower(text)
+  if (startsWith(start, "this package") || (nzchar(name) && startsWith(start, tolower(name)))) {
+    return("Start with what it does, not with \"This package\" or its name: CRAN asks for that.")
+  }
+  ""
+}
 
 # R's rules for a package name, plus a length limit and the names of R's own packages. site/src/form/engine.js has the
 # same.

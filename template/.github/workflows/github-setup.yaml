@@ -15,6 +15,10 @@ on:
         description: Only show what would change
         type: boolean
         default: true
+      remove-other-labels:
+        description: Also remove labels that aren't launchR's, such as GitHub's own
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -26,3 +30,4 @@ jobs:
     uses: insightsurge/launchR/.github/workflows/github-setup.yaml@v{{kit_version}}
     with:
       dry-run: ${{ github.event_name != 'workflow_dispatch' || inputs.dry-run }}
+      remove-other-labels: ${{ github.event_name == 'workflow_dispatch' && inputs.remove-other-labels }}
