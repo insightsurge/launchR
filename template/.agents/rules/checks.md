@@ -22,5 +22,6 @@
   `# nocov` or `skip()`. Explain the failure instead.
 - **A new file or folder at the top level** goes in `.Rbuildignore` if it doesn't belong in the built package;
   otherwise R CMD check notes it, and a note fails.
-- **Code and tests work without the `Suggests` packages;** a job checks this.
+- **Code, examples and vignettes work without the `Suggests` packages;** a job checks this. A test that needs one
+  starts with `skip_if_not_installed()`: testthat skips it on CRAN anyway, but the skip line says why.
 - **Secrets:** a found secret is removed and its key rotated. `gitleaks:allow` is only for a false alarm.

@@ -1,5 +1,6 @@
-# R CMD check without the Suggests, as CRAN also checks: every use of a suggested package must be guarded. It runs the
-# gate's nosuggests mode (the quality gate), which puts only what the check needs on the library path: the hard
+# R CMD check without the Suggests, as CRAN also checks: every use of a suggested package in R code, examples and
+# vignettes must be guarded (testthat itself skips a test whose package is missing; the gate's line counts those).
+# It runs the gate's nosuggests mode (the quality gate), which puts only what the check needs on the library path: the hard
 # dependencies with everything they need, testthat and the vignette builders. A Suggests package that is installed but
 # not needed stays hidden, so the check holds whatever the library contains. Base and recommended packages (tools,
 # MASS, ...) ship with R and stay visible. Derived from r-lib/actions'

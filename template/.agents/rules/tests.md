@@ -8,6 +8,7 @@
 - **Don't change or delete an existing test to make it pass.** If a test is wrong, say so and ask.
 - Use made-up data. No network or files outside `tempdir()` in plain tests; anything that needs them gets a skip line
   (`skip_on_cran()`, `skip_if_offline()`).
+- A test that uses a `Suggests` package starts with `skip_if_not_installed("pkg")`.
 - Clean up with `withr::local_*()`: temporary files, options and environment variables.
 - **Snapshots:** commit the files in `tests/testthat/_snaps/`. Accept a changed snapshot only when the change is on
   purpose, and say so in the pull request.
