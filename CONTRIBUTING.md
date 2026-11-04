@@ -102,8 +102,11 @@ workflow or an action in `.github/`. Its first job builds the site and makes the
 rewrites every caller's `@vX.Y.Z` to the commit under test, pushes the package as a new commit on the sandbox's default
 branch, starts r-cmd-check-extended by hand (it has no push trigger), opens a pull request that adds
 `.github/e2e-fake-secret.txt` with a made-up key, waits for every run (giving up and cancelling at 200 minutes), and
-writes the report to the job summary: the result, what it did with links (the commit under test, the sandbox commit,
-the pull request, how long it waited), a table of the runs and each problem. Given a launchR pull request number when
+writes the report to the job summary: a count of the runs by result (✅ passed, ❌ failed, ⏳ no runner, 🔒 the key
+caught), the verdict, what it did with links (the commit under test, the sandbox commit,
+the pull request, how long it waited), a table of the runs and each problem. A job that GitHub never gave a
+runner (it happens when no macOS runner is free) is listed on its own line as "no runner", not as a test failure,
+and its matrix's summary job is not counted either; the run still fails, so run the test again later. Given a launchR pull request number when
 started (`release_pr`), a third job posts the report there as one comment, updated on a re-run, or a short note
 when the run stopped before its report; it uses launchR's own token, limited to that job, and never the sandbox's.
 A run started by hand shows only under Actions (sandbox-e2e), never in a pull request's Checks tab: give
@@ -116,7 +119,8 @@ What it needs, once:
 
 - **The sandbox:** the public repository `insightsurge/launchr-sandbox` (`SANDBOX_REPO` in the workflow), empty or
   not, with `main` as its default branch. Public, so its runs cost no minutes; nothing private goes there. It is for
-  launchR alone: Issues, Wiki, Projects and Discussions are off, workflows from outside contributors' pull requests
+  launchR alone: Wiki, Projects and Discussions are off (Issues stay on: the "Set up this repository" dry run
+  reads them and stops when they are off), workflows from outside contributors' pull requests
   wait for approval, and an interaction limit lets only collaborators open issues or pull requests or comment.
   GitHub ends that limit after six months (next on 2027-05-04): set it again under Settings, Moderation options,
   Interaction limits.
