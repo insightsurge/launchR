@@ -184,7 +184,7 @@ package's `.github/workflows/README.md` shows how to run it without cloning laun
 | `cli/` | The command line: `launchr.R`, with the work in `R/` |
 | `template/` | The package files, with `{{placeholders}}` |
 | `lists/` | Tab-separated lists read by both the site and the command line |
-| `.github/workflows/` | The reusable checks that packages call, and this repository's own site deploy, site tests and sandbox test |
+| `.github/workflows/` | The reusable checks that packages call, and this repository's own site deploy, site tests and sandbox test. Overview, with what starts each and where its result shows: its `README.md` |
 | `.github/actions/`, `.github/scripts/` | Shared steps the checks use: the PR report, baselines, change detection |
 | `quality-gate/` | The quality gate |
 | `tests/` | Tests for the command line, the two routes, the zip, the PR report builder, generated packages against the gate, and the sandbox test's steps |
