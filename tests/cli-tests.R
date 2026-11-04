@@ -490,6 +490,15 @@ gate_ok <- identical(attr(no_desc, "status"), 2L) && (
 )
 if (!gate_ok) cat("  the gate printed (status ", deparse(attr(no_desc, "status")), "):\n", paste0("    ", no_desc, "\n"), sep = "")
 expect(gate_ok, "the gate outside a package folder exits 2 with one line")
+
+# The no-Suggests step hides every Suggests package except base and recommended ones, which ship with R.
+gate_env <- new.env()
+sys.source(file.path(kit_root, "quality-gate", "quality-gate.R"), envir = gate_env)
+in_r <- function(pkg) pkg %in% c("tools", "MASS", "shiny")
+expect(length(gate_env$suggests_in_r_library(c("tools", "MASS", "knitr"), "knitr", c("tools", "MASS"), in_r)) == 0L,
+  "no-Suggests: base and recommended packages in Suggests don't stop the check")
+expect(identical(gate_env$suggests_in_r_library(c("tools", "shiny", "knitr"), character(), c("tools", "MASS"), in_r), "shiny"),
+  "no-Suggests: another Suggests package in R's own library is named")
 help_out <- system2(rscript, c(quote_arg(file.path(kit_root, "cli", "launchr.R"))), stdout = TRUE)
 expect(any(grepl("Commands: new, gate, github-setup, eject", help_out)), "launchr.R with no command prints the commands")
 
