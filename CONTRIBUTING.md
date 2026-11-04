@@ -60,8 +60,9 @@ launchR's version is the tag its users name in their caller files (`@vX.Y.Z`), s
    (`Version`) and `cli/github-setup.R` (`version <-`). `tests/cli-tests.R` fails when they differ. Everything else
    (the caller files, the package's `DESCRIPTION`, the next-steps text on the site) takes it from `kit_version`.
 2. Open a pull request and let the checks pass. **Run the sandbox test on its branch** (Actions, sandbox-e2e, Run
-   workflow, pick the branch; below): it runs a site-made package's checks on GitHub's Linux, Mac and Windows runners
-   against this commit, and takes one to three hours. Merge when it passes.
+   workflow, pick the branch, and give the pull request's number; below): it runs a site-made package's checks on
+   GitHub's Linux, Mac and Windows runners against this commit, takes about 15 minutes when it passes, and posts its
+   report on the pull request. Merge when it passes.
 3. **Tag the merge commit right after the merge**, `vX.Y.Z` on `main`, and push the tag. Until the tag exists, a new
    package made from `main` points at a version that does not exist yet and its checks fail.
 4. **The site:** `.github/workflows/deploy-site.yaml` publishes it when a change to `site/`, `template/` or `lists/`
@@ -100,7 +101,11 @@ workflow or an action in `.github/`. Its first job builds the site and makes the
 rewrites every caller's `@vX.Y.Z` to the commit under test, pushes the package as a new commit on the sandbox's default
 branch, starts r-cmd-check-extended by hand (it has no push trigger), opens a pull request that adds
 `.github/e2e-fake-secret.txt` with a made-up key, waits for every run (giving up and cancelling at 200 minutes), and
-writes a table of the runs to the job summary. The pull request stays open until the next run closes it, for a look
+writes the report to the job summary: the result, what it did with links (the commit under test, the sandbox commit,
+the pull request, how long it waited), a table of the runs and each problem. Given a launchR pull request number when
+started (`release_pr`), a third job posts the report there as one comment, updated on a re-run, or a short note
+when the run stopped before its report; it uses launchR's own token, limited to that job, and never the sandbox's.
+The pull request in the sandbox stays open until the next run closes it, for a look
 at its report comment. Dependabot's file is left out of the sandbox copy: it would open pull requests moving the callers
 back to a tag.
 
