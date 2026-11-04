@@ -1,5 +1,5 @@
 #!/usr/bin/env Rscript
-# quality-gate version: 2026-10-31
+# quality-gate version: 2026-11-04
 # Quality gate: one command that says whether an R package is ready: for CRAN by default, or for internal use.
 #
 #   Rscript <path to this file> [fast|tests|full|lint|nosuggests] [options]   (--help lists the options)
@@ -9,7 +9,9 @@
 #   full            everything: fast steps, tests, coverage, new lines, CRAN-like check with tests, built tarball and
 #                   the check without Suggests
 #   lint            the quick static steps only: tools, style, docs in sync, \value, spelling
-#   nosuggests      R CMD check with only the hard dependencies on the library path (CI's no-suggests job)
+#   nosuggests      R CMD check with only the hard dependencies on the library path (CI's no-suggests job). Base and
+#                   recommended packages in Suggests stay visible; any other Suggests package in R's own library
+#                   can't be hidden, so the step skips
 #
 # In `tests` and `full` the suite runs ONCE, under covr, and the same run gives the test results and the coverage
 # (a package whose tests/ is not the standard testthat layout falls back to a plain run plus a separate covr run). If
@@ -1077,6 +1079,14 @@ nosuggests_library <- function(dir, uses) {
   structure(lib, linked = length(needed))
 }
 
+# The Suggests that the no-Suggests check can't hide: those in R's own library (`in_r_library(pkg)` is TRUE), leaving
+# out what is linked in on purpose and what ships with R (`shipped`: base and recommended packages). Plain base R, so
+# tests/cli-tests.R can call it without the gate's packages.
+suggests_in_r_library <- function(suggests, linked, shipped, in_r_library) {
+  hidden <- setdiff(suggests, c(linked, shipped))
+  hidden[vapply(hidden, in_r_library, logical(1))]
+}
+
 # R CMD check as CI's no-suggests job runs it, without installing anything: only the hard dependencies are on
 # the library path, `_R_CHECK_FORCE_SUGGESTS_` is false and NOT_CRAN is unset, so a test that uses a Suggests
 # package without guarding it fails here.
@@ -1088,18 +1098,27 @@ step_nosuggests <- function(uses, run_dir, log) {
   if (is.null(lib)) {
     return(result("SKIP", "symlinks can't be made here (on Windows they may need privileges)"))
   }
-  # R's own library is always on the library path, so a Suggests package installed there (as conda and some Docker
-  # images do) can't be hidden, and a PASS would not mean anything.
-  hidden <- setdiff(description_packages("Suggests"), list.files(lib))
-  visible <- hidden[vapply(hidden, function(pkg) length(find.package(pkg, .Library, quiet = TRUE)) > 0, logical(1))]
+  # R's own library is always on the library path, so a Suggests package installed there can't be hidden. Base and
+  # recommended packages (tools, utils, MASS, ...) ship with R and are always there, so they stay visible and the check
+  # runs. Any other package there (as conda, some Docker images and R installed from CRAN's macOS installer do) makes
+  # a PASS meaningless, so the step skips.
+  shipped <- rownames(utils::installed.packages(lib.loc = .Library, priority = c("base", "recommended")))
+  suggests <- description_packages("Suggests")
+  with_r <- intersect(suggests, shipped)
+  visible <- suggests_in_r_library(
+    suggests,
+    linked = list.files(lib),
+    shipped = shipped,
+    in_r_library = function(pkg) length(find.package(pkg, .Library, quiet = TRUE)) > 0
+  )
   if (length(visible) > 0) {
     return(
       result(
         "SKIP",
         paste0(
-          "Suggests installed in R's own library can't be hidden: ",
-          toString(visible),
-          " (install them in a user library to run this check)"
+          "Suggests installed in R's own library (", .Library, ") can't be hidden: ", toString(visible),
+          ". A second copy in a user library doesn't help; to run this check, run it where they are installed only in",
+          " a user library, as CI does"
         )
       )
     )
@@ -1147,7 +1166,11 @@ step_nosuggests <- function(uses, run_dir, log) {
   res$notes <- res$notes[!expected]
   out <- check_result(res, log)
   hidden <- if (any(expected)) "; the Suggests were hidden" else ""
-  result(out$status, paste0(out$detail, " (", attr(lib, "linked"), " packages on the library path", hidden, ")"))
+  kept <- if (length(with_r) > 0) paste0("; left visible, as they ship with R: ", toString(with_r)) else ""
+  result(
+    out$status,
+    paste0(out$detail, " (", attr(lib, "linked"), " packages on the library path", hidden, kept, ")")
+  )
 }
 
 step_tarball <- function(settings, log) {

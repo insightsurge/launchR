@@ -96,7 +96,9 @@ system2(file.path(R.home("bin"), "Rscript"), c(gate, "full"))
 Use `fast` instead of `full` for a quicker run. It prints one PASS or FAIL line per step. It runs the extended tests
 when `EXTENDED_TESTS` is `true`, which the package's `.Renviron` sets (`tests/README.md`). On Windows, `full` skips the
 step that checks the package without its optional packages, because symlinks may need extra privileges there; the
-`no-suggests` check on GitHub runs it on Linux.
+`no-suggests` check on GitHub runs it on Linux. The step also skips when an optional package is installed in R's
+own library, where R on a Mac often installs every package; base and recommended packages such as `tools`
+or `MASS` ship with R and don't count.
 
 ## Updates
 
