@@ -29,7 +29,8 @@ model and search for its name (and `no_suggests`, its key) to see every place. I
 5. **The pull request report:** if the check writes a part, add its workflow file to `workflows` in
    `.github/pr-report.json` (and a section there if it needs a new one). The part's name (`tests-3-no-suggests`) puts
    it in the section named by the text before the first `-`.
-6. **Words that list the checks:** the package's `template/.github/workflows/README.md`, the root README's checks table
+6. **Words that list the checks:** `.github/workflows/README.md` (launchR's overview of its workflows), the package's
+   `template/.github/workflows/README.md`, the root README's checks table
    and "seven automatic checks", the site's text (`site/src/components/Story.astro`, `site/public/llms-full.txt`),
    `quality-gate/quality-gate.R` if a gate mode mirrors the check, and `lists/checklists.tsv` if a stage checklist
    mentions CI. Search for a neighbouring check's name to find them.
@@ -158,3 +159,4 @@ caller's `permissions:` block says, and a called workflow can only narrow it.
   can sign in to Google (`id-token: write`) only downloads the built site and installs `firebase-tools` from its own
   lockfile with install scripts off. Keep it that way.
 - When you add a workflow or a job, say why in a comment next to each permission, and run actionlint and zizmor.
+  A new workflow, or a change to when one runs or where its result shows, also updates `.github/workflows/README.md`.
