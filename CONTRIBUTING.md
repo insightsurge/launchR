@@ -105,6 +105,8 @@ writes the report to the job summary: the result, what it did with links (the co
 the pull request, how long it waited), a table of the runs and each problem. Given a launchR pull request number when
 started (`release_pr`), a third job posts the report there as one comment, updated on a re-run, or a short note
 when the run stopped before its report; it uses launchR's own token, limited to that job, and never the sandbox's.
+A run started by hand shows only under Actions (sandbox-e2e), never in a pull request's Checks tab: give
+`release_pr` to see its result on the pull request.
 The pull request in the sandbox stays open until the next run closes it, for a look
 at its report comment. Dependabot's file is left out of the sandbox copy: it would open pull requests moving the callers
 back to a tag.
