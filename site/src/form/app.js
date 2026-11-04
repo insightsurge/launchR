@@ -455,7 +455,8 @@ function steps() {
     ...(S.github ? [step(setupButton, '', setupMore)] : []),
   ];
   $('#stepList').innerHTML = list.join('');
-  const first = planRow(lists, plan()).first_checklist;
+  // A private package with the QC checklist starts there (cli/R/github.R opens it in place of Before public).
+  const first = S.qc && !isPublic() ? lists.settings.qc_stage : planRow(lists, plan()).first_checklist;
   const email = v('email') ? '' : `Replace the placeholder email in ${code('DESCRIPTION')} before you release. `;
   const settings = S.github ? `Your checklists list a few repository settings to change by hand. Optional: with ${gh} installed and signed in, ${code(setup)} in the R console ticks those boxes for you. ` : '';
   $('#nextAfter').innerHTML = `<b>After that.</b> ${email}${first && S.github ? `Open the <em>${first}</em> checklist in your repository's issues when you reach that stage. ` : ''}${settings}${running.length ? local : ''}${codecov()}To add something later, such as a website, come back and choose only that.`;
