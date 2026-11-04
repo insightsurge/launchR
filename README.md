@@ -184,10 +184,10 @@ package's `.github/workflows/README.md` shows how to run it without cloning laun
 | `cli/` | The command line: `launchr.R`, with the work in `R/` |
 | `template/` | The package files, with `{{placeholders}}` |
 | `lists/` | Tab-separated lists read by both the site and the command line |
-| `.github/workflows/` | The reusable checks that packages call, and this repository's own site deploy |
+| `.github/workflows/` | The reusable checks that packages call, and this repository's own site deploy, site tests and sandbox test |
 | `.github/actions/`, `.github/scripts/` | Shared steps the checks use: the PR report, baselines, change detection |
 | `quality-gate/` | The quality gate |
-| `tests/` | Tests for the command line, the two routes, the zip, the PR report builder, and generated packages against the gate |
+| `tests/` | Tests for the command line, the two routes, the zip, the PR report builder, generated packages against the gate, and the sandbox test's steps |
 | `CONTRIBUTING.md` | For maintainers: add a check or a template file, make a release, run the tests, how the shared workflows are secured |
 
 ## Develop and test
@@ -211,6 +211,15 @@ Every pull request runs the browser tests, the route comparison, the zip check, 
 builder's tests, and two linters for the workflows in `.github/` (actionlint for mistakes, zizmor for security
 problems) in `.github/workflows/site-tests.yaml`. `CONTRIBUTING.md` says what each test covers and how to run the
 linters.
+
+**Before a release, the sandbox test.** Local tests can't show what only GitHub's runners do, such as a step that
+hangs on Windows. `.github/workflows/sandbox-e2e.yaml`, started by hand (Actions, sandbox-e2e, Run workflow, on `main`
+or the release branch), makes a package on the site with every check, R devel and browser tests on Linux, Mac and
+Windows, points its checks at the launchR commit under test, and runs them in the public repository
+`insightsurge/launchr-sandbox`: a push to its default branch, and a pull request with a planted fake secret that
+secret-scan must catch. It fails when any other check fails, with a link to each failed job, or when the pull request
+gets other than one report comment. It takes one to three hours, and needs the `SANDBOX_TOKEN` secret described in
+`CONTRIBUTING.md`.
 
 The site is published to Firebase Hosting by `.github/workflows/deploy-site.yaml` when a change to `site/`,
 `template/` or `lists/` reaches `main`, or when the workflow is started by hand. Google Analytics loads only on that

@@ -1,0 +1,110 @@
+# launchR's own test before a release (not a check that packages call): a package made on the site runs its own checks
+# in a public sandbox repository, the way a user gets them, but pointed at the launchR commit under test instead of the
+# release tag. It finds what only GitHub's runners show, such as a step that hangs on Windows or runs bash in
+# PowerShell. Started by hand ("Run workflow", on main or a branch); a run takes one to three hours, and the sandbox is
+# public, so its minutes are free. The steps are in tests/sandbox-e2e.sh; what it needs is in CONTRIBUTING.md.
+on:
+  workflow_dispatch:
+
+name: sandbox-e2e
+
+permissions:
+  contents: read
+
+# One run at a time: they share the sandbox's default branch.
+concurrency:
+  group: sandbox-e2e
+  cancel-in-progress: false
+
+env:
+  SANDBOX_REPO: insightsurge/launchr-sandbox
+  SANDBOX_PACKAGE: sandboxPkg
+
+jobs:
+  package:
+    # Builds the site and makes the package in a browser (site/tests/sandbox-package.spec.js). No secret here: this job
+    # runs npm packages.
+    if: github.repository == 'insightsurge/launchR'
+    runs-on: ubuntu-26.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+
+      - name: Install the site's packages
+        run: npm --prefix site ci
+
+      - name: Build the site
+        run: npm --prefix site run build
+
+      - name: Install the test browser
+        run: npx --prefix site playwright install --with-deps chromium
+
+      - name: Make the package on the site
+        working-directory: site
+        env:
+          SANDBOX_ZIP: ${{ runner.temp }}/package.zip
+          SANDBOX_OWNER: ${{ github.repository_owner }}
+        run: npx playwright test sandbox-package
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: sandbox-package
+          path: ${{ runner.temp }}/package.zip
+          retention-days: 7
+
+  sandbox:
+    # Pushes the package to the sandbox, opens a pull request with a planted secret, waits for every run and reports.
+    # Runs only launchR's script, with the sandbox's token (secret SANDBOX_TOKEN, scoped to that repository alone).
+    needs: package
+    runs-on: ubuntu-26.04
+    timeout-minutes: 240  # the wait gives up at 200 minutes and cancels what is still running
+    env:
+      LAUNCHR_SHA: ${{ github.sha }}
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: sandbox-package
+          path: ${{ runner.temp }}
+
+      - name: Point the callers at this commit
+        env:
+          ZIP: ${{ runner.temp }}/package.zip
+        run: bash tests/sandbox-e2e.sh prepare
+
+      - name: Push to the sandbox's default branch
+        env:
+          GH_TOKEN: ${{ secrets.SANDBOX_TOKEN }}
+        run: |
+          if [ -z "${GH_TOKEN}" ]; then
+            echo "::error::No SANDBOX_TOKEN secret: see the sandbox test in CONTRIBUTING.md."
+            exit 1
+          fi
+          bash tests/sandbox-e2e.sh push
+
+      - name: Open a pull request with a planted secret
+        env:
+          GH_TOKEN: ${{ secrets.SANDBOX_TOKEN }}
+        run: bash tests/sandbox-e2e.sh pr
+
+      - name: Wait for the sandbox's runs
+        env:
+          GH_TOKEN: ${{ secrets.SANDBOX_TOKEN }}
+        run: bash tests/sandbox-e2e.sh wait
+
+      - name: Report
+        env:
+          GH_TOKEN: ${{ secrets.SANDBOX_TOKEN }}
+        run: bash tests/sandbox-e2e.sh report

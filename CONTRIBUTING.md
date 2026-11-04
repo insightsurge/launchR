@@ -59,7 +59,9 @@ launchR's version is the tag its users name in their caller files (`@vX.Y.Z`), s
 1. **Bump the version in the three places that hold it:** `lists/settings.tsv` (`kit_version`), `cli/DESCRIPTION`
    (`Version`) and `cli/github-setup.R` (`version <-`). `tests/cli-tests.R` fails when they differ. Everything else
    (the caller files, the package's `DESCRIPTION`, the next-steps text on the site) takes it from `kit_version`.
-2. Open a pull request, let the checks pass, and merge it.
+2. Open a pull request and let the checks pass. **Run the sandbox test on its branch** (Actions, sandbox-e2e, Run
+   workflow, pick the branch; below): it runs a site-made package's checks on GitHub's Linux, Mac and Windows runners
+   against this commit, and takes one to three hours. Merge when it passes.
 3. **Tag the merge commit right after the merge**, `vX.Y.Z` on `main`, and push the tag. Until the tag exists, a new
    package made from `main` points at a version that does not exist yet and its checks fail.
 4. **The site:** `.github/workflows/deploy-site.yaml` publishes it when a change to `site/`, `template/` or `lists/`
@@ -81,13 +83,40 @@ launchR's version is the tag its users name in their caller files (`@vX.Y.Z`), s
 | `tests/check-zip.mjs` | The site's zip is sound (after `npm --prefix site run build`) | `node tests/check-zip.mjs` |
 | `site/tests/form.spec.js` | The form, each plan's download and its zip, in a real browser (Playwright) | `npm --prefix site run build`, then `cd site && npx playwright test` |
 | actionlint | Mistakes in `.github/workflows/` (types, expressions, the shell in `run:` steps). Settings: `.github/actionlint.yaml` | `actionlint` from the repository root |
+| `tests/sandbox-e2e.sh` | A package made on the site (`site/tests/sandbox-package.spec.js`: public CRAN plan, every check, R devel, browser tests on every system) runs its own checks in the public sandbox repository, pointed at the commit under test: a push to the default branch, and a pull request whose planted secret secret-scan must catch. Fails on any other failed check (linking each failed job) and unless the pull request has one report comment | By hand before a release: `.github/workflows/sandbox-e2e.yaml` (Run workflow) |
 | zizmor | Security problems in `.github/workflows/` and `.github/actions/` (unpinned actions, token left in `.git`, injection, too-wide permissions). Settings: `.github/zizmor.yml` | `zizmor .github/workflows .github/actions` (set `GH_TOKEN` for the online checks) |
 
 The pull request workflow `.github/workflows/site-tests.yaml` runs the browser tests, the zip check, the route
 comparison, the command line's tests, the report builder's tests, and (job `workflow-lint`) actionlint and zizmor.
-`gate-matrix.sh` is not part of that workflow: run it by hand before a release. Both linters are pinned to an exact version there, with a checksum;
+`gate-matrix.sh` and the sandbox test are not part of that workflow: run them by hand before a release. Both linters are pinned to an exact version there, with a checksum;
 to raise one, change the version and checksum together, run it locally, and fix or (with a one-line reason in its
 config file) allow what it finds.
+
+## The sandbox test
+
+`.github/workflows/sandbox-e2e.yaml` finds what only GitHub's runners show (v0.0.12's full tests hung for two hours on
+Windows, a bash step ran under PowerShell). Run it by hand before a release, and after a change to a reusable
+workflow or an action in `.github/`. Its first job builds the site and makes the package in a browser; the second
+rewrites every caller's `@vX.Y.Z` to the commit under test, pushes the package as a new commit on the sandbox's default
+branch, starts r-cmd-check-extended by hand (it has no push trigger), opens a pull request that adds
+`.github/e2e-fake-secret.txt` with a made-up key, waits for every run (giving up and cancelling at 200 minutes), and
+writes a table of the runs to the job summary. The pull request stays open until the next run closes it, for a look
+at its report comment. Dependabot's file is left out of the sandbox copy: it would open pull requests moving the callers
+back to a tag.
+
+What it needs, once:
+
+- **The sandbox:** the public repository `insightsurge/launchr-sandbox` (`SANDBOX_REPO` in the workflow), empty or
+  not, with `main` as its default branch. Public, so its runs cost no minutes; nothing private goes there. It is for
+  launchR alone: Issues, Wiki, Projects and Discussions are off, workflows from outside contributors' pull requests
+  wait for approval, and an interaction limit lets only collaborators open issues or pull requests or comment.
+  GitHub ends that limit after six months (next on 2027-05-04): set it again under Settings, Moderation options,
+  Interaction limits.
+- **The token:** a fine-grained personal access token for that repository alone, with read and write access to
+  Actions, Contents, Pull requests and Workflows (pushing files under `.github/workflows/` needs Workflows), kept as the
+  launchR repository secret `SANDBOX_TOKEN`. When it expires the push step fails with an error from GitHub: make a new
+  one the same way and replace the secret. The workflow runs only when started by hand, so no pull request can reach
+  the token, and the job that runs npm packages never sees it.
 
 ## Security model of the reusable workflows
 
