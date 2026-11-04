@@ -15,4 +15,6 @@ run allpublic --owner sample-org --public
 run publicstarter --owner sample-org --public --preset starter
 run internalpkg --owner sample-org --internal
 run starterpkg --owner sample-org --preset starter
+# Every badge, so the spelling check sees each badge's words.
+run allbadges --owner sample-org --public --badges check,lifecycle,codecov,cran,downloads,universe,launchr
 exit $fails
