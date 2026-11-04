@@ -27,7 +27,9 @@ All start with `on: workflow_call`, and need no secret beyond the caller's token
 | `pkgdown.yaml` | Builds the package's site from `main` and publishes it to GitHub Pages | No |
 | `github-setup.yaml` | Labels, the root issue and the stage checklists, started by hand ("Run workflow"); also runs as a dry run, changing nothing, when its caller file is pushed | No |
 
-The pull request report is one comment that each check adds its part to (`.github/pr-report.json` lists the parts).
+The pull request report is one comment that each check adds its part to (`.github/pr-report.json` lists the parts). It
+covers only the checks a package has caller files for. Each check that reports takes a `ci-report` input (default
+`true`); a package that leaves the comment out passes `false` from every caller file.
 
 ## launchR's own workflows
 

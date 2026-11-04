@@ -59,6 +59,8 @@ The coverage check decides on its own. To also show coverage on Codecov:
   with a `gitleaks:allow` comment on that line; a real secret must be removed and its key rotated. To clear a false alarm already in history, add its fingerprint
   line (in the scan's log, as `file:rule:line` or `commit:file:rule:line`) to `.gitleaksignore` in a pull request; it applies once
   merged. Keep `^\.gitleaksignore$` in `.Rbuildignore`, or R CMD check notes it as a hidden file.
+- **The CI report comment:** each check that reports has `ci-report: true` under `with:`. Set it to `false` in every
+  one of those files to leave the comment out; each run still shows its results on its own page under Actions.
 - **Keep the `permissions:` block as it is:** a check that reports on pull requests needs what it lists, or it stops before it starts.
 
 Scheduled runs use the default branch only, and GitHub pauses them on public repositories after 60 days with no activity.

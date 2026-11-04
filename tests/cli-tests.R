@@ -116,6 +116,18 @@ listed <- file.path("template", read_list("files.tsv")$path)
 tracked <- system2("git", c("-C", quote_arg(kit_root), "ls-files", "--", "template"), stdout = TRUE)
 expect(all(listed %in% tracked), paste("every template file in files.tsv is in git:", toString(setdiff(listed, tracked))))
 
+section("The Modify lists agree")
+forms <- read_list("forms.tsv")
+files <- read_list("files.tsv")
+expect(all(file.path(".github", "ISSUE_TEMPLATE", forms$file) %in% files$path), "every form in forms.tsv is in files.tsv")
+expect(all(paste0("form_", forms$key) %in% files$needs), "files.tsv includes each form only when it is chosen")
+expect(all(forms$label %in% read_list("labels.tsv")$name), "every form's label is in labels.tsv")
+expect(all(forms$part %in% read_list("parts.tsv")$part), "every form's part is a part")
+checks <- read_list("checks.tsv")$key
+needs <- unlist(strsplit(read_list("badges.tsv")$needs, ",", fixed = TRUE))
+expect(all(needs %in% c("owner", "cran", checks)), "every badge need is owner, cran or a check")
+expect(kit_setting("qc_stage") %in% read_list("checklists.tsv")$stage, "the QC checklist has rows")
+
 section("launchr.R new")
 expect(quiet(cmd_new(character()))$value == 1L, "new without a name fails")
 expect(quiet(cmd_new("1bad"))$value == 1L, "new with a bad name fails")

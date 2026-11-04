@@ -142,12 +142,53 @@ test('Modify: the AI switch adds AGENTS.md, its rules files, CLAUDE.md and their
   await page.locator('#modify').click();
   await page.locator('#modifyView summary', { hasText: 'Extras' }).click();
   await page.locator('label.sw', { hasText: 'Instructions for AI assistants' }).click();
-  await expect(page.locator('#sumMore')).toHaveText('AI instructions');
+  await expect(page.locator('#sumMore')).toContainText('AI instructions');
   const { files } = await download(page, '#modDownload');
   expect(files['tablePkg/AGENTS.md']).toContain('.agents/rules/');
   for (const rule of ['checks', 'docs', 'git', 'js-css', 'r-code', 'tests']) expect(`tablePkg/.agents/rules/${rule}.md` in files, rule).toBe(true);
   expect(files['tablePkg/CLAUDE.md']).toContain('@AGENTS.md');
   expect('tablePkg/.github/ISSUE_TEMPLATE/06-ai-instructions.yml' in files).toBe(true);
+});
+
+test('Modify: the CI report comment, licence, badges, issue forms, labels and QC checklist reach the zip', async ({ page }) => {
+  await openForm(page);
+  await fillForm(page);
+  await page.locator('input[name=plan][value=d]').check();
+  await page.locator('#modify').click();
+  // Checks on GitHub is the section open on arrival.
+  await page.locator('label.sw', { hasText: 'CI report comment' }).click();
+  await page.locator('#modifyView summary', { hasText: 'GitHub setup' }).click();
+  await page.locator('label.pill', { hasText: /^Idea$/ }).click();
+  await expect(page.locator('[data-label="idea"]')).toBeEnabled();
+  await page.locator('label.pill', { hasText: /^idea$/ }).click();
+  await expect(page.locator('[data-label="idea"]')).not.toBeChecked();
+  await expect(page.locator('#sumGit')).toHaveText('4 of 5 issue forms, 10 of 11 labels, QC checklist');
+  await page.locator('#modifyView summary', { hasText: 'Extras' }).click();
+  await expect(page.locator('#sumMore')).toHaveText('Proprietary licence, no badges');
+  await page.locator('label.pill', { hasText: 'Lifecycle' }).click();
+  const { files } = await download(page, '#modDownload');
+  expect(files['tablePkg/.github/workflows/lint.yaml']).toContain('ci-report: false');
+  expect(files['tablePkg/LICENSE']).toContain('All rights reserved');
+  expect('tablePkg/LICENSE.md' in files).toBe(false);
+  expect(files['tablePkg/DESCRIPTION']).toContain('License: file LICENSE');
+  expect(files['tablePkg/DESCRIPTION']).toContain('Config/launchR/checklist: QC before release');
+  expect(files['tablePkg/DESCRIPTION']).toMatch(/Config\/launchR\/labels: .*bug/);
+  expect(files['tablePkg/DESCRIPTION']).not.toMatch(/Config\/launchR\/labels: .*idea/);
+  expect('tablePkg/.github/ISSUE_TEMPLATE/05-idea.yml' in files).toBe(false);
+  expect(files['tablePkg/README.md']).toContain('lifecycle-experimental');
+});
+
+test('Modify: the navbar choices reach _pkgdown.yml', async ({ page }) => {
+  await openForm(page);
+  await fillForm(page);
+  await page.locator('#modify').click();
+  await page.locator('#modifyView summary', { hasText: 'Website' }).click();
+  await page.locator('label.sw', { hasText: 'Add a website' }).click();
+  await page.locator('label.pill', { hasText: 'Changelog' }).click();
+  await page.locator('label.pill', { hasText: 'Light and dark switch' }).click();
+  const { files } = await download(page, '#modDownload');
+  expect(files['tablePkg/_pkgdown.yml']).toContain('left: [reference, articles]');
+  expect(files['tablePkg/_pkgdown.yml']).toContain('right: [search, github]');
 });
 
 test('Modify: the front-end switch adds the JS and CSS wording', async ({ page }) => {
