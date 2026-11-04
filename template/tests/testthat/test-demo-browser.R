@@ -19,7 +19,9 @@ test_that("the demo page's button says hello in a browser", {
   # Waits until the JavaScript is true, for up to `seconds`, instead of sleeping a fixed time.
   wait_until <- function(js, seconds = 10) {
     deadline <- Sys.time() + seconds
-    while (!isTRUE(evaluate(js)) && Sys.time() < deadline) Sys.sleep(0.1)
+    while (!isTRUE(evaluate(js)) && Sys.time() < deadline) {
+      Sys.sleep(0.1)
+    }
     isTRUE(evaluate(js))
   }
   expect_true(wait_until("document.readyState === 'complete' && document.querySelector('#hello') !== null"))
