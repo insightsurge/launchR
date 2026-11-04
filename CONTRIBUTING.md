@@ -102,7 +102,9 @@ rewrites every caller's `@vX.Y.Z` to the commit under test, pushes the package a
 branch, starts r-cmd-check-extended by hand (it has no push trigger), opens a pull request that adds
 `.github/e2e-fake-secret.txt` with a made-up key, waits for every run (giving up and cancelling at 200 minutes), and
 writes the report to the job summary: the result, what it did with links (the commit under test, the sandbox commit,
-the pull request, how long it waited), a table of the runs and each problem. Given a launchR pull request number when
+the pull request, how long it waited), a table of the runs and each problem. A job that GitHub never gave a
+runner (it happens when no macOS runner is free) is listed on its own line as "no runner", not as a test failure,
+and its matrix's summary job is not counted either; the run still fails, so run the test again later. Given a launchR pull request number when
 started (`release_pr`), a third job posts the report there as one comment, updated on a re-run, or a short note
 when the run stopped before its report; it uses launchR's own token, limited to that job, and never the sandbox's.
 A run started by hand shows only under Actions (sandbox-e2e), never in a pull request's Checks tab: give

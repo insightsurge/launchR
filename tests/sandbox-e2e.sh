@@ -8,7 +8,8 @@
 #   wait      wait for every run of both commits, cancelling what is still running at the deadline
 #   report    write the report to WORK/report.md and the job summary, and fail when a check failed (other than
 #             secret-scan on the pull request, which must fail), linking each failed job, and when the pull request
-#             has other than one report comment
+#             has other than one report comment. A job GitHub never gave a runner (as when no macOS runner is
+#             free) is listed apart, not as a failure: the run still fails, as the test is not finished
 #   comment   post WORK/report.md (or, when the run stopped before it, a short note) as one comment on launchR pull
 #             request RELEASE_PR, updating it on a re-run; GH_TOKEN here is launchR's own token, not the sandbox's
 #
@@ -176,9 +177,11 @@ wait_runs() {
 
 report() {
   : "${MAIN_SHA:?}" "${PR_SHA:?}" "${PR_NUMBER:?}"
-  local runs problems=0 line id path commit conclusion url jobs bad job list="${WORK}/problems.md"
+  local runs problems=0 line id path commit conclusion url jobs bad job norunner list="${WORK}/problems.md"
+  local waiting="${WORK}/no-runner.md"
   runs=$(all_runs)
   : > "${list}"
+  : > "${waiting}"
 
   # Expected runs that never started.
   while read -r commit path; do
@@ -196,7 +199,22 @@ report() {
     conclusion=$(jq -r '.conclusion // .status' <<< "${line}")
     url=$(jq -r .html_url <<< "${line}")
     jobs=$(gh api --paginate "repos/${SANDBOX_REPO}/actions/runs/${id}/jobs?filter=latest&per_page=100" \
-      --jq '.jobs[] | {name, conclusion, html_url}')
+      --jq '.jobs[] | {name, conclusion, html_url, runner: (.runner_id // 0), steps: (.steps | length),
+        failed: [.steps[]? | select(.conclusion == "failure") | .name]}')
+    # A job GitHub never gave a runner (cancelled with no runner and no steps, as when no macOS runner is free) is
+    # not a test result: it is listed on its own. The matrix's summary job then fails only at its "Require every
+    # matrix job to succeed" step; that follows from the missing runner, so it is not counted either.
+    norunner=$(jq -c 'select(.conclusion == "cancelled" and .runner == 0 and .steps == 0)' <<< "${jobs}")
+    if [ -n "${norunner}" ]; then
+      jq -r --arg p "${path}" --arg c "${commit}" \
+        '"- ⏳ \($p) on the \($c) commit, job `\(.name)`: GitHub had no runner for it, [job](\(.html_url))"' \
+        <<< "${norunner}" >> "${waiting}"
+      jobs=$(jq -c 'select((.conclusion == "cancelled" and .runner == 0 and .steps == 0) | not)
+        | select(.failed != ["Require every matrix job to succeed"])' <<< "${jobs}")
+      [ -n "${jobs}" ] || continue
+      jq -e 'select(.conclusion != "success" and .conclusion != "skipped" and .conclusion != "neutral")' \
+        <<< "${jobs}" >/dev/null || continue
+    fi
     bad=$(jq -c 'select(.conclusion != "success" and .conclusion != "skipped" and .conclusion != "neutral")' <<< "${jobs}")
     if [ "${commit}" = pr ] && [ "${path}" = .github/workflows/secret-scan.yaml ]; then
       # The scan itself must fail on the planted secret; its report job must still pass.
@@ -240,14 +258,15 @@ report() {
     problems=$((problems + 1))
   fi
 
-  write_report "${runs}" "${problems}" "${list}"
+  write_report "${runs}" "${problems}" "${list}" "${waiting}"
   cat "${REPORT}" >> "${SUMMARY}"
-  [ "${problems}" -eq 0 ] || exit 1
+  if [ -s "${waiting}" ]; then echo "::error::GitHub had no runner for $(wc -l < "${waiting}" | tr -d ' ') job(s); run the test again."; fi
+  [ "${problems}" -eq 0 ] && [ ! -s "${waiting}" ] || exit 1
 }
 
 # The report: the verdict, what the run did (with links), a table of the sandbox's runs, and the problems.
 write_report() {
-  local runs=$1 problems=$2 list=$3 sandbox="https://github.com/${SANDBOX_REPO}" launchr minutes closed
+  local runs=$1 problems=$2 list=$3 waiting=$4 sandbox="https://github.com/${SANDBOX_REPO}" launchr minutes closed
   launchr="${GITHUB_SERVER_URL:-https://github.com}/${GITHUB_REPOSITORY:-insightsurge/launchR}"
   minutes=$(( (${WAIT_END:-${WAIT_START:-0}} - ${WAIT_START:-0}) / 60 ))
   closed=$(sed -E "s@([0-9]+)@[#\\1](${sandbox}/pull/\\1)@g; s@,@, @g" <<< "${CLOSED_PRS:-}")
@@ -255,8 +274,12 @@ write_report() {
     echo "${MARKER}"
     echo "## Sandbox test"
     echo
+    local unrun
+    unrun=$(wc -l < "${waiting}" | tr -d ' ')
     if [ "${problems}" -gt 0 ]; then
-      echo "❌ **${problems} problem(s)**, listed below."
+      echo "❌ **${problems} problem(s)**, listed below.$([ "${unrun}" -gt 0 ] && echo " GitHub also had no runner for ${unrun} job(s).")"
+    elif [ "${unrun}" -gt 0 ]; then
+      echo "⏳ **Not finished: GitHub had no runner for ${unrun} job(s)**, listed below. Everything that ran passed. Run the test again when runners are free."
     else
       echo "✅ Every check passed; secret-scan caught the planted secret and the report is one comment."
     fi
@@ -275,6 +298,10 @@ write_report() {
     if [ -s "${list}" ]; then
       echo
       cat "${list}"
+    fi
+    if [ -s "${waiting}" ]; then
+      echo
+      cat "${waiting}"
     fi
   } > "${REPORT}"
 }
