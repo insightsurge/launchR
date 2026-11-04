@@ -33,12 +33,8 @@ placeholder_values <- function(choices) {
     bugreports_line = if (has_owner) sprintf("BugReports: https://github.com/%s/%s/issues", owner, choices$package) else "",
     chromote_line = if (frontend) "    chromote," else "",
     target_line = if (choices$release == "internal") "Config/quality-gate/target: internal" else "",
-    check_badge = if (public && has_owner && "ci" %in% choices$parts && isTRUE(choices$checks$r_cmd_check$on)) {
-      sprintf("[![R-CMD-check](%s/actions/workflows/r-cmd-check.yaml/badge.svg)](%s/actions/workflows/r-cmd-check.yaml)", repository, repository)
-    } else {
-      ""
-    },
-    credit_badge = if (public) sprintf("[![Set up with launchR](https://img.shields.io/badge/set%%20up%%20with-launchR-f6ab85)](%s)\n", site_url) else "",
+    license_line = if (choices$licence == "mit") "License: MIT + file LICENSE" else "License: file LICENSE",
+    ci_report = if (isTRUE(choices$ci_report)) "true" else "false",
     credit_line = sprintf("\nSet up with [launchR](%s).", site_url)
   )
   # The oldest R supported: in DESCRIPTION, and in place of 4.1 in the default platforms.
@@ -70,6 +66,29 @@ placeholder_values <- function(choices) {
   values$has_full_tests <- yes(check_on("full_tests"))
   values$has_time_limit <- yes(check_on("r_cmd_check"))
   values$is_internal <- yes(choices$release == "internal")
+  values$is_private <- yes(!public)
+  values$is_mit <- yes(choices$licence == "mit")
+  # README badges: the chosen ones whose needs are met, in lists/badges.tsv order.
+  badges <- read_list("badges.tsv")
+  keep <- badges$key %in% choices$badges & vapply(badges$needs, badge_offered, logical(1), choices = choices)
+  lines <- badges$line[keep]
+  for (from in c("{repository}", "{owner}", "{package}", "{site_url}")) {
+    to <- switch(from, "{repository}" = repository, "{owner}" = owner, "{package}" = choices$package, "{site_url}" = site_url)
+    lines <- gsub(from, to, lines, fixed = TRUE)
+  }
+  values$badges <- paste(lines, collapse = "\n")
+  values$has_badges <- yes(length(lines) > 0)
+  navbar <- read_list("navbar.tsv")
+  for (side in c("left", "right")) {
+    values[[paste0("navbar_", side)]] <- paste(navbar$name[navbar$side == side & navbar$key %in% choices$navbar], collapse = ", ")
+  }
+  forms <- read_list("forms.tsv")
+  for (key in forms$key) values[[paste0("form_", key)]] <- yes(key %in% choices$forms)
+  # DESCRIPTION records a choice of labels and the QC checklist, for the Set up this repository step (cli/R/github.R).
+  labels <- chosen_labels(choices)
+  github <- "github" %in% choices$parts
+  values$labels_line <- if (github && length(labels) < nrow(read_list("labels.tsv"))) paste0("Config/launchR/labels: ", paste(labels, collapse = ", ")) else ""
+  values$checklist_line <- if (github && isTRUE(choices$qc) && !public) paste0("Config/launchR/checklist: ", kit_setting("qc_stage")) else ""
   for (i in seq_len(nrow(checks))) {
     key <- checks$key[i]
     check <- choices$checks[[key]]
@@ -151,7 +170,7 @@ render_text <- function(text, values) {
   text
 }
 
-selected_files <- function(choices) {
+selected_files <- function(choices, values = list()) {
   files <- read_list("files.tsv")
   checks <- read_list("checks.tsv")
   on_checks <- checks$check[vapply(checks$key, function(key) choices$checks[[key]]$on, logical(1))]
@@ -159,7 +178,9 @@ selected_files <- function(choices) {
   # that already exists; the command line only makes new packages.)
   check_ok <- !nzchar(files$check) |
     ("ci" %in% choices$parts & ifelse(files$check == "any", length(on_checks) > 0, files$check %in% on_checks))
-  keep <- files$part %in% choices$parts & check_ok & (files$release == "any" | files$release == choices$release)
+  # needs: a value that must not be empty (the licence, a chosen issue form).
+  needs_ok <- !nzchar(files$needs) | vapply(files$needs, function(name) nzchar(values[[name]] %||% ""), logical(1))
+  keep <- files$part %in% choices$parts & check_ok & (files$release == "any" | files$release == choices$release) & needs_ok
   files$path[keep]
 }
 
@@ -172,7 +193,7 @@ settle_choices <- function(choices) {
 build_package <- function(choices, out) {
   choices <- settle_choices(choices)
   values <- placeholder_values(choices)
-  for (path in selected_files(choices)) {
+  for (path in selected_files(choices, values)) {
     text <- render_text(read_text(kit_path("template", path)), values)
     write_text(text, file.path(out, render_text(path, values)))
   }

@@ -1,0 +1,9 @@
+# The pkgdown navbar, in order on each side. on: in the navbar by default (yes or empty). name: the entry in
+# _pkgdown.yml (navbar: structure).
+key	side	label	help	on	name
+reference	left	Reference	Your help pages, one per function.	yes	reference
+news	left	Changelog	NEWS.md as a page.	yes	news
+articles	left	Articles	A menu of your vignettes and articles. It appears once the package has one.	yes	articles
+search	right	Search	A search box for the whole site.	yes	search
+github	right	GitHub icon	A link to the repository.	yes	github
+lightswitch	right	Light and dark switch	Lets readers change between a light and a dark theme.	yes	lightswitch

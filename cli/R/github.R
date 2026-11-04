@@ -30,7 +30,10 @@ find_repo <- function(args) {
 }
 
 package_context <- function(args) {
-  description <- read.dcf("DESCRIPTION", fields = c("Package", "Config/quality-gate/target"))
+  description <- read.dcf("DESCRIPTION", fields = c("Package", "Config/quality-gate/target", "Config/launchR/labels", "Config/launchR/checklist"))
+  # A package made with some of launchR's labels names them; without the field it gets them all.
+  chosen <- unname(description[1, "Config/launchR/labels"])
+  labels <- if (is.na(chosen)) NULL else trimws(strsplit(chosen, ",", fixed = TRUE)[[1]])
   found <- find_repo(args)
   repo <- if (found$connected) found$repo else ""
   public <- if (found$connected) found$visibility == "PUBLIC" else has_flag(args, "public")
@@ -43,13 +46,19 @@ package_context <- function(args) {
     package = description[1, "Package"],
     public = public,
     remove_labels = has_flag(args, "remove-other-labels"),
-    internal = identical(unname(description[1, "Config/quality-gate/target"]), "internal")
+    internal = identical(unname(description[1, "Config/quality-gate/target"]), "internal"),
+    labels = labels,
+    qc = identical(unname(description[1, "Config/launchR/checklist"]), kit_setting("qc_stage"))
   )
 }
 
 # The checklists that should be open now. Internal packages never get the CRAN ones. A package on CRAN moves on to
-# After acceptance and Next release.
+# After acceptance and Next release. A private package with the QC checklist (Config/launchR/checklist) gets it too, in
+# place of Before public when it stays private.
 open_stages <- function(ctx, on_cran = FALSE) {
+  if (isTRUE(ctx$qc) && !ctx$public) {
+    return(c(kit_setting("qc_stage"), if (!ctx$internal) c("Before public", "Before CRAN")))
+  }
   if (ctx$internal) {
     return(if (ctx$public) "After public" else "Before public")
   }
@@ -170,6 +179,7 @@ existing_labels <- function(ctx) {
 
 github_plan <- function(ctx) {
   labels <- read_list("labels.tsv")
+  if (!is.null(ctx$labels)) labels <- labels[labels$name %in% ctx$labels, , drop = FALSE]
   have <- if (ctx$connected) existing_labels(ctx) else list()
   label_action <- vapply(seq_len(nrow(labels)), function(i) {
     current <- have[[labels$name[i]]]

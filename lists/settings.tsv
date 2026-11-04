@@ -2,7 +2,7 @@
 # create it. The CLI's first commit uses the first one. base_packages: names a new package can't take. plan: the plan an
 # untouched form and the CLI start from (lists/plans.tsv). placeholder_email: DESCRIPTION's email when none is given. min_r: the oldest R
 # a new package supports unless chosen; the /4.1 entries in checks.tsv's platforms follow it. weekdays: how the workflows
-# README names the day of a weekly run (cron day 0 is Sunday).
+# README names the day of a weekly run (cron day 0 is Sunday). qc_stage: the name of the QC checklist (lists/checklists.tsv).
 key	value
 kit_version	0.0.16
 site_url	https://launch-r.web.app
@@ -11,5 +11,6 @@ branches	main, master
 base_packages	R, base, compiler, datasets, graphics, grDevices, grid, methods, parallel, splines, stats, stats4, tcltk, tools, utils
 plan	a
 placeholder_email	your.email@example.com
+qc_stage	QC before release
 min_r	4.1
 weekdays	Sundays, Mondays, Tuesdays, Wednesdays, Thursdays, Fridays, Saturdays

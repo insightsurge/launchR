@@ -2,7 +2,7 @@
 // Choices live here; engine.js turns them into files, the same way the CLI does.
 import JSZip from 'jszip';
 import { countZip } from '../consent.js';
-import { buildPackage, checkDescription, checkEmail, checkMinR, checkPackageName, checkPerson, checkTitle, defaultChoices, planRow, readLists } from './engine.js';
+import { buildPackage, checkDescription, checkEmail, checkMinR, checkPackageName, checkPerson, checkTitle, defaultChoices, planExtras, planRow, readLists } from './engine.js';
 
 const $ = (q) => document.querySelector(q);
 const $$ = (q) => [...document.querySelectorAll(q)];
@@ -50,13 +50,41 @@ function recommended() {
     checks: Object.fromEntries(Object.entries(defaultChoices(lists, 'starter', plan()).checks).map(([key, check]) => [key, check.on])),
     matrix: Object.fromEntries(SYSTEMS.flatMap(([s]) => RS.map(([r]) => [`${s}/${r}`, start.includes(`${s}/${r}`)]))),
     minR: '', samePlatforms: false, ...weeklyTime(), website: false, github: true, frontend: false, ai: false,
+    ...modifyExtras(),
   };
+}
+
+/* the licence, badges, navbar, forms, labels, QC checklist and CI report comment the plan starts from (engine.js's
+   planExtras, as the CLI reads them), with each list as ticks: key -> on */
+function modifyExtras() {
+  const extras = planExtras(lists, planRow(lists, plan()));
+  const ticks = (rows, key, on) => Object.fromEntries(rows.map((row) => [row[key], on.includes(row[key])]));
+  return {
+    ciReport: extras.ciReport, licence: extras.licence, qc: extras.qc,
+    badges: ticks(lists.badges, 'key', extras.badges), navbar: ticks(lists.navbar, 'key', extras.navbar),
+    forms: ticks(lists.forms, 'key', extras.forms), labels: ticks(lists.labels, 'name', extras.labels),
+  };
+}
+
+/* the checks whose results go in the CI report comment: all but r-cmd-check-extended (.github/pr-report.json) */
+const REPORTING = ['r_cmd_check', 'coverage', 'full_tests', 'no_suggests', 'secret_scan', 'lint'];
+const keys = (ticks) => Object.entries(ticks).filter(([, on]) => on).map(([key]) => key);
+const formOn = (row) => S.forms[row.key] && (row.part !== 'ai' || S.ai);
+/* why a badge can't be chosen yet, from its needs in lists/badges.tsv */
+function badgeWhy(row) {
+  const needs = row.needs.split(',').filter(Boolean);
+  if (needs.includes('owner') && !v('owner')) return 'Needs your GitHub name in the form.';
+  if (needs.includes('cran') && release() !== 'cran') return 'For a package going to CRAN.';
+  const check = needs.find((need) => need !== 'owner' && need !== 'cran');
+  if (check && !S.checks[check]) return `Needs the ${lists.checks.find((c) => c.key === check)?.check} check.`;
+  return '';
 }
 
 const help = (text) => `<span class="tip" tabindex="0" role="note" aria-label="${esc(text)}"><svg aria-hidden="true"><use href="#i-info" /></svg><span role="tooltip" aria-hidden="true">${esc(text)}</span></span>`;
 const bullets = (list) => `<span class="tip wide-tip" tabindex="0" role="note" aria-label="${esc(list.map(([k, w]) => `${k}: ${w}`).join(' '))}"><svg aria-hidden="true"><use href="#i-info" /></svg><span role="tooltip" aria-hidden="true"><ul>${list.map(([k, w]) => `<li><b>${esc(k)}</b> ${esc(w)}</li>`).join('')}</ul></span></span>`;
 const sw = (id, text, why, on, soon) => `<div class="opt"><label class="sw"><input type="checkbox" id="${id}"${on ? ' checked' : ''}${soon ? ' disabled' : ''} /><i aria-hidden="true"></i><b>${text}</b></label>${soon ? '<span class="tag">Coming soon</span>' : ''}${help(why)}</div>`;
 const pill = (attrs, text, on) => `<label class="pill"><input type="checkbox" ${attrs}${on ? ' checked' : ''} /><span><svg aria-hidden="true"><use href="#i-tick" /></svg>${text}</span></label>`;
+const tick = (attrs, text, on, why, off) => `<div class="opt"><label class="pill"><input type="checkbox" ${attrs}${on ? ' checked' : ''}${off ? ' disabled' : ''} /><span><svg aria-hidden="true"><use href="#i-tick" /></svg>${text}</span></label>${why ? help(why) : ''}</div>`;
 const head3 = (text, why) => `<h4>${text}${Array.isArray(why) ? bullets(why) : why ? help(why) : ''}</h4>`;
 
 function paint() {
@@ -66,6 +94,7 @@ function paint() {
   $('#bodyCi').innerHTML = `
     ${head3('Checks to run', CHECKS.map(([, n, w]) => [n, w]))}
     <div class="ticks">${CHECKS.map(([k, name]) => pill(`data-check="${k}"`, `<code>${name}</code>`, S.checks[k])).join('')}</div>
+    ${REPORTING.some((k) => S.checks[k]) ? sw('ciReport', 'CI report comment', 'One comment on each pull request with the results of the checks you chose, updated as each one finishes: failures with links to their logs, test counts, coverage and its change, style findings. Off leaves the comment out; each run still shows its results on its own page under Actions. You can change it later: ci-report in each file in .github/workflows/.', S.ciReport) : ''}
     ${head3('R versions to check, by system', [['release', 'The current R.'], ['oldrel-1', 'The R release before it. Linux only.'], ['devel', 'The next R, not released yet: it shows early what will break. Linux only.'], ['Minimum R version', 'The oldest R your package supports, as x.y from 4.1 up, such as 4.3. DESCRIPTION gets 4.3.0, as R CMD check asks, and Linux checks the newest 4.3. Leave it empty if you do not know yet.'], ['Systems', 'launchR picks the system version: Ubuntu 26.04, and the latest Windows and macOS on GitHub.'], ['Cost', 'Free on a public repository. A private one gets 2,000 free minutes a month on GitHub\'s free plan, and Mac minutes count ten times, Windows twice.']])}
     <div class="line"><label for="minR">Minimum R version</label><span class="when"><input id="minR" class="short" type="text" inputmode="decimal" autocomplete="off" maxlength="3" placeholder="4.1" aria-describedby="minRZero" value="${esc(S.minR)}" /><span class="unit" id="minRZero">.0</span></span></div>
     <p class="fieldnote" id="minRNote" role="status"></p>
@@ -78,15 +107,32 @@ function paint() {
       <div class="opt"><label class="soon"><input type="radio" name="delivery" disabled /><b>Snapshot</b></label><span class="tag">Coming soon</span>${help("The checks are copied into your repository and frozen, so nothing changes under a validated process. When a new launchR version is released, you won't get any updates, security fixes included.")}</div>
     </div>`;
   const pagesNote = isPublic() ? '' : `<p class="fieldnote" id="pagesNote">On GitHub's free plan a private repository can't publish a website. The site is still built and checked on every push, and goes online once the repository is public or on a paid plan.</p>`;
+  const nav = (side, title) => `${head3(title, lists.navbar.filter((row) => row.side === side).map((row) => [row.label, row.help]))}<div class="ticks">${lists.navbar.filter((row) => row.side === side).map((row) => pill(`data-nav="${row.key}"`, row.label, S.navbar[row.key])).join('')}</div>`;
   $('#bodySite').innerHTML = `${sw('website', 'Add a website', 'A pkgdown site published to GitHub Pages. Its address comes from your GitHub name. A private repository needs a paid GitHub plan for this.', S.website)}${pagesNote}
-    <div class="opt soonline"><span>Navbar choices and theme colours</span><span class="tag">Coming soon</span></div>`;
+    ${S.website ? `${nav('left', 'Navbar, left')}${nav('right', 'Navbar, right')}<p class="fieldnote">Saved in _pkgdown.yml, under navbar: structure. Change it there any time.</p>` : ''}
+    <div class="opt soonline"><span>Theme colours</span><span class="tag">Coming soon</span></div>`;
   $('#bodyGit').innerHTML = `
-    ${sw('github', 'Issue forms, labels and checklists', 'Five issue forms, a pull request template, eleven labels next to GitHub\'s own (the Set up this repository button can remove those), and the stage checklists.', S.github)}
-    <div class="opt soonline"><span>Choosing each form and label</span><span class="tag">Coming soon</span></div>`;
+    ${sw('github', 'Issue forms, labels and checklists', 'The issue forms and labels you tick below, a pull request template, and the stage checklists. The Set up this repository button creates the labels on GitHub, next to GitHub\'s own (it can remove those).', S.github)}
+    ${S.github ? gitChoices() : ''}`;
   $('#bodyMore').innerHTML = `${sw('frontend', 'My package ships its own JS or CSS', 'Adds browser tests and the style checks for them.', S.frontend)}
     ${sw('ai', 'Instructions for AI assistants', 'AGENTS.md and rules files in .agents/rules/ (R code, tests, docs, checks, JS and CSS, git), the same for every package, read by Codex, Gemini, Copilot and others, and a CLAUDE.md that loads AGENTS.md for Claude. Also an issue form for changing them.', S.ai)}
-    <div class="opt soonline"><span>Badges, licence choice, PR report choice</span><span class="tag">Coming soon</span></div>`;
+    ${head3('Licence', [['MIT', 'Others may use, change and share the code, as long as they keep the copyright notice. CRAN accepts it.'], ['Proprietary', 'All rights reserved: for a package used only inside the organisation that owns it. CRAN does not accept it.']])}
+    <div class="pick">${[['mit', 'MIT'], ['proprietary', 'Proprietary']].map(([k, t]) => `<div class="opt"><label><input type="radio" name="licence" value="${k}"${S.licence === k ? ' checked' : ''} /><b>${t}</b></label></div>`).join('')}</div>
+    ${S.licence === 'proprietary' && release() === 'cran' ? '<p class="fieldnote">CRAN only accepts open-source licences, and R CMD check as CRAN gives a NOTE for this one, so the check fails. Choose MIT, or the plan Private for good.</p>' : ''}
+    ${head3('README badges', 'Small images at the top of the README, also shown on the website\'s home page. They sit between the badges: start and end lines, where you can add or remove one later.')}
+    ${lists.badges.map((row) => { const why = badgeWhy(row); return tick(`data-badge="${row.key}"`, row.label, S.badges[row.key] && !why, why ? `${row.help} ${why}` : row.help, !!why); }).join('')}`;
   summary();
+}
+
+/* the issue forms, their labels and the QC checklist: a form's own label stays on while the form is on */
+function gitChoices() {
+  const forms = lists.forms.filter((row) => row.part !== 'ai' || S.ai);
+  const locked = new Set(lists.forms.filter(formOn).map((row) => row.label));
+  return `${head3('Issue forms', 'The forms people fill in when they open an issue on GitHub. Each sets its label. Files in .github/ISSUE_TEMPLATE/.')}
+    ${forms.map((row) => tick(`data-form="${row.key}"`, row.title, S.forms[row.key], row.help)).join('')}
+    ${head3('Labels', 'Created on GitHub by the Set up this repository button. A form\'s label stays on while the form is on.')}
+    ${lists.labels.map((row) => tick(`data-label="${esc(row.name)}"`, esc(row.name), S.labels[row.name] || locked.has(row.name), locked.has(row.name) ? `${row.description}. Kept: an issue form uses it.` : row.description, locked.has(row.name))).join('')}
+    ${isPublic() ? '' : sw('qc', 'QC checklist', 'A checklist issue, QC before release, with boxes for the scope, tests, review and release evidence of a private package, for teams with a quality process. Opened by the Set up this repository button in place of Before public.', S.qc)}`;
 }
 
 function summary() {
@@ -95,8 +141,15 @@ function summary() {
   const sysText = SYSTEMS.filter(([k]) => RS.some(([r]) => S.matrix[`${k}/${r}`])).map(([, t]) => t).join(', ') || 'None';
   $('#sumCi').textContent = `${WORDS[on]} ${on === 1 ? 'check' : 'checks'} on ${sysText}`;
   $('#sumSite').textContent = S.website ? 'On' : 'Off';
-  $('#sumGit').textContent = S.github ? 'Forms, labels and checklists' : 'Off';
-  $('#sumMore').textContent = [S.frontend && 'JS or CSS', S.ai && 'AI instructions'].filter(Boolean).join(', ') || 'Nothing added';
+  const forms = lists.forms.filter((row) => row.part !== 'ai' || S.ai);
+  const formCount = forms.filter(formOn).length;
+  const locked = new Set(lists.forms.filter(formOn).map((row) => row.label));
+  const labelCount = lists.labels.filter((row) => S.labels[row.name] || locked.has(row.name)).length;
+  $('#sumGit').textContent = !S.github ? 'Off' : formCount === forms.length && labelCount === lists.labels.length
+    ? `All issue forms and labels${S.qc && !isPublic() ? ', QC checklist' : ''}`
+    : `${formCount} of ${forms.length} issue forms, ${labelCount} of ${lists.labels.length} labels${S.qc && !isPublic() ? ', QC checklist' : ''}`;
+  const badgeCount = lists.badges.filter((row) => S.badges[row.key] && !badgeWhy(row)).length;
+  $('#sumMore').textContent = [S.licence === 'mit' ? 'MIT licence' : 'Proprietary licence', badgeCount ? `${badgeCount} ${badgeCount === 1 ? 'badge' : 'badges'}` : 'no badges', S.frontend && 'JS or CSS', S.ai && 'AI instructions'].filter(Boolean).join(', ');
   $('#pvChecks').textContent = on === 7 ? 'All seven' : WORDS[on];
   $('#pvSystems').textContent = sysText;
   $('#pvSite').textContent = S.website ? 'On' : 'Off';
@@ -112,8 +165,12 @@ body.addEventListener('change', (e) => {
   const t = e.target;
   if (t.dataset.check) { touched(() => { S.checks[t.dataset.check] = t.checked; }); paint(); return; }
   if (t.dataset.matrix) { touched(() => { S.matrix[t.dataset.matrix] = t.checked; }); return; }
+  for (const [data, list] of [['badge', 'badges'], ['nav', 'navbar'], ['form', 'forms'], ['label', 'labels']]) {
+    if (t.dataset[data] !== undefined) { touched(() => { S[list][t.dataset[data]] = t.checked; }); if (data === 'form') paint(); return; }
+  }
+  if (t.name === 'licence') { touched(() => { S.licence = t.value; }); paint(); return; }
   if (t.id === 'day') { touched(() => { S.day = t.value; }); return; }
-  if (t.type === 'checkbox' && t.id in S) { touched(() => { S[t.id] = t.checked; }); if (mode === 'existing') add.website = S.website; return; }
+  if (t.type === 'checkbox' && t.id in S) { touched(() => { S[t.id] = t.checked; }); if (mode === 'existing') add.website = S.website; if (['website', 'github', 'ai'].includes(t.id)) paint(); return; }
   if (t.id === 'minR') { touched(() => { S.minR = t.value; }); minRProblem(); }
   if (t.id === 'time') { touched(() => { S.time = t.value; }); timeProblem(); }
 });
@@ -232,6 +289,8 @@ function choices() {
     ...base, parts, checks, existing: mode === 'existing', visibility: visibility(), release: release(), owner: mode === 'new' ? v('owner') : v('exOwner'),
     package: pkg(), title: mode === 'new' ? v('what') : '', description: mode === 'new' ? v('details') : '', given: v('first'), family: v('last'), email,
     minR: minRProblem() ? base.minR : S.minR || base.minR,
+    ciReport: S.ciReport, licence: S.licence, qc: S.qc && !isPublic(),
+    badges: keys(S.badges), navbar: keys(S.navbar), forms: keys(S.forms), labels: keys(S.labels),
   };
 }
 

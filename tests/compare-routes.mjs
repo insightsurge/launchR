@@ -21,6 +21,15 @@ cases.push({ name: 'no-email', plan: 'd', preset: 'starter', flags: ['--plan', '
 cases.push({ name: 'min-r', plan: 'a', preset: 'everything', flags: ['--plan', 'a', '--preset', 'everything', '--min-r', '4.3'], minR: '4.3' });
 cases.push({ name: 'min-r-private', plan: 'c', preset: 'starter', flags: ['--plan', 'c', '--min-r', '4.4'], minR: '4.4' });
 cases.push({ name: 'description', plan: 'd', preset: 'starter', flags: ['--plan', 'd', '--description', 'Builds   tables for clinical reports'], description: 'Builds   tables for clinical reports' });
+// The Modify choices (issue 21): each through the CLI's flags and the engine's choices.
+cases.push({ name: 'modify-public', plan: 'a', preset: 'everything',
+  flags: ['--plan', 'a', '--preset', 'everything', '--no-ci-report', '--badges', 'check,codecov,cran,downloads,universe,launchr', '--navbar', 'reference,search', '--forms', 'bug,docs', '--labels', 'priority: high'],
+  extra: { ciReport: false, badges: ['check', 'codecov', 'cran', 'downloads', 'universe', 'launchr'], navbar: ['reference', 'search'], forms: ['bug', 'docs'], labels: ['priority: high'] } });
+cases.push({ name: 'modify-private', plan: 'c', preset: 'everything',
+  flags: ['--plan', 'c', '--preset', 'everything', '--licence', 'mit', '--qc', '--badges', 'lifecycle,cran', '--forms', 'none', '--labels', 'none'],
+  extra: { licence: 'mit', qc: true, badges: ['lifecycle', 'cran'], forms: [], labels: [] } });
+cases.push({ name: 'modify-no-qc', plan: 'd', preset: 'starter', flags: ['--plan', 'd', '--no-qc', '--licence', 'mit', '--badges', 'none'],
+  extra: { qc: false, licence: 'mit', badges: [] } });
 let failed = 0;
 for (const item of cases) {
   const r = join(out, item.name, 'r');
@@ -32,7 +41,7 @@ for (const item of cases) {
   ], { stdio: 'ignore' });
   const choices = { ...defaultChoices(lists, item.preset, item.plan), package: 'samplepkg', title, given: base.author[0],
     family: base.author[1], email, owner: 'sample-org', year: base.year, ...(item.minR ? { minR: item.minR } : {}),
-    ...(item.description ? { description: item.description } : {}) };
+    ...(item.description ? { description: item.description } : {}), ...(item.extra ?? {}) };
   const js = join(out, item.name, 'js');
   const files = buildPackage(choices, bundle);
   for (const [path, text] of Object.entries(files)) {

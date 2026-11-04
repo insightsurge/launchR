@@ -1,0 +1,9 @@
+# Issue forms. title: as GitHub shows it (the form's name). file: in template/.github/ISSUE_TEMPLATE/. label: the label the form sets, kept while the form is on.
+# part: the part the form comes with (ai: only with the AI instructions).
+key	title	file	label	part	help
+bug	Bug report	01-bug.yml	bug	github	For something broken or different from the documentation: asks for a reprex, the version and the session.
+feature	New feature	02-feature.yml	enhancement	github	For something the package cannot do yet: asks what a user should be able to do, and why.
+enhancement	Improve existing behaviour	03-enhancement.yml	enhancement	github	For making something that works better: asks what happens now and what would help.
+docs	Documentation change	04-docs.yml	documentation	github	For a clearer explanation, a missing guide or a correction.
+idea	Idea	05-idea.yml	idea	github	For an idea not planned yet, to discuss.
+ai	AI instructions change	06-ai-instructions.yml	chore	ai	For a change to the instructions for AI tools.
