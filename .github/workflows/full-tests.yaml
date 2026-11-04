@@ -142,11 +142,15 @@ jobs:
             chrome <- chromote::find_chrome()
             if (is.null(chrome)) stop("No Chrome on this runner: the browser tests would all skip.", call. = FALSE)
             # On Windows, chrome.exe --version opens Chrome and never returns: read the file's version instead.
-            version <- if (.Platform$OS.type == "windows") {
-              system2("powershell", c("-NoProfile", "-Command", shQuote(sprintf("(Get-Item '%s').VersionInfo.ProductVersion", chrome))), stdout = TRUE, timeout = 60)
-            } else {
-              system2(chrome, "--version", stdout = TRUE, timeout = 60)
-            }
+            # Only a line in the log: a version that can't be read must not stop the tests.
+            version <- tryCatch(
+              if (.Platform$OS.type == "windows") {
+                system2("powershell", c("-NoProfile", "-Command", shQuote(sprintf("(Get-Item '%s').VersionInfo.ProductVersion", chrome))), stdout = TRUE, timeout = 60)
+              } else {
+                system2(chrome, "--version", stdout = TRUE, timeout = 60)
+              },
+              error = function(e) "unknown"
+            )
             message("Chrome: ", paste(version, collapse = " "))
           }
           library(testthat)

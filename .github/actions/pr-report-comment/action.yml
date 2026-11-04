@@ -27,8 +27,11 @@ inputs:
 runs:
   using: composite
   steps:
+    # A GitHub error while building or posting the report must not turn a passing check red; a warning says the
+    # comment wasn't updated.
     - name: Build the comment
       id: build
+      continue-on-error: true
       shell: bash
       env:
         GH_TOKEN: ${{ inputs.github-token }}
@@ -39,8 +42,8 @@ runs:
       run: bash "${GITHUB_ACTION_PATH}/build-comment.sh"
 
     - name: Post or edit the comment
+      id: post
       if: steps.build.outputs.post == 'true'
-      # A GitHub error while posting must not turn a passing check red: the next workflow to finish edits the comment.
       continue-on-error: true
       uses: marocchino/sticky-pull-request-comment@5770ad5eb8f42dd2c4f34da00c94c5381e49af88 # v3.0.5
       with:
@@ -68,3 +71,8 @@ runs:
             echo "::warning::Could not delete a second report comment (${id})."
           fi
         done
+
+    - name: Warn when the comment wasn't updated
+      if: steps.build.outcome == 'failure' || steps.post.outcome == 'failure'
+      shell: bash
+      run: echo "::warning::The report comment was not updated (see the step that failed above); re-run this job to update it."

@@ -80,3 +80,6 @@ jobs:
 
       - name: Test the command line
         run: Rscript tests/cli-tests.R
+
+      - name: Test the PR report comment
+        run: bash tests/build-comment-tests.sh
