@@ -310,9 +310,13 @@ function existingValid() {
 async function goExisting() {
   /* the lists may still be loading when the button is pressed early */
   if (!lists && !(await loadKit())) {
-    $('#planNote').textContent = 'The form could not load its files. Check your connection and try again.';
+    /* said next to the button that was pressed, which is far from the form */
+    const note = $('#existingNote') ?? Object.assign(document.createElement('span'), { id: 'existingNote', role: 'status' });
+    note.textContent = ' The form could not load its files. Check your connection and try again.';
+    $('#existingStart').after(note);
     return;
   }
+  $('#existingNote')?.remove();
   mode = 'existing';
   S = recommended();
   S.website = add.website;
@@ -348,6 +352,8 @@ function ignoreLines() {
 function existingSteps() {
   const list = [step(`Unzip ${code('launchR-files.zip')} and copy what's inside into your package folder. ${finderNote}`, '', `Nothing in ${code('R/')}, ${code('tests/')} or ${code('DESCRIPTION')} changes.`)];
   list.push(step(`Add these lines to ${code('.Rbuildignore')}, if they aren't there yet.`, copy(ignoreLines().join('\n'), true), 'They keep these files out of the built package, so R CMD check does not note them as unexpected hidden files or folders.'));
+  const settings = ['.lintr', 'air.toml', 'codecov.yml'].filter((file) => file in buildPackage(choices(), bundle));
+  if (settings.length) list.push(step(`If your package already has ${settings.map(code).join(', ')}, keep yours instead of the copy in the zip.`, '', 'The checks read these settings files. Copying over yours would replace your own lint, formatting or coverage settings; merge in only the lines you want.'));
   if (add.ci) list.push(step(`Delete any old files in ${code('.github/workflows')} that do the same job.`, '', `If your package already has ${code('.github/workflows/README.md')}, keep yours and copy in only the new rows from the one in the zip.`));
   if (add.ci && release() === 'internal') list.push(step(`Add this line to ${code('DESCRIPTION')}.`, copy('Config/quality-gate/target: internal'), "Your package won't go to CRAN, so the checks then leave out what only CRAN asks for."));
   list.push(step("Commit and push, from RStudio's Git pane or GitHub Desktop."));
@@ -429,20 +435,29 @@ dialog.addEventListener('keydown', (e) => {
   }
 });
 
-async function loadKit() {
-  try {
-    const response = await fetch('/kit/bundle.json');
-    if (!response.ok) return false;
-    bundle = await response.json();
-    lists = readLists(bundle);
-    CHECKS = lists.checks.map((row) => [row.key, row.check, row.help]);
-    WEEKLY = lists.checks.filter((row) => row.events.split(',').includes('schedule')).map((row) => row.key);
-    S ??= recommended();
-    paint();
-    return true;
-  } catch {
-    return false;
-  }
+/* one load at a time: a button pressed while the page is still loading waits for the same fetch; a failed load can be
+   tried again */
+let kitLoading = null;
+function loadKit() {
+  kitLoading ??= (async () => {
+    try {
+      const response = await fetch('/kit/bundle.json');
+      if (!response.ok) return false;
+      bundle = await response.json();
+      lists = readLists(bundle);
+      CHECKS = lists.checks.map((row) => [row.key, row.check, row.help]);
+      WEEKLY = lists.checks.filter((row) => row.events.split(',').includes('schedule')).map((row) => row.key);
+      S ??= recommended();
+      paint();
+      return true;
+    } catch {
+      return false;
+    }
+  })().then((ok) => {
+    if (!ok) kitLoading = null;
+    return ok;
+  });
+  return kitLoading;
 }
 
 view('main');

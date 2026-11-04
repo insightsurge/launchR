@@ -99,9 +99,10 @@ caller's `permissions:` block says, and a called workflow can only narrow it.
 - **Jobs that run the package's code** (R CMD check, tests, lint, coverage) have a read-only token,
   and their checkouts do not leave the token in `.git` (`persist-credentials: false`). `coverage.yaml` keeps it in
   one checkout because it runs `git fetch` for the base branch; the token is read-only.
-- **Only the `report` job can write.** It has `pull-requests: write` and `actions: read`, runs no package code (it
+- **Write access is rare.** Besides the Pages deploy below, two jobs can write. The `report` job has `pull-requests: write` and `actions: read`, runs no package code (it
   checks out only `.github` and launchR), and copies the report parts in as Markdown without running them. It is
-  skipped for pull requests from forks and from Dependabot, whose tokens cannot write; they get the job summary.
+  skipped for pull requests from forks and from Dependabot, whose tokens cannot write; they get the job summary. The `github-setup` job has `issues: write` for labels and checklists; it runs only launchR's
+  own script, never the package's code, and only when started by hand, or as a dry run that changes nothing when its file is pushed.
 - **`pull_request`, never `pull_request_target`:** a pull request from outside never runs with the base repository's
   secrets.
 - **Secrets:** none are inherited. The only one is the optional `CODECOV_TOKEN`, which a package passes in its

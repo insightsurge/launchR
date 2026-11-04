@@ -14,7 +14,7 @@ on:
 name: github-setup
 
 permissions:
-  contents: read  # the most this workflow can use; the job asks for what it needs
+  contents: read  # the default for jobs that don't set their own; the job below sets what it needs
 
 jobs:
   setup:

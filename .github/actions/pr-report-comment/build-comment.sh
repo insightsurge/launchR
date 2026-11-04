@@ -21,8 +21,14 @@ cut_markdown() {
     if (length($t) > $max) {
       $t = substr($t, 0, $max);
       $t =~ s/(?:[\xC2-\xDF]|[\xE0-\xEF][\x80-\xBF]?|[\xF0-\xF4][\x80-\xBF]{0,2})\z//;
-      my $fences = () = $t =~ /^[ ]{0,3}(?:```|~~~)/mg;
-      $t .= "\n```\n" if $fences % 2;
+      # A fence closes only with the same character, at least as long, alone on its line (CommonMark).
+      my $fence = "";
+      for my $line (split /\n/, $t) {
+        if ($fence eq "") { $fence = $1 if $line =~ /^ {0,3}(`{3,}|~{3,})/; next; }
+        my $c = substr($fence, 0, 1);
+        $fence = "" if $line =~ /^ {0,3}(\Q$c\E{3,})\s*$/ && length($1) >= length($fence);
+      }
+      $t .= "\n$fence\n" if $fence ne "";
       my $open = () = $t =~ /<details\b/g; my $shut = () = $t =~ /<\/details>/g;
       $t .= "\n</details>\n" x ($open - $shut) if $open > $shut;
     }

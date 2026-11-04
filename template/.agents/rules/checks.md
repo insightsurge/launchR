@@ -3,11 +3,12 @@
 - **The pass mark is CRAN's:** R CMD check with 0 errors, 0 warnings and 0 notes. On top of that: style (Air, lintr,
   and Biome when there is a `biome.json`), help pages in sync with roxygen, a documented return value for every export,
   spelling, tests, coverage, a test for every new R line, a check without the `Suggests` packages, and a secret scan.
-- **Tools on your computer:** the R packages the checks need are listed in `.github/workflows/README.md`. Air (R
+- **Tools on your computer:** the R packages the checks need are listed in `.github/workflows/README.md` (when the package has CI; otherwise in
+  the quality gate's own header). Air (R
   formatting) and Biome (JS and CSS, only with a `biome.json`) are separate programs, not R packages: install them from
   <https://posit-dev.github.io/air/> and <https://biomejs.dev>. When one is missing, say which and ask before
   installing it.
-- **CI** runs these on every pull request, one file per check in `.github/workflows/`; its `README.md` says what each
+- **CI**, when the package has it, runs these on every pull request, one file per check in `.github/workflows/`; its `README.md` says what each
   does and how to change one.
 - **Before a pull request,** run the quality gate in `full` mode ("Run the checks on your computer" in
   `.github/workflows/README.md`). It prints one PASS, FAIL or SKIP line per step. Without it, run at least

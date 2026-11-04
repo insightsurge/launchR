@@ -358,6 +358,19 @@ c18() {
 }
 check c18 "a part cut inside <details> and a code block is closed again"
 
+c19() {
+  new_case c19
+  caller alpha.yaml; add_run alpha.yaml 100 completed success
+  add_jobs 100 "completed|success|build|"
+  local part="${FAKE}/tilde.txt"
+  # A ~~~~ fence with a ``` line inside it: only ~~~~ (or longer) closes it.
+  { printf '~~~~\n```\n'; head -c 25000 /dev/zero | tr '\0' 'z'; echo; } >"${part}"
+  add_artifact 100 1 pr-report-tests-1-tilde "${part}"
+  run_script
+  [ "$(C | grep -c '^~~~~$')" = 2 ] || { echo "  expected one opening and one closing ~~~~"; exit 1; }
+}
+check c19 "a part cut inside a ~~~~ fence is closed with the same fence"
+
 echo
 echo "${passed} ok, ${failed} failed"
 [ "${failed}" = 0 ]
