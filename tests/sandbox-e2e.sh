@@ -66,7 +66,7 @@ push() {
   : "${LAUNCHR_SHA:?}"
   local branch repo="${WORK}/repo"
   branch=$(gh api "repos/${SANDBOX_REPO}" --jq .default_branch)
-  grep -q "branches: \[${branch}\]" "${PKG}/.github/workflows/r-cmd-check.yaml" || {
+  grep -qE "^    branches: \[([^]]*, )?${branch}[],]" "${PKG}/.github/workflows/r-cmd-check.yaml" || {
     echo "::error::The package's checks run on another branch than the sandbox's default branch (${branch})."
     exit 1
   }
