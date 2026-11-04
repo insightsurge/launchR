@@ -101,7 +101,8 @@ workflow or an action in `.github/`. Its first job builds the site and makes the
 rewrites every caller's `@vX.Y.Z` to the commit under test, pushes the package as a new commit on the sandbox's default
 branch, starts r-cmd-check-extended by hand (it has no push trigger), opens a pull request that adds
 `.github/e2e-fake-secret.txt` with a made-up key, waits for every run (giving up and cancelling at 200 minutes), and
-writes the report to the job summary: the result, what it did with links (the commit under test, the sandbox commit,
+writes the report to the job summary: a count of the runs by result (✅ passed, ❌ failed, ⏳ no runner, 🔒 the key
+caught), the verdict, what it did with links (the commit under test, the sandbox commit,
 the pull request, how long it waited), a table of the runs and each problem. A job that GitHub never gave a
 runner (it happens when no macOS runner is free) is listed on its own line as "no runner", not as a test failure,
 and its matrix's summary job is not counted either; the run still fails, so run the test again later. Given a launchR pull request number when
