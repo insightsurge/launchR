@@ -8,11 +8,22 @@ test_that("the demo page's button says hello in a browser", {
   on.exit(options(old), add = TRUE)
 
   page <- system.file("www", "demo.html", package = "{{package}}")
+  # A file URL has three slashes, and a Windows path (C:/...) goes after them: file:///C:/...
+  url <- utils::URLencode(paste0("file:///", sub("^/", "", normalizePath(page, winslash = "/"))))
   session <- chromote::ChromoteSession$new()
   on.exit(session$close(), add = TRUE)
-  session$Page$navigate(paste0("file://", page))
-  Sys.sleep(1)
-  session$Runtime$evaluate("document.querySelector('#hello').click()")
-  text <- session$Runtime$evaluate("document.querySelector('#hello').textContent")$result$value
-  expect_identical(text, "Hello!")
+  session$Page$navigate(url)
+
+  # Runs some JavaScript in the page and returns its value.
+  evaluate <- function(js) session$Runtime$evaluate(js)$result$value
+  # Waits until the JavaScript is true, for up to `seconds`, instead of sleeping a fixed time.
+  wait_until <- function(js, seconds = 10) {
+    deadline <- Sys.time() + seconds
+    while (!isTRUE(evaluate(js)) && Sys.time() < deadline) Sys.sleep(0.1)
+    isTRUE(evaluate(js))
+  }
+  expect_true(wait_until("document.readyState === 'complete' && document.querySelector('#hello') !== null"))
+  evaluate("document.querySelector('#hello').click()")
+  expect_true(wait_until("document.querySelector('#hello').textContent === 'Hello!'"))
+  expect_identical(evaluate("document.querySelector('#hello').textContent"), "Hello!")
 })

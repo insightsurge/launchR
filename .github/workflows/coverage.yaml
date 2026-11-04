@@ -28,7 +28,7 @@ permissions:
 
 jobs:
   coverage:
-    runs-on: ubuntu-26.04  # pinned, like the repo's other workflows
+    runs-on: ubuntu-26.04  # a fixed image (the Windows and macOS runners in the matrix workflows float with "latest")
     permissions:
       actions: read  # finds the default branch's figure for a pull request (a private repository needs it)
       contents: read
@@ -39,7 +39,9 @@ jobs:
       HAS_CODECOV: ${{ secrets.CODECOV_TOKEN != '' }}
 
     steps:
-      - uses: actions/checkout@v7
+      # Keeps its credentials (read-only token, contents: read) because the "Read the coverage limit" step below runs
+      # `git fetch` for the base branch.
+      - uses: actions/checkout@v7 # zizmor: ignore[artipacked]
         with:
           fetch-depth: 2  # a pull request's merge commit and its base, for r-changes.sh
       # launchr-fetch-start
@@ -49,6 +51,7 @@ jobs:
           repository: insightsurge/launchR
           ref: ${{ job.workflow_sha }}
           path: .launchr
+          persist-credentials: false
       # launchr-fetch-end
 
       - name: Find out whether the R steps are needed
@@ -101,8 +104,16 @@ jobs:
             stop("The base branch's DESCRIPTION was not read.", call. = FALSE)
           }
           read_limit <- function(file) {
-            value <- as.numeric(read.dcf(file, fields = "Config/quality-gate/coverage")[[1]])
-            if (is.na(value)) 70 else value
+            raw <- read.dcf(file, fields = "Config/quality-gate/coverage")[[1]]
+            # No field: the default, 70. A field that is not a number fails here instead of silently becoming 70.
+            if (is.na(raw)) {
+              return(70)
+            }
+            value <- suppressWarnings(as.numeric(raw))
+            if (is.na(value)) {
+              stop(sprintf("Config/quality-gate/coverage in %s is '%s', not a number.", basename(file), raw), call. = FALSE)
+            }
+            value
           }
           limit <- read_limit("DESCRIPTION")
           if (Sys.getenv("EVENT_NAME") == "pull_request") {
@@ -120,7 +131,7 @@ jobs:
         if: always() && steps.changes.outputs.r == 'true'
         run: |
           ## --------------------------------------------------------------------
-          find '${{ runner.temp }}/package' -name 'testthat.Rout*' -exec cat '{}' \; || true
+          find "${RUNNER_TEMP}/package" -name 'testthat.Rout*' -exec cat '{}' \; || true
         shell: bash
 
       - name: Write the Cobertura report for Codecov
@@ -253,6 +264,7 @@ jobs:
           repository: insightsurge/launchR
           ref: ${{ job.workflow_sha }}
           path: .launchr
+          persist-credentials: false
       # launchr-fetch-end
       - uses: ./.launchr/.github/actions/pr-report-comment
         with:

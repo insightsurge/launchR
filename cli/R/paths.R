@@ -4,6 +4,8 @@ kit_path <- function(...) {
   if (!is.null(root)) {
     return(file.path(root, ...))
   }
+  # For a future installed launchR package (issue 62); nothing uses it yet. lists/, template/ and quality-gate/ sit
+  # outside cli/, so today launchR runs from a clone and kit.root is always set.
   system.file(..., package = "launchR", mustWork = TRUE)
 }
 

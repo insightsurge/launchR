@@ -1,0 +1,11 @@
+# Settings for actionlint, the workflow linter that runs in site-tests.yaml (and locally: `actionlint`).
+self-hosted-runner:
+  # Hosted by GitHub, but newer than the label list in this actionlint version.
+  labels:
+    - ubuntu-26.04
+paths:
+  .github/workflows/**/*.{yaml,yml}:
+    ignore:
+      # `job.workflow_sha` is a real context value (the commit of the reusable workflow's file) that this actionlint
+      # version does not list yet. Remove this when actionlint knows it.
+      - 'property "workflow_sha" is not defined in object type'

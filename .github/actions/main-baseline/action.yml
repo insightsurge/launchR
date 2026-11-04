@@ -1,6 +1,7 @@
 # Downloads an artifact from the latest successful run of a workflow on a push to the default branch: the figures a
 # pull request is compared with (coverage, test times). When there is none (expired, or never uploaded), `found` is
-# false and the job goes on. Generic: no repository-specific code.
+# false and the job goes on (with a warning when the token could not read the runs, such as a job without
+# `actions: read`). Generic: no repository-specific code.
 name: main-baseline
 description: Download an artifact from the latest successful default-branch run of a workflow.
 
@@ -39,8 +40,16 @@ runs:
         BRANCH: ${{ github.event.repository.default_branch }}
       run: |
         mkdir -p "${DEST}"
-        run=$(gh run list -R "${GITHUB_REPOSITORY}" --workflow "${WORKFLOW}" --branch "${BRANCH}" --event push \
-          --status success --limit 1 --json databaseId,headSha --jq '.[0] | "\(.databaseId) \(.headSha)"' || true)
+        # No baseline is not an error, but a token without `actions: read` must not pass for one: say so.
+        if ! run=$(gh run list -R "${GITHUB_REPOSITORY}" --workflow "${WORKFLOW}" --branch "${BRANCH}" --event push \
+          --status success --limit 1 --json databaseId,headSha --jq '.[0] | "\(.databaseId) \(.headSha)"' 2>"${RUNNER_TEMP}/baseline-error.txt"); then
+          run=""
+          if grep -qiE '403|resource not accessible|permission' "${RUNNER_TEMP}/baseline-error.txt"; then
+            echo "::warning::Could not list ${WORKFLOW}'s runs: the token cannot read the repository's actions. The calling job needs the permission \`actions: read\`. Treated as no baseline."
+          else
+            echo "::warning::Could not list ${WORKFLOW}'s runs: $(head -c 300 "${RUNNER_TEMP}/baseline-error.txt")"
+          fi
+        fi
         id=${run%% *}
         sha=${run#* }
         if [ -n "${id}" ] && [ "${id}" != "null" ] &&

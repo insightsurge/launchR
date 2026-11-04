@@ -2,7 +2,9 @@
    prose capped at 64 characters per line, and the same colour tokens (--m-*) for light and dark.
    The ground, ink and accent are also set in _pkgdown.yml (Bootstrap makes its tints from them): change both.
    Every text colour is at least 7.2:1 on the plain ground and 5.8:1 at the strongest point of the glow.
-   Fonts: self-hosted latin subsets (SIL Open Font License 1.1; texts in fonts/OFL-*.txt). */
+   Fonts: the text asks for Hanken Grotesk and the code for JetBrains Mono, but no font files ship with the package, so a
+   visitor sees them only when they are installed on their computer; otherwise the browser's own sans-serif and
+   monospace fonts are used. To ship them, add the font files and @font-face rules, and keep each font's licence text. */
 
 :root {
   --m-ground: #f5fafc;

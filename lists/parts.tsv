@@ -3,6 +3,6 @@ part	label	starter	everything	description
 skeleton	Package skeleton	yes	yes	DESCRIPTION, an example function, tests and help pages
 ci	CI	yes	yes	Checks that run on GitHub by themselves
 github	GitHub setup	yes	yes	Issue forms, PR template, labels and checklists
-ai	AI setup	no	yes	AGENTS.md, and CLAUDE.md importing it
+ai	AI setup	no	yes	AGENTS.md and rules files in .agents/rules/, and CLAUDE.md importing AGENTS.md
 website	Website	no	yes	A pkgdown site published to GitHub Pages
 frontend	Front-end	no	yes	JavaScript and CSS, with browser tests

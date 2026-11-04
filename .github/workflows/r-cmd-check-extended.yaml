@@ -67,6 +67,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       # launchr-fetch-start
       - name: Fetch launchR at this workflow's version
         uses: actions/checkout@v7
@@ -74,6 +76,7 @@ jobs:
           repository: insightsurge/launchR
           ref: ${{ job.workflow_sha }}
           path: .launchr
+          persist-credentials: false
       # launchr-fetch-end
 
       - uses: r-lib/actions/setup-pandoc@v2

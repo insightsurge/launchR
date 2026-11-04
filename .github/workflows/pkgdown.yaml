@@ -15,7 +15,7 @@ jobs:
     # A run started by hand on another branch does nothing: the site is built from the default branch only (main or
     # master).
     if: github.ref_name == github.event.repository.default_branch
-    runs-on: ubuntu-26.04  # pinned, like the repo's other workflows
+    runs-on: ubuntu-26.04  # a fixed image (the Windows and macOS runners in the matrix workflows float with "latest")
     timeout-minutes: 45  # renders the site, then deploys (1-2 min), plus room for a slow package mirror (installing R
     # alone once took 22 min here)
     permissions:
@@ -25,11 +25,18 @@ jobs:
     # No `environment: github-pages` here: GitHub gives that environment a rule that only `main` may deploy, so a
     # package on `master` (as usethis::use_git() can make it) would stop before its first step. The deploy works
     # without it; the run's summary links the site.
+    # One Pages deploy at a time per repository; a newer one waits for the running one rather than cancelling it
+    # halfway through a publish.
+    concurrency:
+      group: pkgdown-pages-${{ github.repository }}
+      cancel-in-progress: false
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       # launchr-fetch-start
       - name: Fetch launchR at this workflow's version
         uses: actions/checkout@v7
@@ -37,6 +44,7 @@ jobs:
           repository: insightsurge/launchR
           ref: ${{ job.workflow_sha }}
           path: .launchr
+          persist-credentials: false
       # launchr-fetch-end
 
       - uses: r-lib/actions/setup-pandoc@v2

@@ -85,6 +85,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 2  # a pull request's merge commit and its base, for r-changes.sh
+          persist-credentials: false
       # launchr-fetch-start
       - name: Fetch launchR at this workflow's version
         uses: actions/checkout@v7
@@ -92,6 +93,7 @@ jobs:
           repository: insightsurge/launchR
           ref: ${{ job.workflow_sha }}
           path: .launchr
+          persist-credentials: false
       # launchr-fetch-end
 
       - name: Find out whether the R steps are needed
@@ -301,6 +303,7 @@ jobs:
           repository: insightsurge/launchR
           ref: ${{ job.workflow_sha }}
           path: .launchr
+          persist-credentials: false
       # launchr-fetch-end
       - uses: ./.launchr/.github/actions/pr-report-comment
         with:

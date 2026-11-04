@@ -25,7 +25,7 @@ while IFS= read -r file; do
 done <<<"$changed"
 
 echo "Files changed by this pull request:"
-printf '  %s\n' $changed
+printf '%s\n' "$changed" | sed 's/^/  /'
 if [ "$r" = true ]; then
   echo "R steps run."
 else

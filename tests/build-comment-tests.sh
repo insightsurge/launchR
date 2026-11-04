@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # Tests for .github/actions/pr-report-comment/build-comment.sh, with a fake `gh` that answers from canned files.
-# Needs: bash, jq, unzip, zip. No network, no R. Run: bash tests/build-comment-tests.sh
+# Needs: bash, jq, perl, unzip, zip, iconv. No network, no R. Run: bash tests/build-comment-tests.sh
 set -euo pipefail
 
 K="$(cd "$(dirname "$0")/.." && pwd)"
 SCRIPT="${K}/.github/actions/pr-report-comment/build-comment.sh"
 ROOT=$(mktemp -d)
 trap 'rm -rf "${ROOT}"' EXIT
-for tool in jq unzip zip; do command -v "${tool}" >/dev/null || { echo "missing tool: ${tool}"; exit 2; }; done
+for tool in jq perl unzip zip iconv; do command -v "${tool}" >/dev/null || { echo "missing tool: ${tool}"; exit 2; }; done
 
 # The fake gh. It answers the five calls build-comment.sh makes, from files in $FAKE:
 #   gh api repos/R/pulls/N --jq .head.sha                              -> $FAKE/head_sha (text)
@@ -307,6 +307,56 @@ c15() {
   outhas "header=pr-report"; has "## ✅ CI report: passed"
 }
 check c15 "config defaults: header 'pr-report', title 'CI report'"
+
+c16() {
+  new_case c16
+  # A run whose matrix jobs are not created yet: only the job that builds the matrix is listed, and the report job
+  # has not started. That is not a success.
+  caller alpha.yaml; add_run alpha.yaml 100 in_progress null
+  add_jobs 100 "completed|success|platforms|" "queued|null|report|"
+  run_script
+  has "## ⏳ CI report: running"; has "Still running: alpha."; hasnt "(success)"
+  # The same run once its matrix has been built and the report job has started.
+  add_jobs 100 "completed|success|platforms|" "completed|success|check (a)|" "in_progress|null|report|"
+  run_script
+  has "## ✅ CI report: passed"; hasnt "Still running"
+  # No report job listed at all yet: still running.
+  add_jobs 100 "completed|success|platforms|"
+  run_script
+  has "Still running: alpha."
+}
+check c16 "matrix jobs not created yet (report job not started): running, not success"
+
+c17() {
+  new_case c17
+  caller alpha.yaml; add_run alpha.yaml 100 completed success
+  add_jobs 100 "completed|success|build|"
+  # "é" is two bytes and "x" first puts the 20000-byte cut between them; "😀" is four bytes.
+  local multi="${FAKE}/multi.txt"
+  { printf 'x'; for _ in $(seq 1 15000); do printf 'é'; done; echo; } >"${multi}"
+  add_artifact 100 1 pr-report-tests-1-two "${multi}"
+  { printf 'xy'; for _ in $(seq 1 8000); do printf '😀'; done; echo; } >"${multi}"
+  add_artifact 100 2 pr-report-tests-2-four "${multi}"
+  run_script
+  iconv -f UTF-8 -t UTF-8 "${W}/comment.md" >/dev/null || { echo "  the comment is not valid UTF-8"; exit 1; }
+  has "é"; has "😀"
+}
+check c17 "a part cut in the middle of a multibyte character stays valid UTF-8"
+
+c18() {
+  new_case c18
+  caller alpha.yaml; add_run alpha.yaml 100 completed success
+  add_jobs 100 "completed|success|build|"
+  local part="${FAKE}/open.txt"
+  { printf '<details open>\n<summary>Details</summary>\n\n```\n'; head -c 25000 /dev/zero | tr '\0' 'z'; echo; } >"${part}"
+  add_artifact 100 1 pr-report-tests-1-open "${part}"
+  run_script
+  local open shut fences
+  open=$(C | grep -c '<details'); shut=$(C | grep -c '</details>'); fences=$(C | grep -c '^```')
+  [ "${open}" = "${shut}" ] || { echo "  <details> ${open}, </details> ${shut}"; exit 1; }
+  [ $((fences % 2)) = 0 ] || { echo "  an odd number of code fences: ${fences}"; exit 1; }
+}
+check c18 "a part cut inside <details> and a code block is closed again"
 
 echo
 echo "${passed} ok, ${failed} failed"

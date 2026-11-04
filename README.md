@@ -53,7 +53,7 @@ flowchart LR
 | Package skeleton | DESCRIPTION, an example function, a test of each kind, help pages | on |
 | CI | The checks below, one short file each in `.github/workflows/` | on |
 | GitHub setup | Issue forms, a PR template, labels and stage checklists | on |
-| AI setup | `AGENTS.md`, and `CLAUDE.md` importing it | off |
+| AI setup | `AGENTS.md` with rules files in `.agents/rules/` (the same in every package), and `CLAUDE.md` importing it | off |
 | Website | A pkgdown site published to GitHub Pages | off |
 | Front-end | JavaScript and CSS, with browser tests | off |
 
@@ -187,7 +187,8 @@ package's `.github/workflows/README.md` shows how to run it without cloning laun
 | `.github/workflows/` | The reusable checks that packages call, and this repository's own site deploy |
 | `.github/actions/`, `.github/scripts/` | Shared steps the checks use: the PR report, baselines, change detection |
 | `quality-gate/` | The quality gate |
-| `tests/` | Tests for the command line, the two routes, the zip, and generated packages against the gate |
+| `tests/` | Tests for the command line, the two routes, the zip, the PR report builder, and generated packages against the gate |
+| `CONTRIBUTING.md` | For maintainers: add a check or a template file, make a release, run the tests, how the shared workflows are secured |
 
 ## Develop and test
 
@@ -198,6 +199,7 @@ npm --prefix site run dev          # the site, with the template bundled in
 Rscript tests/cli-tests.R          # the command line, against a stand-in for gh (about 90 s; needs jq and git)
 node tests/compare-routes.mjs      # the site and the command line build the same files, for every plan
 node tests/check-zip.mjs           # the zip is sound
+bash tests/build-comment-tests.sh  # the pull request report builder, against a fake gh (needs jq, perl, unzip, zip)
 tests/gate-matrix.sh               # generated packages pass the quality gate
 
 npx --prefix site playwright install chromium   # once: the browser for the site's tests
@@ -205,8 +207,10 @@ npm --prefix site run build
 (cd site && npx playwright test)   # the form, each plan's download and its zip, in a real browser
 ```
 
-Every pull request runs the browser tests, the route comparison, the zip check and the command line's tests
-(`.github/workflows/site-tests.yaml`).
+Every pull request runs the browser tests, the route comparison, the zip check, the command line's tests, the report
+builder's tests, and two linters for the workflows in `.github/` (actionlint for mistakes, zizmor for security
+problems) in `.github/workflows/site-tests.yaml`. `CONTRIBUTING.md` says what each test covers and how to run the
+linters.
 
 The site is published to Firebase Hosting by `.github/workflows/deploy-site.yaml` when a change to `site/`,
 `template/` or `lists/` reaches `main`, or when the workflow is started by hand. Google Analytics loads only on that

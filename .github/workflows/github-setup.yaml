@@ -14,20 +14,24 @@ on:
 name: github-setup
 
 permissions:
-  contents: read
-  issues: write
-  checks: read
+  contents: read  # the most this workflow can use; the job asks for what it needs
 
 jobs:
   setup:
     runs-on: ubuntu-26.04
     timeout-minutes: 15
+    permissions:
+      contents: read
+      issues: write  # labels, the root issue and the stage checklists
+      checks: read   # reads the check runs that tick the stage checklists
     steps:
       # Each checkout starts with git init, which prints a hint about the default branch's name when none is set.
       - name: Name git's default branch
         run: git config --global init.defaultBranch main
 
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       # launchr-fetch-start
       - name: Fetch launchR at this workflow's version
         uses: actions/checkout@v7
@@ -35,6 +39,7 @@ jobs:
           repository: insightsurge/launchR
           ref: ${{ job.workflow_sha }}
           path: .launchr
+          persist-credentials: false
       # launchr-fetch-end
 
       - uses: r-lib/actions/setup-r@v2
