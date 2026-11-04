@@ -115,7 +115,8 @@ What it needs, once:
 
 - **The sandbox:** the public repository `insightsurge/launchr-sandbox` (`SANDBOX_REPO` in the workflow), empty or
   not, with `main` as its default branch. Public, so its runs cost no minutes; nothing private goes there. It is for
-  launchR alone: Issues, Wiki, Projects and Discussions are off, workflows from outside contributors' pull requests
+  launchR alone: Wiki, Projects and Discussions are off (Issues stay on: the "Set up this repository" dry run
+  reads them and stops when they are off), workflows from outside contributors' pull requests
   wait for approval, and an interaction limit lets only collaborators open issues or pull requests or comment.
   GitHub ends that limit after six months (next on 2027-05-04): set it again under Settings, Moderation options,
   Interaction limits.
