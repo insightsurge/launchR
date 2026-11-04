@@ -194,7 +194,7 @@ owned <- read.dcf(file.path(new_package("ownedpkg"), "DESCRIPTION"))
 expect(identical(unname(owned[1, "BugReports"]), "https://github.com/sample-org/ownedpkg/issues"), "DESCRIPTION has BugReports from the start")
 expect(nzchar(check_package_name("stats")) && nzchar(check_package_name(strrep("a", 61))), "a base R name or a very long name is refused")
 digits <- readLines(file.path(new_package("demo2pkg"), "inst", "WORDLIST"))
-expect(identical(digits, c("CMD", "demo2pkg", "demo", "pkg", "launchR")), "a name with a digit puts its parts in the word list")
+expect(identical(digits, c("CMD", "CRAN", "Codecov", "Lifecycle", "demo2pkg", "demo", "pkg", "launchR")), "a name with a digit puts its parts in the word list")
 lint_caller <- readLines(file.path(work, "nogitpkg", ".github", "workflows", "lint.yaml"))
 expect(any(grepl("branches: [main, master]", lint_caller, fixed = TRUE)), "the checks run for main and master")
 
