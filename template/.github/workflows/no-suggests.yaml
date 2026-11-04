@@ -28,4 +28,5 @@ jobs:
   check:
     uses: insightsurge/launchR/.github/workflows/no-suggests.yaml@v{{kit_version}}
     with:
+      ci-report: {{ci_report}}   # the CI report comment on pull requests: true posts it, false leaves it out
       timeout-minutes: 0   # longest the job may run, in minutes; 0 keeps launchR's default: 90

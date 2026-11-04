@@ -28,6 +28,7 @@ jobs:
   check:
     uses: insightsurge/launchR/.github/workflows/r-cmd-check.yaml@v{{kit_version}}
     with:
+      ci-report: {{ci_report}}   # the CI report comment on pull requests: true posts it, false leaves it out
       # One entry per run, as system/R version, comma separated. System: ubuntu, windows, macos.
       # R version: release, devel, oldrel-1, or a number such as 4.1. R 4.1 on macos may fail: it has no ready-built packages.
       platforms: {{platforms_r_cmd_check}}

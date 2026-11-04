@@ -1,3 +1,6 @@
 CMD
+CRAN
+Codecov
+Lifecycle
 {{package}}
 {{name_words}}launchR

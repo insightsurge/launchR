@@ -26,7 +26,42 @@ default_choices <- function(package, preset = kit_setting("preset"), plan = kit_
         platforms = NULL
       )
     })
+  ) |> c(plan_extras(chosen))
+}
+
+# The Modify choices that follow from the plan: badges and the QC checklist depend on the visibility; the licence is
+# proprietary only for a private package that won't go to CRAN, since R CMD check as CRAN gives a NOTE for any other
+# licence than an open-source one. site/src/form/engine.js has the same.
+plan_extras <- function(chosen) {
+  badges <- read_list("badges.tsv")
+  navbar <- read_list("navbar.tsv")
+  list(
+    ci_report = TRUE,
+    licence = if (chosen$visibility == "private" && chosen$release == "internal") "proprietary" else "mit",
+    badges = badges$key[badges[[chosen$visibility]] == "yes"],
+    navbar = navbar$key[navbar$on == "yes"],
+    forms = read_list("forms.tsv")$key,
+    labels = read_list("labels.tsv")$name,
+    qc = identical(chosen$qc, "yes")
   )
+}
+
+# Whether a badge can be offered: its needs (lists/badges.tsv) are all met.
+badge_offered <- function(needs, choices) {
+  needs <- strsplit(needs, ",", fixed = TRUE)[[1]]
+  all(vapply(needs, function(need) {
+    if (need == "owner") nzchar(choices$owner)
+    else if (need == "cran") choices$release == "cran"
+    else "ci" %in% choices$parts && isTRUE(choices$checks[[need]]$on)
+  }, logical(1)))
+}
+
+# The labels a package gets: the chosen ones, and the label of every chosen issue form, in lists/labels.tsv order.
+chosen_labels <- function(choices) {
+  forms <- read_list("forms.tsv")
+  forms <- forms[forms$key %in% choices$forms & forms$part %in% choices$parts, , drop = FALSE]
+  labels <- read_list("labels.tsv")$name
+  labels[labels %in% c(choices$labels, forms$label)]
 }
 
 # What a plan starts from: visibility, release, and whether r-cmd-check-extended is on (lists/plans.tsv).

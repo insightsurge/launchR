@@ -1,12 +1,15 @@
 name: New feature
-description: Propose something {{package}} cannot do yet.
+description: Propose something {{package}} can't do yet.
 labels: [enhancement]
 body:
   - type: markdown
     attributes:
       value: |
-        Search existing issues first. Keep this short; a proposed outcome is enough to start a discussion.
-        Use public examples and made-up data. Leave out private data, credentials, machine paths and private links. What goes into a release is the maintainer's decision.
+        Search existing issues first. Keep it short: the outcome you want is enough to start.
+        Use made-up data, and leave out private data, credentials and machine paths.
+{{^is_private}}
+        Link only to public examples.
+{{/is_private}}
   - type: textarea
     id: goal
     attributes:
@@ -17,13 +20,10 @@ body:
   - type: textarea
     id: done
     attributes:
-      label: Done when
-      description: One or two checklist items showing how someone could tell it works. These can be refined during discussion.
-      placeholder: "- [ ] A user can ..."
-    validations:
-      required: true
+      label: Done when (optional)
+      description: How someone could tell it works, for example "a user can ...".
   - type: textarea
     id: context
     attributes:
-      label: Example or affected users (optional)
-      description: A small public example, a workaround you use now, or a related issue.
+      label: Example (optional)
+      description: A small example, a workaround you use now, or a related issue.

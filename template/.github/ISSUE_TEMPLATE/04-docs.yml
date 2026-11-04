@@ -5,12 +5,15 @@ body:
   - type: markdown
     attributes:
       value: |
-        Search existing issues first. For a failing example or a website fault you can reproduce, use Bug report instead.
-        Share only public links or repository-relative files. Leave out private data, credentials and machine paths.
+        Search existing issues first. For an example that fails or a page that doesn't work, use Bug report instead.
+        Leave out private data, credentials and machine paths.
+{{^is_private}}
+        Link only to public pages.
+{{/is_private}}
   - type: input
     id: location
     attributes:
-      label: Page, help topic or repository-relative file
+      label: Page, help topic or file
       description: Include the section if you know it, or say where a missing explanation would help.
     validations:
       required: true
@@ -24,8 +27,5 @@ body:
   - type: textarea
     id: done
     attributes:
-      label: Done when
-      description: One checklist item describing what the reader should understand or be able to do.
-      placeholder: "- [ ] The page explains ..."
-    validations:
-      required: true
+      label: Done when (optional)
+      description: What the reader should then understand or be able to do.

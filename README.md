@@ -153,6 +153,12 @@ Rscript cli/launchr.R eject                           # copy launchR's checks in
 | `--title`, `--author`, `--email`, `--year` | DESCRIPTION fields; the same rules as the site's form |
 | `--description TEXT` | DESCRIPTION's Description, a sentence or two (default: the title) |
 | `--min-r 4.3` | The oldest R the package supports, as x.y (default 4.1); DESCRIPTION gets 4.3.0 |
+| `--no-ci-report` | Leave out the CI report comment on pull requests (`ci-report: false` in each check's file) |
+| `--licence mit` / `proprietary` | The licence (default: proprietary for plan d, MIT otherwise) |
+| `--badges check,lifecycle` | README badges, from `lists/badges.tsv` (`none` for no badges) |
+| `--navbar reference,news,search` | The website's navbar items, from `lists/navbar.tsv` |
+| `--forms bug,docs`, `--labels bug,idea` | Which issue forms (`lists/forms.tsv`) and labels (`lists/labels.tsv`); a form's label is always kept |
+| `--qc`, `--no-qc` | The QC checklist for a private package (default: on for plan d) |
 | `--preset starter` / `everything` | Which parts and checks are on |
 | `--public`, `--internal` | Older spelling of the plan: public, and not going to CRAN |
 | `--path DIR` | Where to write the package (default: a folder named after it) |
@@ -230,4 +236,5 @@ address, and only after a visitor accepts it in the cookie banner (`site/src/con
 
 launchR is under the MIT licence (`LICENSE`). The files in `template/`, which are what end up in your package, are
 under the Zero-Clause BSD licence (`template-LICENSE`), which asks nothing of you: no notice to keep, no credit to give.
-New packages start with the MIT licence in your name; you can change it.
+New packages start with the MIT licence in your name, or a proprietary one for a private package that won't go to CRAN;
+you can change it.

@@ -4,7 +4,7 @@ Version: 0.1.0
 Authors@R: 
     person("{{given}}", "{{family}}", email = "{{email}}", role = c("aut", "cre", "cph"))
 Description: {{description}}
-License: MIT + file LICENSE
+{{license_line}}
 {{url_line}}
 {{bugreports_line}}
 Depends: 
@@ -15,6 +15,8 @@ Suggests:
 Config/quality-gate/coverage: 70
 {{target_line}}
 Config/launchR/version: {{kit_version}}
+{{labels_line}}
+{{checklist_line}}
 Config/testthat/edition: 3
 Config/testthat/parallel: true
 Encoding: UTF-8

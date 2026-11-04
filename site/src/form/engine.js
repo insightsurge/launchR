@@ -18,6 +18,10 @@ export function readLists(bundle) {
     checks: list('checks.tsv'),
     files: list('files.tsv'),
     plans: list('plans.tsv'),
+    badges: list('badges.tsv'),
+    navbar: list('navbar.tsv'),
+    forms: list('forms.tsv'),
+    labels: list('labels.tsv'),
   };
 }
 
@@ -110,7 +114,39 @@ export function defaultChoices(lists, preset = lists.settings.preset, plan = lis
         },
       ]),
     ),
+    ...planExtras(lists, chosen),
   };
+}
+
+// The Modify choices that follow from the plan: badges and the QC checklist depend on the visibility; the licence is
+// proprietary only for a private package that won't go to CRAN, since R CMD check as CRAN gives a NOTE for any other
+// licence than an open-source one. cli/R/choices.R has the same.
+export function planExtras(lists, chosen) {
+  return {
+    ciReport: true,
+    licence: chosen.visibility === 'private' && chosen.release === 'internal' ? 'proprietary' : 'mit',
+    badges: lists.badges.filter((row) => row[chosen.visibility] === 'yes').map((row) => row.key),
+    navbar: lists.navbar.filter((row) => row.on === 'yes').map((row) => row.key),
+    forms: lists.forms.map((row) => row.key),
+    labels: lists.labels.map((row) => row.name),
+    qc: chosen.qc === 'yes',
+  };
+}
+
+// Whether a badge can be offered: its needs (lists/badges.tsv) are all met.
+export function badgeOffered(row, choices) {
+  return row.needs.split(',').filter(Boolean).every((need) => {
+    if (need === 'owner') return choices.owner !== '';
+    if (need === 'cran') return choices.release === 'cran';
+    return choices.parts.includes('ci') && !!choices.checks[need]?.on;
+  });
+}
+
+// The labels a package gets: the chosen ones, and the label of every chosen issue form, in lists/labels.tsv order.
+export function chosenLabels(choices, lists) {
+  const forms = lists.forms.filter((row) => choices.forms.includes(row.key) && choices.parts.includes(row.part));
+  const wanted = new Set([...choices.labels, ...forms.map((row) => row.label)]);
+  return lists.labels.filter((row) => wanted.has(row.name)).map((row) => row.name);
 }
 
 function settleChoices(choices) {
@@ -177,10 +213,8 @@ export function placeholderValues(choices, lists) {
     bugreports_line: hasOwner ? `BugReports: ${repository}/issues` : '',
     chromote_line: frontend ? '    chromote,' : '',
     target_line: choices.release === 'internal' ? 'Config/quality-gate/target: internal' : '',
-    check_badge: isPublic && hasOwner && choices.parts.includes('ci') && choices.checks.r_cmd_check?.on
-      ? `[![R-CMD-check](${repository}/actions/workflows/r-cmd-check.yaml/badge.svg)](${repository}/actions/workflows/r-cmd-check.yaml)`
-      : '',
-    credit_badge: isPublic ? `[![Set up with launchR](https://img.shields.io/badge/set%20up%20with-launchR-f6ab85)](${siteUrl})\n` : '',
+    license_line: choices.licence === 'mit' ? 'License: MIT + file LICENSE' : 'License: file LICENSE',
+    ci_report: choices.ciReport ? 'true' : 'false',
     credit_line: `\nSet up with [launchR](${siteUrl}).`,
   };
   // The oldest R supported: in DESCRIPTION, and in place of 4.1 in the default platforms.
@@ -208,6 +242,22 @@ export function placeholderValues(choices, lists) {
   values.has_full_tests = yes(checkOn('full_tests'));
   values.has_time_limit = yes(checkOn('r_cmd_check'));
   values.is_internal = yes(choices.release === 'internal');
+  values.is_private = yes(!isPublic);
+  values.is_mit = yes(choices.licence === 'mit');
+  // README badges: the chosen ones whose needs are met, in lists/badges.tsv order.
+  const badgeLines = lists.badges
+    .filter((row) => choices.badges.includes(row.key) && badgeOffered(row, choices))
+    .map((row) => row.line.replaceAll('{repository}', repository).replaceAll('{owner}', owner).replaceAll('{package}', choices.package).replaceAll('{site_url}', siteUrl));
+  values.badges = badgeLines.join('\n');
+  values.has_badges = yes(badgeLines.length > 0);
+  for (const side of ['left', 'right']) {
+    values[`navbar_${side}`] = lists.navbar.filter((row) => row.side === side && choices.navbar.includes(row.key)).map((row) => row.name).join(', ');
+  }
+  for (const row of lists.forms) values[`form_${row.key}`] = yes(choices.forms.includes(row.key));
+  // DESCRIPTION records a choice of labels and the QC checklist, for the Set up this repository step (cli/R/github.R).
+  const labels = chosenLabels(choices, lists);
+  values.labels_line = choices.parts.includes('github') && labels.length < lists.labels.length ? `Config/launchR/labels: ${labels.join(', ')}` : '';
+  values.checklist_line = choices.parts.includes('github') && choices.qc && !isPublic ? `Config/launchR/checklist: ${lists.settings.qc_stage}` : '';
   for (const row of lists.checks) {
     const check = choices.checks[row.key];
     for (const event of ['pr', 'push', 'schedule', 'manual']) {
@@ -260,7 +310,7 @@ export function renderText(text, values) {
 
 // The route for a package that already exists (choices.existing) has no skeleton part, but takes the settings files of
 // the checks it chooses: the rows whose existing column names a check that is on.
-export function selectedFiles(choices, lists) {
+export function selectedFiles(choices, lists, values = {}) {
   const onChecks = new Set(lists.checks.filter((row) => choices.checks[row.key].on).map((row) => row.check));
   const ci = choices.parts.includes('ci');
   const checkOk = (check) => check === '' || (ci && (check === 'any' ? onChecks.size > 0 : onChecks.has(check)));
@@ -270,7 +320,8 @@ export function selectedFiles(choices, lists) {
         (row.release === 'any' || row.release === choices.release) &&
         (choices.parts.includes(row.part)
           ? checkOk(row.check)
-          : choices.existing === true && row.existing !== '' && ci && onChecks.has(row.existing)),
+          : choices.existing === true && row.existing !== '' && ci && onChecks.has(row.existing)) &&
+        (row.needs === '' || (values[row.needs] ?? '') !== ''),
     )
     .map((row) => row.path);
 }
@@ -280,7 +331,7 @@ export function buildPackage(rawChoices, bundle) {
   const choices = settleChoices(rawChoices);
   const values = placeholderValues(choices, lists);
   const files = {};
-  for (const path of selectedFiles(choices, lists)) {
+  for (const path of selectedFiles(choices, lists, values)) {
     files[renderText(path, values)] = renderText(bundle.template[path], values);
   }
   return files;

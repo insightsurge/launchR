@@ -5,8 +5,11 @@ body:
   - type: markdown
     attributes:
       value: |
-        This form is for the repository's public instructions to AI tools. If an instruction fails or gives a wrong result, use Bug report so the version and a minimal example are included.
-        Search existing issues first. Cite only repository-relative files and public examples. Leave out personal configuration, credentials, private data, machine paths, private links and conversation transcripts.
+        This form is for the repository's instructions to AI tools. If following an instruction gives a wrong result in the package, use Bug report, so the version and an example are included.
+        Search existing issues first. Name files by their path in the repository. Leave out personal settings, credentials, private data, machine paths and chat transcripts.
+{{^is_private}}
+        Link only to public examples.
+{{/is_private}}
   - type: input
     id: location
     attributes:
@@ -17,15 +20,12 @@ body:
   - type: textarea
     id: change
     attributes:
-      label: What instruction should change, and why?
-      description: Give a short public example of the ambiguity, the missing guidance or the proposed rule. Suggested wording is optional.
+      label: What should change, and why?
+      description: Give a short example of what is unclear or missing, or the rule you suggest. Suggested wording is optional.
     validations:
       required: true
   - type: textarea
     id: done
     attributes:
-      label: Done when
-      description: One checklist item showing how someone could check that the instruction is clear and agrees with the contributor guide.
-      placeholder: "- [ ] The instruction explains ..."
-    validations:
-      required: true
+      label: Done when (optional)
+      description: How someone could check the instruction is clear and agrees with the contributor guide.

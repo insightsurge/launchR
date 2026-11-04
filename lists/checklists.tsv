@@ -34,3 +34,13 @@ release	After acceptance	Launch	manual		cran		GitHub release published
 launchr-news	Next release	Release	manual		any		Look at what's new in launchR			
 news	Next release	Release	manual		any		NEWS.md is up to date			
 version	Next release	Release	manual		any		Version set with `usethis::use_version()`			
+qc-purpose	QC before release	Scope	manual		any		README says what the package is for and who uses it			
+qc-returns	QC before release	Scope	manual		any		Every exported function's help page says what it returns			
+qc-ci	QC before release	Tests	ci		any	.github/workflows	CI is green on the default branch			
+qc-tests	QC before release	Tests	manual		any		Every exported function has a test of its documented behaviour			
+qc-coverage	QC before release	Tests	manual		any		Coverage is at or above the limit in DESCRIPTION			
+qc-review	QC before release	Review	manual		any		Each change was reviewed in a pull request by someone other than its author			
+qc-imports	QC before release	Review	manual		any		Each package in Imports is needed, and approved for use where you work			
+qc-news	QC before release	Release	manual		any		NEWS.md lists the changes in this version			
+qc-version	QC before release	Release	manual		any		Version set with `usethis::use_version()`, and the release tagged			
+qc-evidence	QC before release	Release	manual		any		The QC evidence is kept: links to the CI runs and the reviewed pull requests			

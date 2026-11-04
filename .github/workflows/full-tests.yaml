@@ -11,6 +11,10 @@
 on:
   workflow_call:
     inputs:
+      ci-report:
+        description: Post the CI report comment on pull requests (one comment for every check that reports); false leaves it out, and each run's results stay in its job summary
+        type: boolean
+        default: true
       timeout-minutes:
         description: Longest a job may run, in minutes; 0 keeps launchR's default (60 on Mac, 120 elsewhere)
         type: number
@@ -274,7 +278,7 @@ jobs:
   report:
     needs: [tests, full-tests]  # after the summary job too, so the run counts as finished
     if: >-
-      always() && github.event_name == 'pull_request' &&
+      always() && inputs.ci-report && github.event_name == 'pull_request' &&
       github.event.pull_request.head.repo.full_name == github.repository &&
       github.event.pull_request.user.login != 'dependabot[bot]'
     runs-on: ubuntu-26.04

@@ -1,2 +1,10 @@
+{{#is_mit}}
 YEAR: {{year}}
 COPYRIGHT HOLDER: {{author}}
+{{/is_mit}}
+{{^is_mit}}
+Copyright (c) {{year}} {{author}}. All rights reserved.
+
+This package is proprietary. It may not be copied, shared, changed or used outside the organisation that owns it
+without written permission from the copyright holder.
+{{/is_mit}}

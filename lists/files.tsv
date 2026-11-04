@@ -1,68 +1,70 @@
 # One row per template file. part: when the file is included. check: the CI check that needs it (any: at least one
 # check is on). release: cran or any. existing: for the route of a package that already exists, which has no skeleton
 # part: the check that brings this file along (the settings files the check reads).
-path	part	check	release	existing
-.Rbuildignore	skeleton		any	
-.Renviron	skeleton		any	
-.gitattributes	skeleton		any	
-.github/CODE_OF_CONDUCT.md	github		any	
-.github/CONTRIBUTING.md	github		any	
-.github/ISSUE_TEMPLATE/01-bug.yml	github		any	
-.github/ISSUE_TEMPLATE/02-feature.yml	github		any	
-.github/ISSUE_TEMPLATE/03-enhancement.yml	github		any	
-.github/ISSUE_TEMPLATE/04-docs.yml	github		any	
-.github/ISSUE_TEMPLATE/05-idea.yml	github		any	
-.github/ISSUE_TEMPLATE/06-ai-instructions.yml	ai		any	
-.github/ISSUE_TEMPLATE/config.yml	github		any	
-.github/SECURITY.md	github		any	
-.github/dependabot.yml	ci	any	any	
-.github/pull_request_template.md	github		any	
-.github/release.yml	github		any	
-.github/workflows/README.md	ci		any	
-.github/workflows/coverage.yaml	ci	coverage	any	
-codecov.yml	skeleton	coverage	any	coverage
-.github/workflows/r-cmd-check-extended.yaml	ci	r-cmd-check-extended	any	
-.github/workflows/full-tests.yaml	ci	full-tests	any	
-.github/workflows/github-setup.yaml	github		any	
-.github/workflows/lint.yaml	ci	lint	any	
-.github/workflows/no-suggests.yaml	ci	no-suggests	any	
-.github/workflows/pkgdown.yaml	website		any	
-.github/workflows/r-cmd-check.yaml	ci	r-cmd-check	any	
-.github/workflows/secret-scan.yaml	ci	secret-scan	any	
-.gitignore	skeleton		any	
-.lintr	skeleton		any	lint
-.agents/rules/checks.md	ai		any	
-.agents/rules/docs.md	ai		any	
-.agents/rules/git.md	ai		any	
-.agents/rules/js-css.md	ai		any	
-.agents/rules/r-code.md	ai		any	
-.agents/rules/tests.md	ai		any	
-AGENTS.md	ai		any	
-CLAUDE.md	ai		any	
-DESCRIPTION	skeleton		any	
-LICENSE	skeleton		any	
-LICENSE.md	skeleton		any	
-NAMESPACE	skeleton		any	
-NEWS.md	skeleton		any	
-R/say_hello.R	skeleton		any	
-R/{{package}}-package.R	skeleton		any	
-README.md	skeleton		any	
-_pkgdown.yml	website		any	
-air.toml	skeleton		any	lint
-biome.json	frontend		any	
-cran-comments.md	skeleton		cran	
-inst/WORDLIST	skeleton		any	
-inst/www/demo.html	frontend		any	
-inst/www/{{package}}.css	frontend		any	
-inst/www/{{package}}.js	frontend		any	
-man/say_hello.Rd	skeleton		any	
-man/{{package}}-package.Rd	skeleton		any	
-pkgdown/extra.css	website		any	
-tests/README.md	skeleton		any	
-tests/testthat.R	skeleton		any	
-tests/testthat/test-demo-browser.R	frontend		any	
-tests/testthat/test-say_hello.R	skeleton		any	
-tests/testthat/test-say_hello-snap.R	skeleton		any	
-tests/testthat/_snaps/say_hello-snap.md	skeleton		any	
-tests/testthat/test-say_hello-extended.R	skeleton		any	
-{{package}}.Rproj	skeleton		any	
+# needs: a value that must not be empty for the file to be included (is_mit: the MIT licence; form_<key>: that
+# issue form is chosen, lists/forms.tsv).
+path	part	check	release	existing	needs
+.Rbuildignore	skeleton		any		
+.Renviron	skeleton		any		
+.gitattributes	skeleton		any		
+.github/CODE_OF_CONDUCT.md	github		any		
+.github/CONTRIBUTING.md	github		any		
+.github/ISSUE_TEMPLATE/01-bug.yml	github		any		form_bug
+.github/ISSUE_TEMPLATE/02-feature.yml	github		any		form_feature
+.github/ISSUE_TEMPLATE/03-enhancement.yml	github		any		form_enhancement
+.github/ISSUE_TEMPLATE/04-docs.yml	github		any		form_docs
+.github/ISSUE_TEMPLATE/05-idea.yml	github		any		form_idea
+.github/ISSUE_TEMPLATE/06-ai-instructions.yml	ai		any		form_ai
+.github/ISSUE_TEMPLATE/config.yml	github		any		
+.github/SECURITY.md	github		any		
+.github/dependabot.yml	ci	any	any		
+.github/pull_request_template.md	github		any		
+.github/release.yml	github		any		
+.github/workflows/README.md	ci		any		
+.github/workflows/coverage.yaml	ci	coverage	any		
+codecov.yml	skeleton	coverage	any	coverage	
+.github/workflows/r-cmd-check-extended.yaml	ci	r-cmd-check-extended	any		
+.github/workflows/full-tests.yaml	ci	full-tests	any		
+.github/workflows/github-setup.yaml	github		any		
+.github/workflows/lint.yaml	ci	lint	any		
+.github/workflows/no-suggests.yaml	ci	no-suggests	any		
+.github/workflows/pkgdown.yaml	website		any		
+.github/workflows/r-cmd-check.yaml	ci	r-cmd-check	any		
+.github/workflows/secret-scan.yaml	ci	secret-scan	any		
+.gitignore	skeleton		any		
+.lintr	skeleton		any	lint	
+.agents/rules/checks.md	ai		any		
+.agents/rules/docs.md	ai		any		
+.agents/rules/git.md	ai		any		
+.agents/rules/js-css.md	ai		any		
+.agents/rules/r-code.md	ai		any		
+.agents/rules/tests.md	ai		any		
+AGENTS.md	ai		any		
+CLAUDE.md	ai		any		
+DESCRIPTION	skeleton		any		
+LICENSE	skeleton		any		
+LICENSE.md	skeleton		any		is_mit
+NAMESPACE	skeleton		any		
+NEWS.md	skeleton		any		
+R/say_hello.R	skeleton		any		
+R/{{package}}-package.R	skeleton		any		
+README.md	skeleton		any		
+_pkgdown.yml	website		any		
+air.toml	skeleton		any	lint	
+biome.json	frontend		any		
+cran-comments.md	skeleton		cran		
+inst/WORDLIST	skeleton		any		
+inst/www/demo.html	frontend		any		
+inst/www/{{package}}.css	frontend		any		
+inst/www/{{package}}.js	frontend		any		
+man/say_hello.Rd	skeleton		any		
+man/{{package}}-package.Rd	skeleton		any		
+pkgdown/extra.css	website		any		
+tests/README.md	skeleton		any		
+tests/testthat.R	skeleton		any		
+tests/testthat/test-demo-browser.R	frontend		any		
+tests/testthat/test-say_hello.R	skeleton		any		
+tests/testthat/test-say_hello-snap.R	skeleton		any		
+tests/testthat/_snaps/say_hello-snap.md	skeleton		any		
+tests/testthat/test-say_hello-extended.R	skeleton		any		
+{{package}}.Rproj	skeleton		any		

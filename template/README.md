@@ -1,7 +1,11 @@
 # {{package}}
 
-{{check_badge}}
-{{credit_badge}}
+{{#has_badges}}
+<!-- badges: start -->
+{{badges}}
+<!-- badges: end -->
+
+{{/has_badges}}
 {{title}}.
 
 ## Installation

@@ -5,13 +5,16 @@ body:
   - type: markdown
     attributes:
       value: |
-        Search existing issues first. Use made-up or bundled data. Remove private data, credentials, machine paths and private links from examples, output and screenshots.
-        This form also covers faults in the docs, the website and CI. A short example is enough; you do not need to diagnose the cause.
+        Search existing issues first. Use made-up or bundled data, and remove private data, credentials and machine paths from examples, output and screenshots.
+{{^is_private}}
+        Link only to public pages.
+{{/is_private}}
+        This form also covers problems in the docs, the website and CI. A short example is enough; you don't need to find the cause.
   - type: textarea
     id: behaviour
     attributes:
       label: What happened, and what did you expect?
-      description: One or two sentences. Include the relevant error message, if there is one. A screenshot is optional.
+      description: One or two sentences. Include the error message, if there is one. A screenshot is optional.
     validations:
       required: true
   - type: textarea
@@ -19,8 +22,8 @@ body:
     attributes:
       label: Minimal reproducible example (reprex)
       description: |
-        Paste the smallest runnable R example that shows the fault. Use reprex::reprex() if you have it; it is not required.
-        For a docs, website or CI fault, give the public page or repository-relative file, a small example and the exact steps. Use fenced code blocks for code.
+        Paste the smallest runnable R example that shows the problem. reprex::reprex() helps but isn't required.
+        For a problem in the docs, the website or CI, give the page or file and the exact steps. Use fenced code blocks for code.
       render: r
     validations:
       required: true
@@ -28,20 +31,22 @@ body:
     id: version
     attributes:
       label: '{{package}} version'
-      description: 'Use packageVersion("{{package}}"). Add the commit if you installed from GitHub. For a repository or website report without an installed package, write "Not installed".'
+      description: 'Use packageVersion("{{package}}"). Add the commit if you installed from GitHub. For a docs, website or CI problem without the package installed, write "Not installed".'
     validations:
       required: true
   - type: textarea
     id: session
     attributes:
       label: Environment details (optional)
-      description: 'Paste sessionInfo() or sessioninfo::session_info() if you can. For a problem in a browser, add the browser and its version. Remove private details and paths before posting; a short summary is fine.'
+{{#has_frontend}}
+      description: 'Paste sessionInfo() or sessioninfo::session_info() if you can. For a problem in a browser, add the browser and its version. Remove private details and paths first; a short summary is fine.'
+{{/has_frontend}}
+{{^has_frontend}}
+      description: 'Paste sessionInfo() or sessioninfo::session_info() if you can. Remove private details and paths first; a short summary is fine.'
+{{/has_frontend}}
       render: text
   - type: textarea
     id: done
     attributes:
-      label: Done when
-      description: One short checklist item describing the result that would count as fixed.
-      placeholder: "- [ ] The example produces the expected result."
-    validations:
-      required: true
+      label: Fixed when (optional)
+      description: What would show it's fixed, for example "the example above returns the expected result".

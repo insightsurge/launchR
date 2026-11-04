@@ -13,5 +13,5 @@ template:
 
 navbar:
   structure:
-    left: [reference, news]
-    right: [search, github, lightswitch]
+    left: [{{navbar_left}}]
+    right: [{{navbar_right}}]

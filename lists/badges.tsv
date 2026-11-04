@@ -1,0 +1,12 @@
+# README badges, in the order they appear. public and private: on by default for that visibility (yes or empty). needs:
+# what must be true for the badge to be offered: owner (a GitHub name), a check key (that check is on), cran (going to
+# CRAN). line: the badge, with {repository} (https://github.com/owner/package), {owner}, {package} and {site_url}.
+# Keep the columns tab-separated, with no hash sign inside a cell (lists treat it as a comment).
+key	label	help	public	private	needs	line
+check	R-CMD-check	Shows whether the latest R CMD check on the default branch passed.	yes		owner,r_cmd_check	[![R-CMD-check]({repository}/actions/workflows/r-cmd-check.yaml/badge.svg)]({repository}/actions/workflows/r-cmd-check.yaml)
+lifecycle	Lifecycle	Tells readers how settled the package is. Starts at experimental; change it with usethis::use_lifecycle_badge().	yes			[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html%23experimental)
+codecov	Codecov	Shows the test coverage. Needs the coverage check, and a Codecov account linked to the repository.			owner,coverage	[![Codecov test coverage](https://codecov.io/gh/{owner}/{package}/graph/badge.svg)](https://app.codecov.io/gh/{owner}/{package})
+cran	CRAN version	Shows the version on CRAN. Says "not published" until the package is accepted.			cran	[![CRAN status](https://www.r-pkg.org/badges/version/{package})](https://CRAN.R-project.org/package={package})
+downloads	CRAN downloads	How many times the package was downloaded from CRAN each month.			cran	[![CRAN downloads](https://cranlogs.r-pkg.org/badges/{package})](https://CRAN.R-project.org/package={package})
+universe	R-universe	The version built on R-universe, where people can install it from before or instead of CRAN. Needs an R-universe set up for your GitHub name.			owner	[![R-universe](https://{owner}.r-universe.dev/badges/{package})](https://{owner}.r-universe.dev/{package})
+launchr	Set up with launchR	A small credit that links to launchR.	yes			[![Set up with launchR](https://img.shields.io/badge/set%20up%20with-launchR-f6ab85)]({site_url})

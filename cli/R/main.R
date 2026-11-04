@@ -16,7 +16,8 @@ flag_value <- function(args, name, default = "") {
 
 flag_example <- list(
   title = '"Tools For Tables"', description = '"Builds tables for clinical reports."', author = '"Asha Rao"', email = "asha@example.com", owner = "insightsurge",
-  path = "mypkg", preset = "starter", plan = "d", year = "2026", repo = "owner/name", `min-r` = "4.3"
+  path = "mypkg", preset = "starter", plan = "d", year = "2026", repo = "owner/name", `min-r` = "4.3",
+  licence = "proprietary", badges = "check,lifecycle", navbar = "reference,news,search", forms = "bug,docs", labels = "bug,documentation"
 )
 
 usage_error <- function(message) {
@@ -75,6 +76,12 @@ cmd_new <- function(args) {
   } else {
     choices <- ask_choices(choices)
   }
+  modified <- modify_from_flags(args, choices)
+  if (is.character(modified)) {
+    message(modified)
+    return(1L)
+  }
+  choices <- modified
   out <- flag_value(args, "path", package)
   if (dir.exists(out) && length(list.files(out, all.files = TRUE, no.. = TRUE)) > 0) {
     message("That folder already has files in it: ", out)
@@ -182,4 +189,38 @@ run_command <- function(args) {
       0L
     }
   )
+}
+
+# The site's Modify choices, as flags: --no-ci-report, --licence, --badges, --navbar, --forms, --labels, --qc and --no-qc.
+# A list flag replaces the default list with the comma-separated keys given ("none" for an empty one). Returns the
+# choices, or a message saying what is wrong.
+modify_from_flags <- function(args, choices) {
+  if (has_flag(args, "no-ci-report")) choices$ci_report <- FALSE
+  choices$licence <- flag_value(args, "licence", choices$licence)
+  if (!choices$licence %in% c("mit", "proprietary")) {
+    return("--licence is mit or proprietary.")
+  }
+  if (choices$licence == "proprietary" && choices$release == "cran") {
+    message("Note: CRAN only accepts open-source licences, and R CMD check as CRAN gives a NOTE for a proprietary one.")
+  }
+  known <- list(
+    badges = read_list("badges.tsv")$key, navbar = read_list("navbar.tsv")$key,
+    forms = read_list("forms.tsv")$key, labels = read_list("labels.tsv")$name
+  )
+  for (name in names(known)) {
+    if (!paste0("--", name) %in% args) next
+    given <- trimws(strsplit(flag_value(args, name), ",", fixed = TRUE)[[1]])
+    given <- if (identical(given, "none")) character() else given[nzchar(given)]
+    unknown <- setdiff(given, known[[name]])
+    if (length(unknown) > 0) {
+      return(sprintf("--%s takes some of: %s (unknown: %s).", name, paste(known[[name]], collapse = ", "), paste(unknown, collapse = ", ")))
+    }
+    choices[[name]] <- known[[name]][known[[name]] %in% given]
+  }
+  if (has_flag(args, "qc")) choices$qc <- TRUE
+  if (has_flag(args, "no-qc")) choices$qc <- FALSE
+  if (isTRUE(choices$qc) && choices$visibility == "public") {
+    return("--qc is for private packages (plans c and d).")
+  }
+  choices
 }
