@@ -1,7 +1,8 @@
 # R CMD check without the Suggests, as CRAN also checks: every use of a suggested package must be guarded. It runs the
 # gate's nosuggests mode (the quality gate), which puts only what the check needs on the library path: the hard
 # dependencies with everything they need, testthat and the vignette builders. A Suggests package that is installed but
-# not needed stays hidden, so the check holds whatever the library contains. Derived from r-lib/actions'
+# not needed stays hidden, so the check holds whatever the library contains. Base and recommended packages (tools,
+# MASS, ...) ship with R and stay visible. Derived from r-lib/actions'
 # check-no-suggests example. A pull request that changes only documentation starts the job and skips its steps
 # (.github/scripts/r-changes.sh).
 on:
@@ -77,8 +78,8 @@ jobs:
 
       # The gate starts R CMD check itself, with NOT_CRAN unset, _R_CHECK_FORCE_SUGGESTS_ false and the CRAN-incoming
       # checks off (R-CMD-check runs the local ones); any note other than the one listing the hidden Suggests fails it.
-      # The step skips when it cannot hide the Suggests (one installed in R's own library), which here must fail the
-      # job too.
+      # The step skips when it cannot hide the Suggests (one other than R's base and recommended packages installed in
+      # R's own library), which here must fail the job too.
       - name: R CMD check with only what the check needs (the gate's nosuggests mode)
         if: steps.changes.outputs.r == 'true'
         env:
