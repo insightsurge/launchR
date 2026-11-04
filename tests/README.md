@@ -9,6 +9,8 @@ What each file checks. How to run them all, and the workflow linters, is in [CON
 | `build-comment-tests.sh` | `.github/actions/pr-report-comment/build-comment.sh` with a fake `gh`: a run's state (running, failed, cancelled), the matrix race, section order, cutting long parts without breaking a character or leaving `<details>` open |
 | `check-zip.mjs` | The zip the site builds is sound (run after building the site) |
 | `gate-matrix.sh` | Generated packages for the main sets of choices pass the quality gate (slow; run by hand) |
+| `sandbox-e2e.sh` | The steps of `.github/workflows/sandbox-e2e.yaml`, run by hand before a release: a package made on the site (`site/tests/sandbox-package.spec.js`) runs its own checks in the public sandbox repository, pointed at the launchR commit under test; a planted secret must fail secret-scan, everything else must pass, and the pull request must get one report comment |
 
-The browser tests are in `site/tests/`. The workflow linters have no test file: `actionlint` and `zizmor` run on
+The browser tests are in `site/tests/`; `sandbox-package.spec.js` there runs only when `SANDBOX_ZIP` is set (the
+sandbox test sets it). The workflow linters have no test file: `actionlint` and `zizmor` run on
 `.github/workflows/` and `.github/actions/` in the `workflow-lint` job of `.github/workflows/site-tests.yaml`.
