@@ -97,6 +97,13 @@ for (const [plan, want] of Object.entries(PLANS)) {
     expect(has('AGENTS.md')).toBe(false);
     const forms = Object.keys(files).filter((path) => /ISSUE_TEMPLATE\/\d\d-/.test(path)).map((path) => path.match(/(\d\d)-/)[1]).sort();
     expect(forms).toEqual(['01', '02', '03', '04', '05']);
+    // The weekly time comes from lists/checks.tsv (an odd minute), not from the form.
+    expect(files['tablePkg/.github/workflows/r-cmd-check.yaml']).toContain('- cron: "17 5 * * 1"');
+    // Text that depends on the plan or the parts: CRAN wording only for a CRAN package, JS and CSS only with a front end.
+    expect(files['tablePkg/.github/SECURITY.md'].includes('is on CRAN')).toBe(!want.internal);
+    expect(files['tablePkg/.github/CONTRIBUTING.md']).not.toMatch(/Biome|JavaScript|Chrome/);
+    expect(files['tablePkg/.github/pull_request_template.md']).not.toContain('JavaScript');
+    expect(files['tablePkg/.github/CONTRIBUTING.md']).toContain('Language: en-GB');
     // Without a longer description, DESCRIPTION's Description repeats the title.
     expect(description).toContain('Description: Tools For Tables.');
   });
@@ -129,7 +136,7 @@ test('the longer description reaches DESCRIPTION and the help page, and CRAN wor
   expect(files['tablePkg/man/tablePkg-package.Rd']).toContain('Builds tables for clinical study reports.');
 });
 
-test('Modify: the AI switch adds AGENTS.md, CLAUDE.md and their issue form', async ({ page }) => {
+test('Modify: the AI switch adds AGENTS.md, its rules files, CLAUDE.md and their issue form', async ({ page }) => {
   await openForm(page);
   await fillForm(page);
   await page.locator('#modify').click();
@@ -137,9 +144,41 @@ test('Modify: the AI switch adds AGENTS.md, CLAUDE.md and their issue form', asy
   await page.locator('label.sw', { hasText: 'Instructions for AI assistants' }).click();
   await expect(page.locator('#sumMore')).toHaveText('AI instructions');
   const { files } = await download(page, '#modDownload');
-  expect(files['tablePkg/AGENTS.md']).toContain('# tablePkg');
+  expect(files['tablePkg/AGENTS.md']).toContain('.agents/rules/');
+  for (const rule of ['checks', 'docs', 'git', 'js-css', 'r-code', 'tests']) expect(`tablePkg/.agents/rules/${rule}.md` in files, rule).toBe(true);
   expect(files['tablePkg/CLAUDE.md']).toContain('@AGENTS.md');
   expect('tablePkg/.github/ISSUE_TEMPLATE/06-ai-instructions.yml' in files).toBe(true);
+});
+
+test('Modify: the front-end switch adds the JS and CSS wording', async ({ page }) => {
+  await openForm(page);
+  await fillForm(page);
+  await page.locator('#modify').click();
+  await page.locator('#modifyView summary', { hasText: 'Extras' }).click();
+  await page.locator('label.sw', { hasText: 'JS or CSS' }).click();
+  const { files } = await download(page, '#modDownload');
+  expect(files['tablePkg/.github/CONTRIBUTING.md']).toMatch(/Biome[\s\S]*Chrome/);
+  expect(files['tablePkg/.github/pull_request_template.md']).toContain('JavaScript and CSS changes');
+  expect(files['tablePkg/tests/README.md']).toContain('test-demo-browser.R');
+});
+
+test('Modify: with every check off, there is no run-locally section, no Dependabot file and no caller files', async ({ page }) => {
+  await openForm(page);
+  await fillForm(page);
+  await page.locator('#modify').click();
+  // The page repaints after each click, so pick each check by its key.
+  for (const key of ['r_cmd_check', 'lint', 'no_suggests', 'secret_scan', 'coverage', 'full_tests', 'r_cmd_check_extended']) {
+    await page.locator(`#bodyCi [data-check=${key}]`).evaluate((input) => input.click());
+  }
+  await expect(page.locator('#bodyCi .ticks input:checked')).toHaveCount(0);
+  const { files } = await download(page, '#modDownload');
+  const readme = files['tablePkg/.github/workflows/README.md'];
+  expect(readme).toContain('| None yet | Come back to the site to add one | |');
+  expect(readme).not.toContain('Run the checks on your computer');
+  expect(readme).not.toContain('Leaving launchR');
+  expect('tablePkg/.github/dependabot.yml' in files).toBe(false);
+  expect(Object.keys(files).filter((path) => path.includes('/workflows/') && path.endsWith('.yaml')).every((path) => path.endsWith('github-setup.yaml'))).toBe(true);
+  expect(files['tablePkg/.github/CONTRIBUTING.md']).not.toContain('CI runs on every pull request');
 });
 
 test('Modify: the oldest R reaches DESCRIPTION, and the download works from there', async ({ page }) => {
@@ -213,17 +252,64 @@ test("the next steps give both routes, the first commands and an organisation's 
   await expect(more.locator('p')).toBeVisible();
 });
 
-test('an existing package gets only the CI files', async ({ page }) => {
+async function openExisting(page) {
   await page.goto('/');
   const reject = page.locator('#cookieNo');
   if (await reject.isVisible()) await reject.click();
   await page.locator('#existingStart').click();
   await page.locator('#exPkg').fill('oldPkg');
   await page.locator('#exOwner').fill('sample-org');
+}
+
+test('an existing package gets only the CI files and the settings files its checks read', async ({ page }) => {
+  await openExisting(page);
+  // The Finder note is next to the download button, not only in the steps.
+  await expect(page.locator('#exFinder')).toContainText('Cmd+Shift+.');
   const { name, files } = await download(page, '#exDownload');
   expect(name).toBe('launchR-files.zip');
   await expect(page.locator('#nextView')).toBeVisible();
   expect('.github/workflows/r-cmd-check.yaml' in files).toBe(true);
   expect('.github/workflows/README.md' in files).toBe(true);
-  for (const path of ['DESCRIPTION', 'R/say_hello.R', 'codecov.yml', '.Renviron']) expect(path in files, path).toBe(false);
+  // The lint check is on by default, so its settings files come along; so does codecov.yml, with the coverage check.
+  for (const path of ['.lintr', 'air.toml', 'codecov.yml']) expect(path in files, path).toBe(true);
+  for (const path of ['DESCRIPTION', 'R/say_hello.R', '.Renviron', '.gitignore', 'tests/README.md']) expect(path in files, path).toBe(false);
+  // The steps list the .Rbuildignore lines for what is in the zip, as one block to copy.
+  const block = page.locator('#stepList .cmd.block code');
+  await expect(block).toBeVisible();
+  const lines = (await block.textContent()).split('\n');
+  expect(lines).toEqual(expect.arrayContaining(['^\\.github$', '^\\.lintr$', '^air\\.toml$', '^codecov\\.yml$', '^\\.gitleaksignore$']));
+  expect(lines).not.toContain('^_pkgdown\\.yml$');
+  await expect(page.locator('#stepList')).toContainText('Cmd+Shift+.');
+});
+
+test('an existing package without the lint check gets no lint settings files, and a website adds its own lines', async ({ page }) => {
+  await openExisting(page);
+  await page.locator('#exRows label.pill', { hasText: 'Website' }).click();
+  await page.locator('#exModify').click();
+  await page.locator('#bodyCi label.pill', { hasText: 'lint' }).first().click();
+  await page.locator('#bodyCi label.pill', { hasText: 'coverage' }).click();
+  const { files } = await download(page, '#modDownload');
+  for (const path of ['.lintr', 'air.toml', 'codecov.yml']) expect(path in files, path).toBe(false);
+  expect('_pkgdown.yml' in files).toBe(true);
+  const lines = (await page.locator('#stepList .cmd.block code').textContent()).split('\n');
+  expect(lines).toEqual(expect.arrayContaining(['^_pkgdown\\.yml$', '^pkgdown$']));
+  expect(lines).not.toContain('^\\.lintr$');
+});
+
+test('the existing-package button works when it is pressed before the lists have loaded', async ({ page }) => {
+  let open;
+  const gate = new Promise((resolve) => { open = resolve; });
+  await page.route('**/kit/bundle.json', async (route) => { await gate; await route.continue(); });
+  const asked = page.waitForRequest('**/kit/bundle.json');
+  await page.goto('/', { waitUntil: 'commit' });
+  await asked;
+  await expect(page.locator('#existingStart')).toBeVisible();
+  const reject = page.locator('#cookieNo');
+  if (await reject.isVisible()) await reject.click();
+  const errors = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  await page.locator('#existingStart').click();
+  open();
+  await expect(page.locator('#exRows .pill')).toHaveCount(3);
+  expect(errors).toEqual([]);
 });

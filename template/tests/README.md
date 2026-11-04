@@ -11,15 +11,24 @@ they go in a file whose name ends in a kind. The examples next to each are in `t
 | File name ends in | What it holds | Example | Runs in |
 | --- | --- | --- | --- |
 | `.R` (plain) | Quick tests that run everywhere | `test-say_hello.R` | {{runs_plain}} |
-{{browser_row}}
+{{#has_frontend}}
+| `-browser.R` | Tests that drive a browser (chromote); start them with `options(chromote.timeout = 60)`, as Chrome can start slowly on CI | `test-demo-browser.R` | {{runs_browser}} |
+{{/has_frontend}}
 | `-snap.R` | Snapshot tests (`expect_snapshot()`): the output is saved in `_snaps/` and compared on later runs | `test-say_hello-snap.R` | {{runs_snap}} |
 | `-extended.R` | Slow or detailed tests | `test-say_hello-extended.R` | {{runs_extended}} |
 
-{{full_tests_line}}CRAN skips every kind but the plain one. Snapshot tests
+{{#has_full_tests}}
+`full-tests` runs every kind and fails if any test skips there. CRAN skips every kind but the plain one. Snapshot tests
+{{/has_full_tests}}
+{{^has_full_tests}}
+CRAN skips every kind but the plain one. Snapshot tests
+{{/has_full_tests}}
 skip on CRAN by themselves; start each other file, or each test in it, with a skip line, so it skips there too:
 
 ```r
-{{browser_skip}}
+{{#has_frontend}}
+skip_on_cran()                                                    # -browser.R files
+{{/has_frontend}}
 skip_if_not(identical(Sys.getenv("EXTENDED_TESTS"), "true"), "an extended test")   # -extended.R files
 ```
 

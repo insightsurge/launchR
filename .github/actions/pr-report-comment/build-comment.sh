@@ -3,7 +3,7 @@
 # config, the latest pull_request run for the pull request's head commit, and that run's pr-report-* artifacts.
 # The parts are plain Markdown: they are copied into the comment, never run. Writes the comment to $OUT and the
 # outputs `post` (false when the pull request has a newer commit) and `header` to $GITHUB_OUTPUT.
-# Needs: gh, jq, unzip; GH_TOKEN with actions: read; CONFIG, PR_NUMBER, HEAD_SHA, OUT. Generic: no
+# Needs: gh, jq, perl, unzip; GH_TOKEN with actions: read; CONFIG, PR_NUMBER, HEAD_SHA, OUT. Generic: no
 # repository-specific code.
 set -euo pipefail
 
@@ -11,6 +11,29 @@ repo="${GITHUB_REPOSITORY}"
 work=$(mktemp -d)
 max_part=20000     # characters kept from one part
 max_comment=60000  # GitHub's limit is 65,536
+
+# Cuts Markdown read from stdin to at most $1 bytes, without leaving a half character (a UTF-8 character is up to four
+# bytes) or an open <details> block or code fence: what the cut dropped is closed again, so the rest of the comment
+# is not swallowed. Text within the limit passes through unchanged.
+cut_markdown() {
+  perl -0777 -e '
+    my $max = shift; local $/; my $t = <STDIN>;
+    if (length($t) > $max) {
+      $t = substr($t, 0, $max);
+      $t =~ s/(?:[\xC2-\xDF]|[\xE0-\xEF][\x80-\xBF]?|[\xF0-\xF4][\x80-\xBF]{0,2})\z//;
+      # A fence closes only with the same character, at least as long, alone on its line (CommonMark).
+      my $fence = "";
+      for my $line (split /\n/, $t) {
+        if ($fence eq "") { $fence = $1 if $line =~ /^ {0,3}(`{3,}|~{3,})/; next; }
+        my $c = substr($fence, 0, 1);
+        $fence = "" if $line =~ /^ {0,3}(\Q$c\E{3,})\s*$/ && length($1) >= length($fence);
+      }
+      $t .= "\n$fence\n" if $fence ne "";
+      my $open = () = $t =~ /<details\b/g; my $shut = () = $t =~ /<\/details>/g;
+      $t .= "\n</details>\n" x ($open - $shut) if $open > $shut;
+    }
+    print $t;' "$1"
+}
 
 header=$(jq -r '.header // "pr-report"' "${CONFIG}")
 title=$(jq -r '.title // "CI report"' "${CONFIG}")
@@ -56,16 +79,21 @@ while IFS= read -r workflow; do
   # A run is finished for the report when all its jobs but the report jobs are: its own report job (and this one)
   # may still be running.
   # Each job: its status, conclusion, name, link and the first step that failed ("-" when none).
-  jobs=$(gh api --paginate "repos/${repo}/actions/runs/${id}/jobs" \
-    --jq ".jobs[] | select((.name | split(\" / \") | last) != \"${report_job}\") |
-      [.status, (.conclusion // \"-\"), .name, .html_url,
-       ([.steps[]? | select(.conclusion == \"failure\") | .name][0] // \"-\")] | @tsv")
+  # The sixth field is "true" for a report job.
+  all_jobs=$(gh api --paginate "repos/${repo}/actions/runs/${id}/jobs" \
+    --jq ".jobs[] | [.status, (.conclusion // \"-\"), .name, .html_url,
+       ([.steps[]? | select(.conclusion == \"failure\") | .name][0] // \"-\"),
+       ((.name | split(\" / \") | last) == \"${report_job}\" | tostring)] | @tsv")
+  jobs=$(printf '%s\n' "${all_jobs}" | awk -F '\t' '$6 != "true"' | cut -f 1-5)
+  # The report job needs all the others, so it has started only when they are done. Before that, a run may still be
+  # about to create its matrix jobs (only the job that builds the matrix is listed), which would look like a success.
+  report_started=$(printf '%s\n' "${all_jobs}" | awk -F '\t' '$6 == "true" && ($1 == "in_progress" || $1 == "completed")' | wc -l)
   pending=$(printf '%s\n' "${jobs}" | awk -F '\t' '$1 != "" && $1 != "completed"' | wc -l)
   failed=$(printf '%s\n' "${jobs}" | awk -F '\t' '$2 == "failure" || $2 == "timed_out"' | wc -l)
   cancelled=$(printf '%s\n' "${jobs}" | awk -F '\t' '$2 == "cancelled"' | wc -l)
   # Read from those jobs, not the run's own conclusion: GitHub cancels a report job that waits behind another (they
   # share one concurrency group), which would mark a run whose tests passed as cancelled.
-  if [ "${status}" != "completed" ] && [ "${pending}" -gt 0 ]; then
+  if [ "${status}" != "completed" ] && { [ "${pending}" -gt 0 ] || [ "${report_started}" -eq 0 ]; }; then
     state="running"
   elif [ "${failed}" -gt 0 ]; then
     state="failure"
@@ -113,7 +141,7 @@ while IFS= read -r workflow; do
     unzip -qq -o "${work}/part.zip" -d "${work}/unzip"
     file=$(find "${work}/unzip" -type f -name '*.md' | head -n 1)
     [ -z "${file}" ] && continue
-    head -c "${max_part}" "${file}" >"${work}/parts/${part}.md"
+    cut_markdown "${max_part}" <"${file}" >"${work}/parts/${part}.md"
     found=1
   done < <(gh api --paginate "repos/${repo}/actions/runs/${id}/artifacts" \
     --jq '.artifacts[] | select(.expired | not) | select(.name | startswith("pr-report-")) | [.id, .name] | @tsv')
@@ -185,7 +213,7 @@ fi
 } >"${work}/comment.md"
 
 if [ "$(wc -c <"${work}/comment.md")" -gt "${max_comment}" ]; then
-  head -c "${max_comment}" "${work}/comment.md" >"${OUT}"
+  cut_markdown "${max_comment}" <"${work}/comment.md" >"${OUT}"
   printf '\n\n(Cut short: the full parts are in each job summary.)\n' >>"${OUT}"
 else
   cp "${work}/comment.md" "${OUT}"

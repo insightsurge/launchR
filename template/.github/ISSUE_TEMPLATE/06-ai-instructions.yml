@@ -1,5 +1,5 @@
 name: AI instructions change
-description: Improve the instructions in AGENTS.md or CLAUDE.md.
+description: Improve the instructions in AGENTS.md, CLAUDE.md or .agents/rules/.
 labels: [chore]
 body:
   - type: markdown
@@ -11,7 +11,7 @@ body:
     id: location
     attributes:
       label: Instruction file and section
-      description: Name AGENTS.md or CLAUDE.md and the section. For a missing instruction, say where it belongs.
+      description: Name the file (AGENTS.md, CLAUDE.md or one in .agents/rules/) and the section. For a missing instruction, say where it belongs.
     validations:
       required: true
   - type: textarea

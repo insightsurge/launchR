@@ -131,26 +131,20 @@ function manSeealso(urls, repository) {
   ].join('\n');
 }
 
-// When a check runs, in words for the workflows README: "pull requests, pushes, Mondays at 05:00 UTC, by hand".
-const WEEKDAYS = ['Sundays', 'Mondays', 'Tuesdays', 'Wednesdays', 'Thursdays', 'Fridays', 'Saturdays'];
-function whenText(check) {
-  const [minute, hour, , , day] = check.cron.split(' ');
-  const time = `${hour.padStart(2, '0')}:${minute.padStart(2, '0')} UTC`;
+// When a check runs, in words for the workflows README: "pull requests, pushes, Mondays at 05:17 UTC, by hand". The
+// weekday names are in lists/settings.tsv, which cli/R/build.R reads too.
+function whenText(check, lists) {
   const parts = [];
   if (check.events.includes('pr')) parts.push('pull requests');
   if (check.events.includes('push')) parts.push('pushes');
-  if (check.events.includes('schedule')) parts.push(day === '*' ? `every day at ${time}` : `${WEEKDAYS[Number(day)]} at ${time}`);
+  if (check.events.includes('schedule')) {
+    const [minute, hour, , , day] = check.cron.split(' ');
+    const time = `${hour.padStart(2, '0')}:${minute.padStart(2, '0')} UTC`;
+    parts.push(day === '*' ? `every day at ${time}` : `${lists.settings.weekdays.split(', ')[Number(day)]} at ${time}`);
+  }
   if (check.events.includes('manual')) parts.push('by hand');
   return parts.join(', ');
 }
-
-// Which of the package's checks run each kind of test file, for tests/README.md.
-const TEST_KINDS = {
-  plain: ['r_cmd_check', 'coverage', 'full_tests', 'r_cmd_check_extended'],
-  browser: ['full_tests'],
-  snap: ['full_tests'],
-  extended: ['coverage', 'full_tests', 'r_cmd_check_extended'],
-};
 
 export function placeholderValues(choices, lists) {
   const hasOwner = choices.owner !== '';
@@ -192,62 +186,28 @@ export function placeholderValues(choices, lists) {
   // The oldest R supported: in DESCRIPTION, and in place of 4.1 in the default platforms.
   const minR = choices.minR || lists.settings.min_r;
   // DESCRIPTION takes major.minor.0: R CMD check warns about any other patch level. CI runs the newest patch of it.
-    values.min_r = `${minR}.0`;
+  values.min_r = `${minR}.0`;
   const ciOn = choices.parts.includes('ci');
-  const onRows = ciOn ? lists.checks.filter((row) => choices.checks[row.key].on) : [];
-  values.checks_table = onRows.length
-    ? onRows.map((row) => `| \`${row.check}.yaml\` | ${row.label} | ${whenText(choices.checks[row.key])} |`).join('\n')
-    : '| None yet | Come back to the site to add one | |';
-  for (const [kind, keys] of Object.entries(TEST_KINDS)) {
-    const names = onRows.filter((row) => keys.includes(row.key)).map((row) => `\`${row.check}\``);
+  const checkOn = (key) => ciOn && !!choices.checks[key]?.on;
+  const onRows = lists.checks.filter((row) => checkOn(row.key));
+  values.checks_table = onRows.map((row) => `| \`${row.check}.yaml\` | ${row.label} | ${whenText(choices.checks[row.key], lists)} |`).join('\n');
+  // Which checks run each kind of test file (the test_kinds column of lists/checks.tsv), for tests/README.md.
+  const kinds = new Set(lists.checks.flatMap((row) => row.test_kinds.split(',')).filter(Boolean));
+  for (const kind of kinds) {
+    const names = onRows.filter((row) => row.test_kinds.split(',').includes(kind)).map((row) => `\`${row.check}\``);
     values[`runs_${kind}`] = names.length ? names.join(', ') : 'none of the checks yet';
   }
   // .Renviron runs the extended tests locally when a check runs them in CI.
-  const extendedInCi = ['full_tests', 'coverage', 'r_cmd_check_extended'].some((key) => ciOn && choices.checks[key]?.on);
-  values.extended_env = extendedInCi ? 'EXTENDED_TESTS=true' : '# EXTENDED_TESTS=true';
-  values.browser_row = frontend
-    ? `| \`-browser.R\` | Tests that drive a browser (shinytest2, chromote); start them with \`options(chromote.timeout = 60)\`, as Chrome can start slowly on CI | \`test-demo-browser.R\` | ${values.runs_browser} |`
-    : '';
-  values.browser_skip = frontend ? 'skip_on_cran()                                                    # -browser.R files' : '';
-  // How to send coverage to Codecov; codecov.yml comes with new packages only (an existing package's .Rbuildignore
-  // doesn't list it).
-  values.codecov_note = ciOn && choices.checks.coverage?.on
-    ? `${[
-      '## Codecov',
-      '',
-      'The coverage check decides on its own. To also show coverage on Codecov:',
-      '',
-      '1. Sign in at <https://about.codecov.io> with GitHub and add this repository.',
-      '2. Copy its upload token. On GitHub, add it as a repository secret named `CODECOV_TOKEN` (Settings, then Secrets and',
-      '   variables, then Actions).',
-      '3. In `coverage.yaml`, remove the `#` before the `secrets:` and `CODECOV_TOKEN:` lines.',
-      ...(choices.parts.includes('skeleton') ? [
-        '',
-        '`codecov.yml` at the top of the package keeps Codecov to reporting: no blocking status and no second comment.',
-      ] : []),
-    ].join('\n')}\n\n`
-    : '';
-  const testKinds = [
-    '## Test file kinds',
-    '',
-    'Most tests run in every check. Files whose name ends in a kind run only where they can:',
-    '',
-    '| File name ends in | What it holds | Runs in |',
-    '| --- | --- | --- |',
-    `| \`-browser.R\` | Tests that drive a browser (shinytest2, chromote); start them with \`options(chromote.timeout = 60)\`, as Chrome can start slowly on CI | ${values.runs_browser} |`,
-    `| \`-snap.R\` | Snapshot tests (\`expect_snapshot()\`) | ${values.runs_snap} |`,
-    `| \`-extended.R\` | Slow or detailed tests | ${values.runs_extended} |`,
-    '',
-    'Start each browser file with `skip_on_cran()` and each extended file with',
-    '`skip_if_not(identical(Sys.getenv("EXTENDED_TESTS"), "true"))`, so CRAN and R CMD check skip them.',
-  ].join('\n');
-  values.test_kinds_section = choices.parts.includes('skeleton')
-    ? 'Which test files each check runs: `tests/README.md`.\n\n'
-    : `${testKinds}\n\n`;
-  values.full_tests_line = ciOn && choices.checks.full_tests?.on ? '`full-tests` runs every kind and fails if any test skips there. ' : '';
-  values.time_limit_section = ciOn && choices.checks.r_cmd_check?.on
-    ? '## The time limit\n\n`r-cmd-check` fails when the tests take longer than `test-time-limit` seconds on Linux with R release (180 by default;\n0 turns it off). CRAN asks for quick checks. Move slow tests to a `-extended.R` file, or make them faster.\n\n'
-    : '';
+  values.extended_env = ['full_tests', 'coverage', 'r_cmd_check_extended'].some(checkOn) ? 'EXTENDED_TESTS=true' : '# EXTENDED_TESTS=true';
+  // What the template's {{#has_...}} blocks ask. The paragraphs themselves are in the template.
+  const yes = (on) => (on ? 'yes' : '');
+  values.has_skeleton = yes(choices.parts.includes('skeleton'));
+  values.has_frontend = yes(frontend);
+  values.has_checks = yes(onRows.length > 0);
+  values.has_coverage = yes(checkOn('coverage'));
+  values.has_full_tests = yes(checkOn('full_tests'));
+  values.has_time_limit = yes(checkOn('r_cmd_check'));
+  values.is_internal = yes(choices.release === 'internal');
   for (const row of lists.checks) {
     const check = choices.checks[row.key];
     for (const event of ['pr', 'push', 'schedule', 'manual']) {
@@ -263,13 +223,32 @@ export function placeholderValues(choices, lists) {
   return values;
 }
 
+// Keeps or drops the template's blocks. A block is a line {{#name}} (kept when the value called name is not empty) or
+// {{^name}} (kept when it is empty), the lines under it, and a line {{/name}}. Blocks nest. cli/R/build.R does the same.
+function applyBlocks(text, values) {
+  const keep = [true];
+  const out = [];
+  for (const line of text.split('\n')) {
+    const open = line.match(/^\{\{([#^])(\w+)\}\}$/);
+    if (open) {
+      if (!(open[2] in values)) throw new Error(`No value for the block ${open[2]}`);
+      keep.push(keep.at(-1) && (values[open[2]] !== '') === (open[1] === '#'));
+    } else if (/^\{\{\/\w+\}\}$/.test(line)) {
+      keep.pop();
+    } else if (keep.at(-1)) {
+      out.push(line);
+    }
+  }
+  return out.join('\n');
+}
+
 export function renderText(text, values) {
   const empty = new Set(
     Object.keys(values)
       .filter((key) => values[key] === '')
       .map((key) => `{{${key}}}`),
   );
-  let out = text
+  let out = applyBlocks(text, values)
     .split('\n')
     .filter((line) => !empty.has(line))
     .join('\n');
@@ -279,14 +258,19 @@ export function renderText(text, values) {
   return out;
 }
 
+// The route for a package that already exists (choices.existing) has no skeleton part, but takes the settings files of
+// the checks it chooses: the rows whose existing column names a check that is on.
 export function selectedFiles(choices, lists) {
   const onChecks = new Set(lists.checks.filter((row) => choices.checks[row.key].on).map((row) => row.check));
+  const ci = choices.parts.includes('ci');
+  const checkOk = (check) => check === '' || (ci && (check === 'any' ? onChecks.size > 0 : onChecks.has(check)));
   return lists.files
     .filter(
       (row) =>
-        choices.parts.includes(row.part) &&
-        (row.check === '' || (choices.parts.includes('ci') && onChecks.has(row.check))) &&
-        (row.release === 'any' || row.release === choices.release),
+        (row.release === 'any' || row.release === choices.release) &&
+        (choices.parts.includes(row.part)
+          ? checkOk(row.check)
+          : choices.existing === true && row.existing !== '' && ci && onChecks.has(row.existing)),
     )
     .map((row) => row.path);
 }

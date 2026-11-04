@@ -420,18 +420,62 @@ ejected <- quiet(cmd_eject(character()))
 workflow <- read_text(".github/workflows/lint.yaml")
 ignore <- read_text(".Rbuildignore")
 readme <- read_text(".github/workflows/README.md")
-dependabot_kept <- file.exists(".github/dependabot.yml")
+dependabot <- read_text(".github/dependabot.yml")
 setwd(old)
 expect(ejected$value == 0L && dir.exists(file.path(eject_pkg, ".launchr", "quality-gate")) && file.exists(file.path(eject_pkg, ".launchr", ".github", "gitleaks.toml")),
   "eject copies launchR's CI, gate and gitleaks config into .launchr")
 expect(grepl("uses: ./.github/workflows/launchr-lint.yaml", workflow, fixed = TRUE) && !grepl("insightsurge/launchR", workflow, fixed = TRUE), "eject points the caller files at local copies")
 expect(endsWith(ignore, "^\\.launchr$\n") && !grepl("\r", ignore, fixed = TRUE), "eject adds .launchr to .Rbuildignore with \\n line endings")
 expect(grepl('gate <- ".launchr/quality-gate/quality-gate.R"', readme, fixed = TRUE) && !grepl("insightsurge/launchR", readme, fixed = TRUE), "eject points the local gate run at the package's own copy")
-expect(dependabot_kept, "eject leaves dependabot.yml alone")
+expect(!grepl("launchR", dependabot, fixed = TRUE) && grepl("package-ecosystem: github-actions", dependabot, fixed = TRUE),
+  "eject drops dependabot.yml's launchR group and rule, and keeps the rest")
+expect(!grepl("lives in the launchR repository", readme, fixed = TRUE) && !grepl("Dependabot opens a pull request when launchR", readme, fixed = TRUE) &&
+  grepl("`launchr-*.yaml` files here", readme, fixed = TRUE), "eject rewrites the workflows README's opening paragraph and updates section")
+
+# A caller pinned by commit (with a version comment) is ejected too, and a second eject refreshes the copies.
+sha_pkg <- new_package("shapkg")
+old <- setwd(sha_pkg)
+sha <- strrep("a1b2c3d4e5", 4)
+lint_caller <- read_text(".github/workflows/lint.yaml")
+write_text(sub("@v[0-9.]+", sprintf("@%s # v0.0.12", sha), lint_caller), ".github/workflows/lint.yaml")
+first <- quiet(cmd_eject(character()))
+sha_caller <- read_text(".github/workflows/lint.yaml")
+write_text("stale copy\n", ".github/workflows/launchr-lint.yaml")
+write_text(sub("uses: ./.github/workflows/launchr-lint.yaml", "uses: ./.github/workflows/launchr-lint.yaml\n", sha_caller, fixed = TRUE), ".github/workflows/lint.yaml")
+second <- quiet(cmd_eject(character()))
+refreshed <- read_text(".github/workflows/launchr-lint.yaml")
+workflows_listed <- list.files(".github/workflows")
+setwd(old)
+expect(first$value == 0L && grepl("uses: ./.github/workflows/launchr-lint.yaml", sha_caller, fixed = TRUE) && !grepl("# v0.0.12|launchR", sha_caller),
+  "eject also points a caller pinned by commit at the local copy, dropping the version comment")
+expect(second$value == 0L && !grepl("stale copy", refreshed, fixed = TRUE) && grepl("\nname: lint", refreshed, fixed = TRUE) && !grepl("launchr-fetch", refreshed, fixed = TRUE),
+  "a second eject refreshes the launchr-*.yaml copies")
+expect(sum(workflows_listed == "launchr-lint.yaml") == 1L, "a second eject doesn't duplicate the copies")
 old <- setwd(file.path(work))
 outside <- quiet(cmd_eject(character()))
 setwd(old)
 expect(outside$value == 1L, "eject outside a package fails with a message")
+
+# --- The first commit when git is old -------------------------------------------------------------------------
+section("launchr.R new with a git that has no init -b")
+# A git that refuses init -b, as before 2.28: the first branch is named another way. Another that refuses every init.
+old_git <- Sys.which("git")
+for (mode in c("no-b", "no-init")) {
+  fake_bin <- file.path(work, paste0("fake-git-", mode))
+  dir.create(fake_bin)
+  writeLines(c("#!/bin/sh",
+    if (mode == "no-b") 'case " $* " in *" -b "*) echo "unknown switch b" >&2; exit 129;; esac' else 'case " $* " in *" init "*) exit 128;; esac',
+    sprintf('exec "%s" "$@"', old_git)), file.path(fake_bin, "git"))
+  Sys.chmod(file.path(fake_bin, "git"), "755")
+  Sys.setenv(PATH = paste(fake_bin, old_path, sep = .Platform$path.sep))
+  assign(paste0("old_git_", gsub("-", "_", mode)), quiet(cmd_new(c(paste0("oldgit", gsub("-", "", mode)), "--yes", "--owner", "sample-org", "--path", file.path(work, paste0("oldgit-", mode))))))
+  Sys.setenv(PATH = old_path)
+}
+branch <- system2("git", c("-C", quote_arg(file.path(work, "oldgit-no-b")), "symbolic-ref", "--short", "HEAD"), stdout = TRUE)
+commits <- system2("git", c("-C", quote_arg(file.path(work, "oldgit-no-b")), "rev-list", "--count", "HEAD"), stdout = TRUE)
+expect(old_git_no_b$value == 0L && identical(branch, "main") && identical(commits, "1"), "without init -b, new starts the repository, names the branch main and commits")
+expect(old_git_no_init$value == 0L && any(grepl("git 2.28 or newer", old_git_no_init$out)) && !any(grepl("first commit failed", old_git_no_init$out)) &&
+  file.exists(file.path(work, "oldgit-no-init", "DESCRIPTION")), "when git can't start a repository, new says git 2.28 or newer is needed, not that the commit failed")
 
 # --- Eject, gate and the command line ----------------------------------------------------------------------------
 section("launchr.R from the command line")

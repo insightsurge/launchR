@@ -48,7 +48,9 @@ CI runs the full checks on this pull request; local results do not replace it. -
 - [ ] A user-facing change has a `NEWS.md` bullet.
 - [ ] New behaviour and each fixed bug have a test.
 - [ ] Changes to exported functions keep their help pages, `NAMESPACE` and examples in step (`devtools::document()`).
+{{#has_frontend}}
 - [ ] JavaScript and CSS changes keep meaning off colour alone and honour `prefers-reduced-motion`. Delete if there are none.
+{{/has_frontend}}
 - [ ] Every text that describes the changed behaviour is updated: help pages, articles, the README, `NEWS.md`, examples, workflow comments, `AGENTS.md` and `CLAUDE.md` if the repository has them, and any other page or file that describes it. Search terms used for the old wording:
 
 Notes: <!-- One-off observations, browser and OS versions, screenshots, suggested labels, or words for the spelling list.

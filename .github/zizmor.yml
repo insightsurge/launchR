@@ -1,0 +1,14 @@
+# Settings for zizmor, the workflow security linter that runs in site-tests.yaml (and locally: `zizmor .github`).
+rules:
+  unpinned-uses:
+    config:
+      policies:
+        # GitHub's own actions and r-lib's follow a major-version tag that Dependabot keeps current, the same as in
+        # every package's own caller workflows. Every other action must be pinned to a full commit SHA.
+        actions/*: ref-pin
+        r-lib/actions/*: ref-pin
+        "*": hash-pin
+  self-repository:
+    # `./.launchr/...` is a checkout of launchR at this workflow's version (or the copy left in the package after
+    # `eject`), not the repository the workflow runs in, so the `$/...` syntax would point at the wrong code.
+    disable: true

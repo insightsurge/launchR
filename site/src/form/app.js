@@ -36,13 +36,20 @@ function kitPlatforms() {
   return row[`platforms_${visibility()}`].split(',').map((entry) => entry.trim());
 }
 
+/* the day and time of the weekly checks, from the cron in lists/checks.tsv ("17 5 * * 1" is Monday, 05:17) */
+function weeklyTime() {
+  const row = lists.checks.find((check) => check.events.split(',').includes('schedule'));
+  const [minute, hour, , , day] = row.cron.split(' ');
+  return { day: DAYS[Number(day)], time: `${hour.padStart(2, '0')}:${minute.padStart(2, '0')}` };
+}
+
 /* what each plan starts from: the starter column and lists/plans.tsv, read by engine.js as the CLI reads them */
 function recommended() {
   const start = kitPlatforms();
   return {
     checks: Object.fromEntries(Object.entries(defaultChoices(lists, 'starter', plan()).checks).map(([key, check]) => [key, check.on])),
     matrix: Object.fromEntries(SYSTEMS.flatMap(([s]) => RS.map(([r]) => [`${s}/${r}`, start.includes(`${s}/${r}`)]))),
-    minR: '', samePlatforms: false, day: 'Monday', time: '05:00', website: false, github: true, frontend: false, ai: false,
+    minR: '', samePlatforms: false, ...weeklyTime(), website: false, github: true, frontend: false, ai: false,
   };
 }
 
@@ -77,7 +84,7 @@ function paint() {
     ${sw('github', 'Issue forms, labels and checklists', 'Five issue forms, a pull request template, eleven labels next to GitHub\'s own (the Set up this repository button can remove those), and the stage checklists.', S.github)}
     <div class="opt soonline"><span>Choosing each form and label</span><span class="tag">Coming soon</span></div>`;
   $('#bodyMore').innerHTML = `${sw('frontend', 'My package ships its own JS or CSS', 'Adds browser tests and the style checks for them.', S.frontend)}
-    ${sw('ai', 'Instructions for AI assistants', 'AGENTS.md with the package\'s house rules, read by Codex, Gemini, Copilot and others, and a CLAUDE.md that loads it for Claude. Also an issue form for changing them.', S.ai)}
+    ${sw('ai', 'Instructions for AI assistants', 'AGENTS.md and rules files in .agents/rules/ (R code, tests, docs, checks, JS and CSS, git), the same for every package, read by Codex, Gemini, Copilot and others, and a CLAUDE.md that loads AGENTS.md for Claude. Also an issue form for changing them.', S.ai)}
     <div class="opt soonline"><span>Badges, licence choice, PR report choice</span><span class="tag">Coming soon</span></div>`;
   summary();
 }
@@ -197,7 +204,7 @@ function modifyValid() {
 ['exPkg', 'exOwner'].forEach((id) => $(`#${id}`).addEventListener('input', () => put(id, '')));
 
 function cron() {
-  const [hour, minute] = (timeProblem() ? '05:00' : S.time).split(':').map(Number);
+  const [hour, minute] = (timeProblem() ? weeklyTime().time : S.time).split(':').map(Number);
   return `${minute} ${hour} * * ${DAYS.indexOf(S.day)}`;
 }
 
@@ -222,7 +229,7 @@ function choices() {
   }]));
   const email = mode === 'new' ? v('email') : '';
   return {
-    ...base, parts, checks, visibility: visibility(), release: release(), owner: mode === 'new' ? v('owner') : v('exOwner'),
+    ...base, parts, checks, existing: mode === 'existing', visibility: visibility(), release: release(), owner: mode === 'new' ? v('owner') : v('exOwner'),
     package: pkg(), title: mode === 'new' ? v('what') : '', description: mode === 'new' ? v('details') : '', given: v('first'), family: v('last'), email,
     minR: minRProblem() ? base.minR : S.minR || base.minR,
   };
@@ -285,6 +292,7 @@ function paintExisting() {
   $('#exModify').hidden = !add.ci;
   $('#exDownload').disabled = !PARTS.some(([k]) => add[k]);
   $('#exNote').textContent = '';
+  $('#exFinder').textContent = finderNote;
 }
 $('#exRows').addEventListener('change', (e) => { add[e.target.dataset.part] = e.target.checked; S.website = add.website; paintExisting(); });
 $('#exPlans').addEventListener('change', (e) => { $(`input[name=plan][value=${e.target.value}]`).checked = true; S = recommended(); S.website = add.website; paint(); });
@@ -299,7 +307,16 @@ function existingValid() {
   return modifyValid();
 }
 
-function goExisting() {
+async function goExisting() {
+  /* the lists may still be loading when the button is pressed early */
+  if (!lists && !(await loadKit())) {
+    /* said next to the button that was pressed, which is far from the form */
+    const note = $('#existingNote') ?? Object.assign(document.createElement('span'), { id: 'existingNote', role: 'status' });
+    note.textContent = ' The form could not load its files. Check your connection and try again.';
+    $('#existingStart').after(note);
+    return;
+  }
+  $('#existingNote')?.remove();
   mode = 'existing';
   S = recommended();
   S.website = add.website;
@@ -312,8 +329,9 @@ $('#existingStart').addEventListener('click', goExisting);
 $('#exBack').addEventListener('click', () => { mode = 'new'; S = recommended(); paint(); view('main', $('#pkg')); });
 
 /* the page after the download */
-const copy = (text) => `<div class="cmd"><code>${esc(text)}</code><button type="button" class="copy" data-copy="${esc(text)}">Copy</button></div>`;
+const copy = (text, block) => `<div class="cmd${block ? ' block' : ''}"><code>${esc(text)}</code><button type="button" class="copy" data-copy="${esc(text)}">Copy</button></div>`;
 const code = (t) => `<code>${esc(t)}</code>`;
+const finderNote = 'On a Mac, Finder hides folders whose name starts with a dot, such as .github: press Cmd+Shift+. to see them.';
 const setupButton = 'On GitHub, go to Actions, open <em>Set up this repository</em>, click Run workflow, untick <em>Only show what would change</em>, and run it.';
 const setupMore = "Its first run, from your push, only listed what it would make. This run makes your labels and checklists. Labels that aren't launchR's, such as GitHub's own and any you made, stay. To remove them, also tick <em>Also remove labels that aren't launchR's</em>; Dependabot's labels are kept.";
 const actions = 'Open the repository on GitHub and go to Actions: your checks are running.';
@@ -323,8 +341,19 @@ const codecov = () => (S.checks.coverage ? `Optional: to show coverage on Codeco
 // One step: what to do in a line, the commands, and the explanations folded away.
 const step = (lead, cmds = '', more = '') => `<li><p class="lead">${lead}</p>${cmds}${more ? `<details class="more"><summary>Why, and more</summary><p>${more}</p></details>` : ''}</li>`;
 
+/* the lines R CMD check needs in .Rbuildignore for what the zip holds: one for each top-level file or folder, and the
+   file a secret-scan false alarm goes in */
+function ignoreLines() {
+  const tops = [...new Set(Object.keys(buildPackage(choices(), bundle)).map((path) => path.split('/')[0]))];
+  if (add.ci && S.checks.secret_scan) tops.push('.gitleaksignore');
+  return tops.map((name) => `^${name.replace(/\./g, '\\.')}$`);
+}
+
 function existingSteps() {
-  const list = [step(`Unzip ${code('launchR-files.zip')} and copy what's inside into your package folder.`, '', `Nothing in ${code('R/')}, ${code('tests/')} or ${code('DESCRIPTION')} changes. On a Mac, Finder hides folders whose name starts with a dot, such as ${code('.github')}: press Cmd+Shift+. to see them before you copy.`)];
+  const list = [step(`Unzip ${code('launchR-files.zip')} and copy what's inside into your package folder. ${finderNote}`, '', `Nothing in ${code('R/')}, ${code('tests/')} or ${code('DESCRIPTION')} changes.`)];
+  list.push(step(`Add these lines to ${code('.Rbuildignore')}, if they aren't there yet.`, copy(ignoreLines().join('\n'), true), 'They keep these files out of the built package, so R CMD check does not note them as unexpected hidden files or folders.'));
+  const settings = ['.lintr', 'air.toml', 'codecov.yml'].filter((file) => file in buildPackage(choices(), bundle));
+  if (settings.length) list.push(step(`If your package already has ${settings.map(code).join(', ')}, keep yours instead of the copy in the zip.`, '', 'The checks read these settings files. Copying over yours would replace your own lint, formatting or coverage settings; merge in only the lines you want.'));
   if (add.ci) list.push(step(`Delete any old files in ${code('.github/workflows')} that do the same job.`, '', `If your package already has ${code('.github/workflows/README.md')}, keep yours and copy in only the new rows from the one in the zip.`));
   if (add.ci && release() === 'internal') list.push(step(`Add this line to ${code('DESCRIPTION')}.`, copy('Config/quality-gate/target: internal'), "Your package won't go to CRAN, so the checks then leave out what only CRAN asks for."));
   list.push(step("Commit and push, from RStudio's Git pane or GitHub Desktop."));
@@ -406,20 +435,29 @@ dialog.addEventListener('keydown', (e) => {
   }
 });
 
-async function loadKit() {
-  try {
-    const response = await fetch('/kit/bundle.json');
-    if (!response.ok) return false;
-    bundle = await response.json();
-    lists = readLists(bundle);
-    CHECKS = lists.checks.map((row) => [row.key, row.check, row.help]);
-    WEEKLY = lists.checks.filter((row) => row.events.split(',').includes('schedule')).map((row) => row.key);
-    S ??= recommended();
-    paint();
-    return true;
-  } catch {
-    return false;
-  }
+/* one load at a time: a button pressed while the page is still loading waits for the same fetch; a failed load can be
+   tried again */
+let kitLoading = null;
+function loadKit() {
+  kitLoading ??= (async () => {
+    try {
+      const response = await fetch('/kit/bundle.json');
+      if (!response.ok) return false;
+      bundle = await response.json();
+      lists = readLists(bundle);
+      CHECKS = lists.checks.map((row) => [row.key, row.check, row.help]);
+      WEEKLY = lists.checks.filter((row) => row.events.split(',').includes('schedule')).map((row) => row.key);
+      S ??= recommended();
+      paint();
+      return true;
+    } catch {
+      return false;
+    }
+  })().then((ok) => {
+    if (!ok) kitLoading = null;
+    return ok;
+  });
+  return kitLoading;
 }
 
 view('main');

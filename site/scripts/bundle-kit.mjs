@@ -1,6 +1,6 @@
 // Copies the shared template and lists into the site as one file, so the browser builds the zip from what the CLI uses.
 import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, join, relative } from 'node:path';
+import { dirname, join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -10,14 +10,19 @@ const walk = (folder) =>
     return entry.isDirectory() ? walk(path) : [path];
   });
 
+// Text with \n line endings and keys with / whatever the system, as cli/R/paths.R reads files: a checkout with Windows
+// line endings or backslash paths builds the same package.
+const readText = (path) => readFileSync(path, 'utf8').replaceAll('\r\n', '\n');
+const key = (base, path) => relative(base, path).split(sep).join('/');
+
 export function readBundle() {
   const template = {};
   for (const path of walk(join(root, 'template'))) {
-    template[relative(join(root, 'template'), path)] = readFileSync(path, 'utf8');
+    template[key(join(root, 'template'), path)] = readText(path);
   }
   const lists = {};
   for (const name of readdirSync(join(root, 'lists'))) {
-    lists[name] = readFileSync(join(root, 'lists', name), 'utf8');
+    lists[name] = readText(join(root, 'lists', name));
   }
   return { template, lists };
 }

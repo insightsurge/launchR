@@ -1,7 +1,8 @@
 # Values the CLI and the app share. branches: the checks run for these; master too, because usethis::use_git() can
 # create it. The CLI's first commit uses the first one. base_packages: names a new package can't take. plan: the plan an
 # untouched form and the CLI start from (lists/plans.tsv). placeholder_email: DESCRIPTION's email when none is given. min_r: the oldest R
-# a new package supports unless chosen; the /4.1 entries in checks.tsv's platforms follow it.
+# a new package supports unless chosen; the /4.1 entries in checks.tsv's platforms follow it. weekdays: how the workflows
+# README names the day of a weekly run (cron day 0 is Sunday).
 key	value
 kit_version	0.0.12
 site_url	https://launch-r.web.app
@@ -11,3 +12,4 @@ base_packages	R, base, compiler, datasets, graphics, grDevices, grid, methods, p
 plan	a
 placeholder_email	your.email@example.com
 min_r	4.1
+weekdays	Sundays, Mondays, Tuesdays, Wednesdays, Thursdays, Fridays, Saturdays

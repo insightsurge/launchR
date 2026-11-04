@@ -99,7 +99,18 @@ cmd_new <- function(args) {
     return(0L)
   }
   git <- function(...) system2("git", c("-C", quote_arg(out), ...), stdout = FALSE, stderr = FALSE)
-  git("init", "-q", "-b", strsplit(choices$branches, ",")[[1]][1])
+  branch <- strsplit(choices$branches, ",")[[1]][1]
+  init <- git("init", "-q", "-b", branch)
+  if (init != 0L) {
+    # git before 2.28 has no -b: start the repository, then name its first branch.
+    init <- git("init", "-q")
+    if (init == 0L) init <- git("symbolic-ref", "HEAD", paste0("refs/heads/", branch))
+  }
+  if (init != 0L) {
+    message("git couldn't start a repository in the folder. launchR needs git 2.28 or newer (git --version), or run: git init")
+    print_next_steps(choices, package, out, committed = FALSE)
+    return(0L)
+  }
   git("add", "-A")
   status <- git("commit", "-q", "-m", quote_arg("feat: start the package"))
   if (status != 0L) {

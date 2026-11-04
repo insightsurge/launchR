@@ -1,6 +1,7 @@
 # launchR's own checks on every pull request (not a check that packages call): the site works in a browser the way a
 # visitor uses it, and the site and the command line still make the same packages. A change that breaks the form or a
-# zip then fails here before it reaches the live site.
+# zip then fails here before it reaches the live site. The workflows and actions that packages call are linted here too
+# (actionlint for mistakes, zizmor for security problems).
 on:
   pull_request:
     branches: [main]
@@ -83,3 +84,41 @@ jobs:
 
       - name: Test the PR report comment
         run: bash tests/build-comment-tests.sh
+
+  workflow-lint:
+    # Lints .github/workflows and .github/actions, which every package's CI calls. Settings: .github/actionlint.yaml and
+    # .github/zizmor.yml. Both tools are pinned to an exact version and the downloads are checked against a SHA-256,
+    # so a new release cannot change the result by itself; raise them on purpose (and in CONTRIBUTING.md).
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    env:
+      ACTIONLINT_VERSION: "1.7.12"
+      ACTIONLINT_SHA256: 8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8  # actionlint_1.7.12_linux_amd64.tar.gz
+      ZIZMOR_VERSION: "1.32.0"
+      ZIZMOR_SHA256: bb110cc765eca9cd7efb2e284a956be5974c60027b0970f16397d86208a9957b  # zizmor-x86_64-unknown-linux-gnu.tar.gz
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Install actionlint and zizmor
+        run: |
+          mkdir -p "${RUNNER_TEMP}/bin"
+          cd "${RUNNER_TEMP}"
+          curl -sSfL -o actionlint.tar.gz "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
+          curl -sSfL -o zizmor.tar.gz "https://github.com/zizmorcore/zizmor/releases/download/v${ZIZMOR_VERSION}/zizmor-x86_64-unknown-linux-gnu.tar.gz"
+          echo "${ACTIONLINT_SHA256}  actionlint.tar.gz" | sha256sum --check
+          echo "${ZIZMOR_SHA256}  zizmor.tar.gz" | sha256sum --check
+          tar -xzf actionlint.tar.gz -C bin actionlint
+          tar -xzf zizmor.tar.gz -C bin zizmor
+          echo "${RUNNER_TEMP}/bin" >> "${GITHUB_PATH}"
+
+      # Uses the shellcheck on the runner for the shell in `run:` steps.
+      - name: actionlint
+        run: actionlint
+
+      # Online audits (a pinned SHA that is no commit of its action, a known-vulnerable action) need the token.
+      - name: zizmor
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: zizmor .github/workflows .github/actions

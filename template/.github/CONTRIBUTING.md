@@ -8,13 +8,17 @@ To change something yourself, read the workflow below and open a pull request.
 - **R**: the current release is recommended. The minimum version is in `DESCRIPTION`.
 - **Development packages**: from the package root, run `pak::local_install_dev_deps()`.
 - **Air**, the formatter for R code: <https://posit-dev.github.io/air/>. The settings are in `air.toml`.
-- **Biome**, only if the repository has a `biome.json`: the formatter and linter for JavaScript and CSS in `inst/`,
-  <https://biomejs.dev>.
-- **Google Chrome or Chromium**, only if the repository has browser tests.
+{{#has_frontend}}
+- **Biome**, the formatter and linter for JavaScript and CSS in `inst/`: <https://biomejs.dev>. The settings are in
+  `biome.json`.
+- **Google Chrome or Chromium**, for the browser tests.
+{{/has_frontend}}
 - If you use renv, set up your own library; the repository does not ship one.
 
+{{#has_checks}}
 CI runs on every pull request, so you do not need anything else installed. How CI works is in
 [`.github/workflows/README.md`](workflows/README.md).
+{{/has_checks}}
 
 ## Workflow
 
@@ -59,23 +63,35 @@ air format .           # R code style
 - Commit the files `devtools::document()` changes together with the source.
 - An unknown word fails the spelling check: list it in your pull request, and the maintainer adds agreed words to
   `inst/WORDLIST`.
+- The spelling check reads `Language: en-GB` in `DESCRIPTION`, so it expects British spelling. For American spelling
+  (color, license), change it to `en-US`.
+{{#has_checks}}
 - To run the same checks CI runs, including style, docs in sync and spelling, use the quality gate: see "Run the
   checks on your computer" in `.github/workflows/README.md`.
 - A failing check on a pull request is read from its log in the Checks tab. Fix the first failure and push again.
+{{/has_checks}}
 
 ## Code in short
 
 - Write help and offline examples with roxygen2. Every exported function documents its return value.
 - Call other packages as `pkg::fn()` and add them to `DESCRIPTION` first.
 - Check arguments at the top of exported functions, and give messages that say what to do next.
+{{#has_frontend}}
 - Keep JavaScript and CSS in `inst/` plain and readable. Bundle what the package needs; do not load anything from a
   CDN.
 - Accessibility: meaning never rests on colour alone. Honour `prefers-reduced-motion`.
+{{/has_frontend}}
 
 ## Tests
 
 Tests use testthat, one test file per R file. Add a test for every new behaviour and every fixed bug, and keep example
-data made up. Browser and snapshot tests that CRAN skips live in their own files and run in CI.
+data made up.
+{{#has_frontend}}
+Browser and snapshot tests that CRAN skips live in their own files and run in CI.
+{{/has_frontend}}
+{{^has_frontend}}
+Snapshot and extended tests that CRAN skips live in their own files and run in CI.
+{{/has_frontend}}
 
 ## NEWS.md
 

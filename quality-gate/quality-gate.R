@@ -107,7 +107,7 @@ required_packages <- function(mode, uses) {
   checkmate::assert_choice(mode, modes)
   checkmate::assert_list(uses, types = "logical")
   # The nosuggests mode needs only what its own step uses, so it runs in a library with just the hard dependencies
-  # (CI's check-no-suggests job), which has no devtools.
+  # (CI's no-suggests job), which has no devtools.
   if (mode == "nosuggests") {
     return(c("checkmate", "cli", "jsonlite", "pkgbuild", "processx", "rcmdcheck"))
   }
@@ -1077,7 +1077,7 @@ nosuggests_library <- function(dir, uses) {
   structure(lib, linked = length(needed))
 }
 
-# R CMD check as CI's check-no-suggests job runs it, without installing anything: only the hard dependencies are on
+# R CMD check as CI's no-suggests job runs it, without installing anything: only the hard dependencies are on
 # the library path, `_R_CHECK_FORCE_SUGGESTS_` is false and NOT_CRAN is unset, so a test that uses a Suggests
 # package without guarding it fails here.
 step_nosuggests <- function(uses, run_dir, log) {
@@ -1307,7 +1307,7 @@ usage_lines <- c(
   "  tests       tools, the tests under covr (once), coverage and the lines this branch adds",
   "  full        everything: fast steps, tests, coverage, CRAN-like check with tests, no-Suggests check, tarball",
   "  lint        the quick static steps only",
-  "  nosuggests  R CMD check with only the hard dependencies on the library path (CI's check-no-suggests job)",
+  "  nosuggests  R CMD check with only the hard dependencies on the library path (CI's no-suggests job)",
   "",
   "Options:",
   "  --steps a,b    run only these steps of the mode (tools always runs); the run is marked PARTIAL",

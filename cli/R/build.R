@@ -46,78 +46,30 @@ placeholder_values <- function(choices) {
   # DESCRIPTION takes major.minor.0: R CMD check warns about any other patch level. CI runs the newest patch of it.
   values$min_r <- paste0(min_r, ".0")
   ci_on <- "ci" %in% choices$parts
-  on_rows <- if (ci_on) which(vapply(checks$key, function(key) isTRUE(choices$checks[[key]]$on), logical(1))) else integer()
+  check_on <- function(key) ci_on && isTRUE(choices$checks[[key]]$on)
+  on_rows <- which(vapply(checks$key, check_on, logical(1)))
   values$checks_table <- paste(
     sprintf("| `%s.yaml` | %s | %s |", checks$check[on_rows], checks$label[on_rows],
       vapply(checks$key[on_rows], function(key) when_text(choices$checks[[key]]), character(1))),
     collapse = "\n"
   )
-  if (length(on_rows) == 0) values$checks_table <- "| None yet | Come back to the site to add one | |"
-  for (kind in names(test_kinds)) {
-    rows <- on_rows[checks$key[on_rows] %in% test_kinds[[kind]]]
+  # Which checks run each kind of test file (the test_kinds column of lists/checks.tsv), for tests/README.md.
+  kind_lists <- strsplit(checks$test_kinds, ",", fixed = TRUE)
+  for (kind in unique(unlist(kind_lists))) {
+    rows <- on_rows[vapply(kind_lists[on_rows], function(kinds) kind %in% kinds, logical(1))]
     values[[paste0("runs_", kind)]] <- if (length(rows) > 0) paste0("`", checks$check[rows], "`", collapse = ", ") else "none of the checks yet"
   }
   # .Renviron runs the extended tests locally when a check runs them in CI.
-  extended_in_ci <- ci_on && any(vapply(c("full_tests", "coverage", "r_cmd_check_extended"), function(key) isTRUE(choices$checks[[key]]$on), logical(1)))
-  values$extended_env <- if (extended_in_ci) "EXTENDED_TESTS=true" else "# EXTENDED_TESTS=true"
-  values$browser_row <- if (frontend) {
-    sprintf("| `-browser.R` | Tests that drive a browser (shinytest2, chromote); start them with `options(chromote.timeout = 60)`, as Chrome can start slowly on CI | `test-demo-browser.R` | %s |", values$runs_browser)
-  } else {
-    ""
-  }
-  values$browser_skip <- if (frontend) "skip_on_cran()                                                    # -browser.R files" else ""
-  # How to send coverage to Codecov; codecov.yml comes with new packages only (an existing package's .Rbuildignore
-  # doesn't list it).
-  values$codecov_note <- if (ci_on && isTRUE(choices$checks$coverage$on)) {
-    yml <- if ("skeleton" %in% choices$parts) {
-      c("", "`codecov.yml` at the top of the package keeps Codecov to reporting: no blocking status and no second comment.")
-    }
-    paste0(paste(c(
-      "## Codecov",
-      "",
-      "The coverage check decides on its own. To also show coverage on Codecov:",
-      "",
-      "1. Sign in at <https://about.codecov.io> with GitHub and add this repository.",
-      "2. Copy its upload token. On GitHub, add it as a repository secret named `CODECOV_TOKEN` (Settings, then Secrets and",
-      "   variables, then Actions).",
-      "3. In `coverage.yaml`, remove the `#` before the `secrets:` and `CODECOV_TOKEN:` lines.",
-      yml
-    ), collapse = "\n"), "\n\n")
-  } else {
-    ""
-  }
-  test_kinds_text <- paste(c(
-    "## Test file kinds",
-    "",
-    "Most tests run in every check. Files whose name ends in a kind run only where they can:",
-    "",
-    "| File name ends in | What it holds | Runs in |",
-    "| --- | --- | --- |",
-    sprintf("| `-browser.R` | Tests that drive a browser (shinytest2, chromote); start them with `options(chromote.timeout = 60)`, as Chrome can start slowly on CI | %s |", values$runs_browser),
-    sprintf("| `-snap.R` | Snapshot tests (`expect_snapshot()`) | %s |", values$runs_snap),
-    sprintf("| `-extended.R` | Slow or detailed tests | %s |", values$runs_extended),
-    "",
-    "Start each browser file with `skip_on_cran()` and each extended file with",
-    "`skip_if_not(identical(Sys.getenv(\"EXTENDED_TESTS\"), \"true\"))`, so CRAN and R CMD check skip them."
-  ), collapse = "\n")
-  values$test_kinds_section <- if ("skeleton" %in% choices$parts) {
-    "Which test files each check runs: `tests/README.md`.\n\n"
-  } else {
-    paste0(test_kinds_text, "\n\n")
-  }
-  values$full_tests_line <- if (ci_on && isTRUE(choices$checks$full_tests$on)) {
-    "`full-tests` runs every kind and fails if any test skips there. "
-  } else {
-    ""
-  }
-  values$time_limit_section <- if (ci_on && isTRUE(choices$checks$r_cmd_check$on)) {
-    paste0(
-      "## The time limit\n\n`r-cmd-check` fails when the tests take longer than `test-time-limit` seconds on Linux with R release (180 by default;\n",
-      "0 turns it off). CRAN asks for quick checks. Move slow tests to a `-extended.R` file, or make them faster.\n\n"
-    )
-  } else {
-    ""
-  }
+  values$extended_env <- if (any(vapply(c("full_tests", "coverage", "r_cmd_check_extended"), check_on, logical(1)))) "EXTENDED_TESTS=true" else "# EXTENDED_TESTS=true"
+  # What the template's {{#has_...}} blocks ask. The paragraphs themselves are in the template.
+  yes <- function(on) if (on) "yes" else ""
+  values$has_skeleton <- yes("skeleton" %in% choices$parts)
+  values$has_frontend <- yes(frontend)
+  values$has_checks <- yes(length(on_rows) > 0)
+  values$has_coverage <- yes(check_on("coverage"))
+  values$has_full_tests <- yes(check_on("full_tests"))
+  values$has_time_limit <- yes(check_on("r_cmd_check"))
+  values$is_internal <- yes(choices$release == "internal")
   for (i in seq_len(nrow(checks))) {
     key <- checks$key[i]
     check <- choices$checks[[key]]
@@ -137,30 +89,22 @@ placeholder_values <- function(choices) {
   values
 }
 
-# When a check runs, in words for the workflows README: "pull requests, pushes, Mondays at 05:00 UTC, by hand".
-# site/src/form/engine.js has the same.
+# When a check runs, in words for the workflows README: "pull requests, pushes, Mondays at 05:17 UTC, by hand". The
+# weekday names are in lists/settings.tsv, which site/src/form/engine.js reads too.
 when_text <- function(check) {
-  cron <- strsplit(check$cron, " ", fixed = TRUE)[[1]]
-  time <- sprintf("%02d:%02d UTC", as.integer(cron[2]), as.integer(cron[1]))
-  weekdays <- c("Sundays", "Mondays", "Tuesdays", "Wednesdays", "Thursdays", "Fridays", "Saturdays")
   parts <- c(
     if ("pr" %in% check$events) "pull requests",
     if ("push" %in% check$events) "pushes",
     if ("schedule" %in% check$events) {
+      cron <- strsplit(check$cron, " ", fixed = TRUE)[[1]]
+      time <- sprintf("%02d:%02d UTC", as.integer(cron[2]), as.integer(cron[1]))
+      weekdays <- strsplit(kit_setting("weekdays"), ", ", fixed = TRUE)[[1]]
       if (cron[5] == "*") paste("every day at", time) else paste(weekdays[as.integer(cron[5]) + 1], "at", time)
     },
     if ("manual" %in% check$events) "by hand"
   )
   paste(parts, collapse = ", ")
 }
-
-# Which of the package's checks run each kind of test file, for tests/README.md.
-test_kinds <- list(
-  plain = c("r_cmd_check", "coverage", "full_tests", "r_cmd_check_extended"),
-  browser = "full_tests",
-  snap = "full_tests",
-  extended = c("coverage", "full_tests", "r_cmd_check_extended")
-)
 
 # The help page's links, as roxygen2 writes them from URL and BugReports.
 man_seealso <- function(urls, repository) {
@@ -172,9 +116,30 @@ man_seealso <- function(urls, repository) {
   ), collapse = "\n")
 }
 
+# Keeps or drops the template's blocks. A block is a line {{#name}} (kept when the value called name is not empty) or
+# {{^name}} (kept when it is empty), the lines under it, and a line {{/name}}. Blocks nest. site/src/form/engine.js does
+# the same.
+apply_blocks <- function(text, values) {
+  keep <- TRUE
+  out <- character()
+  for (line in strsplit(text, "\n", fixed = TRUE)[[1]]) {
+    open <- regmatches(line, regexec("^\\{\\{([#^])(\\w+)\\}\\}$", line))[[1]]
+    if (length(open) > 0) {
+      if (!open[3] %in% names(values)) stop("No value for the block ", open[3], call. = FALSE)
+      keep <- c(keep, tail(keep, 1) && (nzchar(values[[open[3]]]) == (open[2] == "#")))
+    } else if (grepl("^\\{\\{/\\w+\\}\\}$", line)) {
+      keep <- head(keep, -1)
+    } else if (tail(keep, 1)) {
+      out <- c(out, line)
+    }
+  }
+  paste0(paste(out, collapse = "\n"), if (endsWith(text, "\n")) "\n")
+}
+
 render_text <- function(text, values) {
   missing <- names(values)[vapply(values, function(value) length(value) != 1 || is.na(value), logical(1))]
   if (length(missing) > 0) stop("No value for: ", paste(missing, collapse = ", "), call. = FALSE)
+  text <- apply_blocks(text, values)
   lines <- strsplit(text, "\n", fixed = TRUE)[[1]]
   ends_with_newline <- endsWith(text, "\n")
   empty <- names(values)[vapply(values, function(value) !nzchar(value), logical(1))]
@@ -190,10 +155,11 @@ selected_files <- function(choices) {
   files <- read_list("files.tsv")
   checks <- read_list("checks.tsv")
   on_checks <- checks$check[vapply(checks$key, function(key) choices$checks[[key]]$on, logical(1))]
-  keep <- files$part %in%
-    choices$parts &
-    (!nzchar(files$check) | ("ci" %in% choices$parts & files$check %in% on_checks)) &
-    (files$release == "any" | files$release == choices$release)
+  # A check column of "any" means at least one check is on. (The existing column is for the site's route for a package
+  # that already exists; the command line only makes new packages.)
+  check_ok <- !nzchar(files$check) |
+    ("ci" %in% choices$parts & ifelse(files$check == "any", length(on_checks) > 0, files$check %in% on_checks))
+  keep <- files$part %in% choices$parts & check_ok & (files$release == "any" | files$release == choices$release)
   files$path[keep]
 }
 

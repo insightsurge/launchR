@@ -1,0 +1,8 @@
+# Text files use \n line endings in every checkout, so the lists, the template and the scripts read the same on
+# Windows (core.autocrlf would otherwise put \r at the end of the last column of a list). Binary files stay as they are.
+* text=auto eol=lf
+*.png binary
+*.gif binary
+*.ico binary
+*.woff2 binary
+*.jpg binary

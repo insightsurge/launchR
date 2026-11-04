@@ -2,8 +2,13 @@
 
 ## Supported versions
 
+{{#is_internal}}
+Only the development version on `main` gets fixes.
+{{/is_internal}}
+{{^is_internal}}
 Until {{package}} is on CRAN, only the development version on `main` gets fixes. After that, the latest CRAN release
 does.
+{{/is_internal}}
 
 ## Reporting a vulnerability
 
