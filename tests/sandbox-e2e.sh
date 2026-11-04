@@ -175,6 +175,20 @@ wait_runs() {
   save WAIT_END "$(date +%s)"
 }
 
+# The jobs of one run as JSON lines. GitHub has answered with no result for a job that had finished long before
+# (2026-11-04), so a job without one is asked about again, up to three times, before it counts as not finished.
+run_jobs() {
+  local jobs try
+  for try in 1 2 3; do
+    jobs=$(gh api --paginate "repos/${SANDBOX_REPO}/actions/runs/$1/jobs?filter=latest&per_page=100" \
+      --jq '.jobs[] | {name, conclusion, html_url, runner: (.runner_id // 0), steps: (.steps | length),
+        failed: [.steps[]? | select(.conclusion == "failure") | .name]}')
+    jq -e 'select(.conclusion == null)' <<< "${jobs}" >/dev/null || break
+    [ "${try}" -eq 3 ] || sleep "${JOBS_RETRY_SECONDS:-20}"
+  done
+  printf '%s\n' "${jobs}"
+}
+
 report() {
   : "${MAIN_SHA:?}" "${PR_SHA:?}" "${PR_NUMBER:?}"
   local runs problems=0 line id path commit conclusion url jobs bad job norunner list="${WORK}/problems.md"
@@ -201,9 +215,7 @@ report() {
     commit=$(jq -r .commit <<< "${line}")
     conclusion=$(jq -r '.conclusion // .status' <<< "${line}")
     url=$(jq -r .html_url <<< "${line}")
-    jobs=$(gh api --paginate "repos/${SANDBOX_REPO}/actions/runs/${id}/jobs?filter=latest&per_page=100" \
-      --jq '.jobs[] | {name, conclusion, html_url, runner: (.runner_id // 0), steps: (.steps | length),
-        failed: [.steps[]? | select(.conclusion == "failure") | .name]}')
+    jobs=$(run_jobs "${id}")
     # A job GitHub never gave a runner (cancelled with no runner and no steps, as when no macOS runner is free) is
     # not a test result: it is listed on its own. The matrix's summary job then fails only at its "Require every
     # matrix job to succeed" step; that follows from the missing runner, so it is not counted either.
