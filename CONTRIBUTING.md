@@ -107,7 +107,11 @@ back to a tag.
 What it needs, once:
 
 - **The sandbox:** the public repository `insightsurge/launchr-sandbox` (`SANDBOX_REPO` in the workflow), empty or
-  not, with `main` as its default branch. Public, so its runs cost no minutes; nothing private goes there.
+  not, with `main` as its default branch. Public, so its runs cost no minutes; nothing private goes there. It is for
+  launchR alone: Issues, Wiki, Projects and Discussions are off, workflows from outside contributors' pull requests
+  wait for approval, and an interaction limit lets only collaborators open issues or pull requests or comment.
+  GitHub ends that limit after six months (next on 2027-05-04): set it again under Settings, Moderation options,
+  Interaction limits.
 - **The token:** a fine-grained personal access token for that repository alone, with read and write access to
   Actions, Contents, Pull requests and Workflows (pushing files under `.github/workflows/` needs Workflows), kept as the
   launchR repository secret `SANDBOX_TOKEN`. When it expires the push step fails with an error from GitHub: make a new

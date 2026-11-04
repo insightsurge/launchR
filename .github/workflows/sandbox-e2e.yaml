@@ -5,8 +5,6 @@
 # public, so its minutes are free. The steps are in tests/sandbox-e2e.sh; what it needs is in CONTRIBUTING.md.
 on:
   workflow_dispatch:
-  push:  # TEMPORARY: a live run before the first merge; removed before merging
-    branches: [ci/61-sandbox-e2e]
 
 name: sandbox-e2e
 
