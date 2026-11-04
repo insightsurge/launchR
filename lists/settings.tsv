@@ -4,7 +4,7 @@
 # a new package supports unless chosen; the /4.1 entries in checks.tsv's platforms follow it. weekdays: how the workflows
 # README names the day of a weekly run (cron day 0 is Sunday).
 key	value
-kit_version	0.0.14
+kit_version	0.0.15
 site_url	https://launch-r.web.app
 preset	starter
 branches	main, master
