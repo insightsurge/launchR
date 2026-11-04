@@ -105,6 +105,7 @@ jobs:
         if: steps.changes.outputs.r == 'true'
         with:
           r-version: ${{ matrix.config.r }}
+          http-user-agent: ${{ matrix.config.http-user-agent }}
           use-public-rspm: true
           # The R option Ncpus for every R session (setup-r's default is 1). testthat starts that many processes for
           # the test files (Config/testthat/parallel in DESCRIPTION): two, as in R CMD check and on CRAN.
@@ -140,7 +141,17 @@ jobs:
           if (length(list.files("tests/testthat", "^test-(.*-)?browser[.]R$")) > 0L) {
             chrome <- chromote::find_chrome()
             if (is.null(chrome)) stop("No Chrome on this runner: the browser tests would all skip.", call. = FALSE)
-            message("Chrome: ", system2(chrome, "--version", stdout = TRUE))
+            # On Windows, chrome.exe --version opens Chrome and never returns: read the file's version instead.
+            # Only a line in the log: a version that can't be read must not stop the tests.
+            version <- tryCatch(
+              if (.Platform$OS.type == "windows") {
+                system2("powershell", c("-NoProfile", "-Command", shQuote(sprintf("(Get-Item '%s').VersionInfo.ProductVersion", chrome))), stdout = TRUE, timeout = 60)
+              } else {
+                system2(chrome, "--version", stdout = TRUE, timeout = 60)
+              },
+              error = function(e) "unknown"
+            )
+            message("Chrome: ", paste(version, collapse = " "))
           }
           library(testthat)
           # The package's name from DESCRIPTION, so the workflow names no package.
@@ -206,6 +217,8 @@ jobs:
       # When the tests didn't report: a documentation-only change, or a failure before the tests finished.
       - name: Write the report (when the tests didn't)
         if: always()
+        # bash on every system: Windows runs a step in PowerShell unless told otherwise.
+        shell: bash
         env:
           R_STEPS: ${{ steps.changes.outputs.r }}
           R_LABEL: ${{ matrix.config.r }}

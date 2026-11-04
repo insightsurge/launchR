@@ -102,6 +102,18 @@ for (const [plan, want] of Object.entries(PLANS)) {
   });
 }
 
+test('the workflows README describes the extended check without naming systems a private package lacks', async ({ page }) => {
+  await openForm(page);
+  await fillForm(page);
+  await page.locator('input[name=plan][value=c]').check();
+  const { files } = await download(page, '#download');
+  expect(files['tablePkg/.github/workflows/r-cmd-check-extended.yaml']).toContain('platforms: ubuntu/release');
+  const readme = files['tablePkg/.github/workflows/README.md'];
+  const row = readme.split('\n').find((line) => line.startsWith('| `r-cmd-check-extended.yaml`'));
+  expect(row).toContain('Run R CMD check on more systems, with the extended tests');
+  expect(row).not.toMatch(/Mac|Windows/);
+});
+
 test('the longer description reaches DESCRIPTION and the help page, and CRAN wording is checked', async ({ page }) => {
   await openForm(page);
   await fillForm(page);

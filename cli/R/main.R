@@ -29,11 +29,6 @@ has_flag <- function(args, name) paste0("--", name) %in% args
 
 git_available <- function() nzchar(Sys.which("git"))
 
-git_name_is_ai <- function() {
-  name <- suppressWarnings(tryCatch(system2("git", c("config", "user.name"), stdout = TRUE), error = function(e) ""))
-  length(name) == 1 && grepl("claude|copilot|gemini|codex|cursor|\\bai\\b", name, ignore.case = TRUE)
-}
-
 cmd_new <- function(args) {
   package <- args[1]
   problem <- if (is.na(package)) "Give the package a name: launchr.R new mypkg" else check_package_name(package)
@@ -95,14 +90,12 @@ cmd_new <- function(args) {
     message("Replace the placeholder ", paste(placeholders, collapse = " and "), " in DESCRIPTION before you publish.")
   }
   if (has_flag(args, "no-git")) {
+    print_next_steps(choices, package, out, committed = FALSE)
     return(0L)
   }
   if (!git_available()) {
     message("git isn't installed, so the folder is not a repository yet. Install git, then run: git init")
-    return(0L)
-  }
-  if (git_name_is_ai()) {
-    message("Your git name looks like an AI tool, so the first commit was skipped.")
+    print_next_steps(choices, package, out, committed = FALSE)
     return(0L)
   }
   git <- function(...) system2("git", c("-C", quote_arg(out), ...), stdout = FALSE, stderr = FALSE)
@@ -112,7 +105,25 @@ cmd_new <- function(args) {
   if (status != 0L) {
     message("The first commit failed. Set your name and email (git config --global user.name and user.email), then commit.")
   }
+  print_next_steps(choices, package, out, committed = status == 0L)
   0L
+}
+
+# What to do next, in the order of the site's R route. use_github() needs a repository with a commit, so without one
+# the step starts with use_git().
+print_next_steps <- function(choices, package, out, committed) {
+  private <- if (identical(choices$visibility, "private")) "TRUE" else "FALSE"
+  cat(
+    "Next:\n",
+    "  1. Open ", out, " (", package, ".Rproj in RStudio, or the folder in Positron).\n",
+    "  2. In R: install.packages(c(\"devtools\", \"gitcreds\", \"pak\")) (skip any you have), then\n",
+    "     pak::local_install_dev_deps() and devtools::test()\n",
+    "  3. Let R reach GitHub, once (skip if it can): usethis::create_github_token(), then gitcreds::gitcreds_set()\n",
+    "  4. Put it on GitHub: ", if (!committed) "usethis::use_git() (answer yes to commit), then ", "usethis::use_github(private = ", private, ")\n",
+    "     for an organisation: usethis::use_github(organisation = \"", choices$owner, "\", private = ", private, ")\n",
+    if ("github" %in% choices$parts) "  5. On GitHub, go to Actions, open \"Set up this repository\", click Run workflow, untick \"Only show what would change\", and run it.\n",
+    sep = ""
+  )
 }
 
 cmd_gate <- function(args) {

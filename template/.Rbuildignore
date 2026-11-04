@@ -33,4 +33,6 @@
 ^site$
 ^\.launchr$
 ^\.gitattributes$
+^\.gitleaksignore$
+^\.gitleaks\.toml$
 ^README\.Rmd$

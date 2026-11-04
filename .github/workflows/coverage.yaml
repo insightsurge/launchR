@@ -35,6 +35,8 @@ jobs:
     timeout-minutes: ${{ inputs.timeout-minutes > 0 && inputs.timeout-minutes || 60 }}  # the tests without Chrome under covr: about a minute, plus room for a slow package mirror
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      # A secret can't be tested in a step's `if:`, so the job notes here whether the package passed CODECOV_TOKEN.
+      HAS_CODECOV: ${{ secrets.CODECOV_TOKEN != '' }}
 
     steps:
       - uses: actions/checkout@v7
@@ -140,9 +142,14 @@ jobs:
           }
         shell: Rscript {0}
 
-      # Codecov being down is not a test failure: fail_ci_if_error stays false, so a failed upload only warns.
+      # Codecov being down is not a test failure: fail_ci_if_error stays false, so a failed upload only warns. Without a
+      # CODECOV_TOKEN (the package didn't pass one) the step is skipped, so the run carries no warning, except for a pull
+      # request from a fork: it has no token, but Codecov accepts its upload without one.
       - name: Upload coverage to Codecov
-        if: always() && steps.cobertura.outputs.written == 'true'
+        if: >-
+          always() && steps.cobertura.outputs.written == 'true' &&
+          (env.HAS_CODECOV == 'true' ||
+          github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository)
         uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}

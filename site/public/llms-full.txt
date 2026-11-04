@@ -41,7 +41,7 @@ Each check is a short workflow file in the package that calls a shared workflow 
 | `coverage` | Measures how much code the tests run | Yes |
 | `no-suggests` | Checks the package works without its optional packages | Yes |
 | `full-tests` | Runs every test, including the browser, snapshot and extended tests CRAN skips, with Chrome for browser tests | Yes |
-| `r-cmd-check-extended` | Weekly R CMD check on more systems (Mac and Windows for public packages), with the extended tests | Yes, except for private packages that won't go to CRAN |
+| `r-cmd-check-extended` | Weekly R CMD check on more systems, with the extended tests (Mac and Windows for public packages, Linux only for private ones) | Yes, except for private packages that won't go to CRAN |
 | `pkgdown` | Builds and publishes a package website | When a website is chosen |
 
 ## Existing packages

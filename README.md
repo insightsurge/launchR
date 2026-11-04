@@ -69,6 +69,8 @@ flowchart LR
 | `full-tests` | Every test, including the browser, snapshot and extended tests CRAN skips | pull requests, pushes, weekly |
 | `r-cmd-check-extended` | R CMD check on more systems, with the extended tests | weekly |
 
+`secret-scan` uses launchR's own rules, not a `.gitleaks.toml` in the package: a false alarm is silenced with a `gitleaks:allow` comment on that line, and a real secret must be removed and its key rotated. To clear a false alarm already in history, add its fingerprint line (in the scan's log, as `file:rule:line` or `commit:file:rule:line`) to `.gitleaksignore` in a pull request; it applies once merged. Keep `^\.gitleaksignore$` in `.Rbuildignore`, or R CMD check notes it as a hidden file.
+
 Every check except `secret-scan` can also be started by hand from the Actions tab. You choose the systems, R versions,
 oldest R and weekly time on the site; the package's `.github/workflows/README.md` lists what you chose and how to
 change it, and `tests/README.md` explains the test file kinds.
@@ -155,6 +157,8 @@ Rscript cli/launchr.R eject                           # copy launchR's checks in
 | `--public`, `--internal` | Older spelling of the plan: public, and not going to CRAN |
 | `--path DIR` | Where to write the package (default: a folder named after it) |
 | `--no-git` | Don't make the first git commit |
+
+When it has written the package, `new` prints a few next steps: open the folder, install the dependencies and run the tests, and put the package on GitHub.
 
 ## The quality gate
 

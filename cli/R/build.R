@@ -1,4 +1,4 @@
-# Turns choices into files. site/src/form/engine.js follows the same steps, and tests/compare-routes.sh compares them.
+# Turns choices into files. site/src/form/engine.js follows the same steps, and tests/compare-routes.mjs compares them.
 placeholder_values <- function(choices) {
   checks <- read_list("checks.tsv")
   has_owner <- nzchar(choices$owner)
