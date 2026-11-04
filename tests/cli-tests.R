@@ -499,6 +499,13 @@ expect(length(gate_env$suggests_in_r_library(c("tools", "MASS", "knitr"), "knitr
   "no-Suggests: base and recommended packages in Suggests don't stop the check")
 expect(identical(gate_env$suggests_in_r_library(c("tools", "shiny", "knitr"), character(), c("tools", "MASS"), in_r), "shiny"),
   "no-Suggests: another Suggests package in R's own library is named")
+expect(identical(gate_env$check_log_unavailable(c("* checking package dependencies ... INFO",
+  "Packages suggested but not available for checking:", "  'shiny', 'data.table'", "* checking if this is a source package ... OK")),
+  c("shiny", "data.table")), "no-Suggests: the hidden packages are read from R 4.6's INFO line")
+expect(identical(gate_env$check_log_unavailable("Package suggested but not available for checking: 'zz'"), "zz"),
+  "no-Suggests: and from the one-line form")
+expect(identical(gate_env$missing_package_skips(c("• {shiny} is not installed. (2): 'a.R:1:1'", "• {zz} is not installed. (1): 'b.R:2:1'", "[ FAIL 0 | SKIP 3 ]")),
+  c(shiny = 2L, zz = 1L)), "no-Suggests: tests skipped for a missing package are counted")
 help_out <- system2(rscript, c(quote_arg(file.path(kit_root, "cli", "launchr.R"))), stdout = TRUE)
 expect(any(grepl("Commands: new, gate, github-setup, eject", help_out)), "launchr.R with no command prints the commands")
 

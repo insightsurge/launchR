@@ -1,5 +1,5 @@
 #!/usr/bin/env Rscript
-# quality-gate version: 2026-11-04
+# quality-gate version: 2026-11-04b
 # Quality gate: one command that says whether an R package is ready: for CRAN by default, or for internal use.
 #
 #   Rscript <path to this file> [fast|tests|full|lint|nosuggests] [options]   (--help lists the options)
@@ -1087,9 +1087,34 @@ suggests_in_r_library <- function(suggests, linked, shipped, in_r_library) {
   hidden[vapply(hidden, in_r_library, logical(1))]
 }
 
+# The packages R CMD check could not find for checking, from the "Packages suggested but not available for
+# checking:" line in 00check.log's dependencies step (INFO from R 4.6, NOTE before). Plain base R, for
+# tests/cli-tests.R.
+check_log_unavailable <- function(lines) {
+  at <- grep("Packages? suggested but not available for checking:", lines)
+  if (length(at) == 0) {
+    return(character())
+  }
+  # The names follow on the same line or on the indented lines after it.
+  after <- lines[-seq_len(at[1])]
+  more <- after[seq_len(match(FALSE, grepl("^\\s", after), nomatch = length(after) + 1L) - 1L)]
+  text <- paste(c(sub(".*checking:", "", lines[at[1]]), more), collapse = " ")
+  regmatches(text, gregexpr("(?<=')[A-Za-z][A-Za-z0-9.]*(?=')", text, perl = TRUE))[[1]]
+}
+
+# How many tests testthat skipped because a package isn't installed, by package, from the test output
+# ("{shiny} is not installed. (3): ..." in the skipped-tests list). Plain base R, for tests/cli-tests.R.
+missing_package_skips <- function(lines) {
+  found <- regmatches(lines, regexec("\\{([^}]+)\\} is not installed\\.? \\(([0-9]+)\\)", lines))
+  found <- found[lengths(found) == 3L]
+  counts <- vapply(found, function(x) as.integer(x[[3]]), integer(1))
+  vapply(split(counts, vapply(found, function(x) x[[2]], character(1))), sum, integer(1))
+}
+
 # R CMD check as CI's no-suggests job runs it, without installing anything: only the hard dependencies are on
-# the library path, `_R_CHECK_FORCE_SUGGESTS_` is false and NOT_CRAN is unset, so a test that uses a Suggests
-# package without guarding it fails here.
+# the library path, `_R_CHECK_FORCE_SUGGESTS_` is false and NOT_CRAN is unset, as on CRAN. An example, vignette or R
+# code that uses a Suggests package without guarding it fails here. A test doesn't: recent testthat (3.3 does) skips a
+# test whose package isn't installed when NOT_CRAN is unset, so the line counts those skips instead.
 step_nosuggests <- function(uses, run_dir, log) {
   checkmate::assert_list(uses, types = "logical")
   checkmate::assert_directory_exists(run_dir, access = "w")
@@ -1165,7 +1190,16 @@ step_nosuggests <- function(uses, run_dir, log) {
     lengths(regmatches(res$notes, gregexpr("\n", res$notes))) <= 2
   res$notes <- res$notes[!expected]
   out <- check_result(res, log)
-  hidden <- if (any(expected)) "; the Suggests were hidden" else ""
+  unavailable <- check_log_unavailable(readLines(check_log, warn = FALSE))
+  hidden <- if (length(unavailable) > 0) paste0("; hidden: ", toString(unavailable)) else ""
+  rout <- list.files(file.path(dirname(check_log), "tests"), pattern = "\\.Rout(\\.fail)?$", full.names = TRUE)
+  skips <- missing_package_skips(unlist(lapply(rout, readLines, warn = FALSE)))
+  if (length(skips) > 0) {
+    hidden <- paste0(
+      hidden, "; ", sum(skips), if (sum(skips) == 1L) " test" else " tests",
+      " skipped as their package isn't installed (", toString(paste0(names(skips), ": ", skips)), ")"
+    )
+  }
   kept <- if (length(with_r) > 0) paste0("; left visible, as they ship with R: ", toString(with_r)) else ""
   result(
     out$status,
