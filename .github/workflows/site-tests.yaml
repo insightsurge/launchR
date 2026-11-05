@@ -190,17 +190,9 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         if: steps.changes.outputs.run == 'true'
+        # The gate's fast mode (quality-gate.R, the pkgs lines) and what the generated packages' R CMD check needs.
+        # launchR has no DESCRIPTION at its root, so the packages are listed here.
         with:
-          extra-packages: |
-            any::checkmate
-            any::cli
-            any::devtools
-            any::jsonlite
-            any::lintr
-            any::roxygen2
-            any::spelling
-            any::testthat
-            any::chromote
           packages: |
             any::checkmate
             any::cli
@@ -215,4 +207,3 @@ jobs:
       - name: Gate matrix
         if: steps.changes.outputs.run == 'true'
         run: bash tests/gate-matrix.sh
-
