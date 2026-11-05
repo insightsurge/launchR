@@ -56,12 +56,13 @@ badge_offered <- function(needs, choices) {
   }, logical(1)))
 }
 
-# The labels a package gets: the chosen ones, and the label of every chosen issue form, in lists/labels.tsv order.
+# The labels a package gets: the chosen ones, the label of every chosen issue form, and the ones the set-up step
+# uses (the kept column), in lists/labels.tsv order.
 chosen_labels <- function(choices) {
   forms <- read_list("forms.tsv")
   forms <- forms[forms$key %in% choices$forms & forms$part %in% choices$parts, , drop = FALSE]
-  labels <- read_list("labels.tsv")$name
-  labels[labels %in% c(choices$labels, forms$label)]
+  labels <- read_list("labels.tsv")
+  labels$name[labels$name %in% c(choices$labels, forms$label) | nzchar(labels$kept)]
 }
 
 # What a plan starts from: visibility, release, and whether r-cmd-check-extended is on (lists/plans.tsv).

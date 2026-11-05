@@ -275,8 +275,17 @@ expect(length(readLines(file.path(fake, "labels.txt"))) == 11L, "all labels exis
 some <- new_package("somelabels", "--forms", "bug", "--labels", "priority: high")
 fake_some <- fake_github()
 run_github(some, fake_some, "--yes")
-expect(identical(sort(sub("[|].*", "", readLines(file.path(fake_some, "labels.txt")))), c("bug", "priority: high")),
-  "a package made with some labels gets those and its forms' labels")
+expect(identical(sort(sub("[|].*", "", readLines(file.path(fake_some, "labels.txt")))), c("bug", "epic", "priority: high")),
+  "a package made with some labels gets those, its forms' labels and epic, which the root issue uses")
+expect(any(grepl("About this repository", issues(fake_some))), "with some labels, the root issue is created")
+# A package made before epic was kept: its DESCRIPTION lists labels without epic. The root issue then has no label.
+old <- new_package("oldlabels", "--forms", "bug", "--labels", "priority: high")
+desc <- readLines(file.path(old, "DESCRIPTION"))
+writeLines(sub("^Config/launchR/labels: .*$", "Config/launchR/labels: bug, priority: high", desc), file.path(old, "DESCRIPTION"))
+fake_old <- fake_github()
+run_github(old, fake_old, "--yes")
+expect(any(grepl("About this repository", issues(fake_old))) && !any(grepl("^epic[|]", readLines(file.path(fake_old, "labels.txt")))),
+  "a package whose labels leave out epic still gets its root issue, without the label")
 expect(identical(sub("^[0-9]+\\|OPEN\\|", "", issues(fake)), c(root_title, "Checklist: Before public", "Checklist: Before CRAN")), "the root issue and two checklists are created")
 expect(setequal(readLines(file.path(fake, "subs.txt")), c("2", "3")), "both checklists are sub-issues of the root")
 expect(any(grepl("launchr:licence", body(fake, 2), fixed = TRUE)) && any(grepl("^- \\[x\\] Licence", body(fake, 2))), "the checklist body has its ticked boxes")

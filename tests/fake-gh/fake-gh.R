@@ -62,6 +62,11 @@ if (args[1] == "issue" && args[2] == "create") {
     file.create(flag)
     fail("HTTP 403: You have exceeded a secondary rate limit.")
   }
+  # GitHub refuses an issue with a label the repository doesn't have.
+  label <- opt("--label")
+  if (nzchar(label) && !label %in% sub("[|].*", "", read_lines("labels.txt"))) {
+    fail(sprintf("could not add label: '%s' not found", label))
+  }
   rows <- read_lines("issues.txt")
   number <- length(rows) + 1L
   writeLines(c(rows, sprintf("%d|OPEN|%s", number, opt("--title"))), path("issues.txt"))

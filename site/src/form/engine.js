@@ -142,10 +142,12 @@ export function badgeOffered(row, choices) {
   });
 }
 
-// The labels a package gets: the chosen ones, and the label of every chosen issue form, in lists/labels.tsv order.
+// The labels a package gets: the chosen ones, the label of every chosen issue form, and the ones the set-up step
+// uses (the kept column), in lists/labels.tsv order.
 export function chosenLabels(choices, lists) {
   const forms = lists.forms.filter((row) => choices.forms.includes(row.key) && choices.parts.includes(row.part));
-  const wanted = new Set([...choices.labels, ...forms.map((row) => row.label)]);
+  const kept = lists.labels.filter((row) => row.kept !== '').map((row) => row.name);
+  const wanted = new Set([...choices.labels, ...forms.map((row) => row.label), ...kept]);
   return lists.labels.filter((row) => wanted.has(row.name)).map((row) => row.name);
 }
 
