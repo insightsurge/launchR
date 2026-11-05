@@ -149,6 +149,7 @@ h2 { font-size: clamp(1.8rem, 3.2vw, 2.9rem); line-height: 1.08; }
   background: var(--surface); border: 1.5px solid var(--accent); color: var(--ink);
   font-size: 26px; font-weight: var(--hw); letter-spacing: 0.02em;
 }
+img.photo { object-fit: cover; padding: 0; }
 .about h2 { font-size: clamp(1.7rem, 2.6vw, 2.4rem); }
 .about .role { margin: 4px 0 0; font-size: 15.5px; }
 .about .why { color: var(--ink); padding: 14px 16px; background: var(--surface); border-radius: 12px; }
