@@ -136,7 +136,7 @@ jobs:
         if: steps.changes.outputs.r == 'true'
         shell: Rscript {0}
         env:
-          R_LABEL: ${{ matrix.config.r }}
+          R_LABEL: ${{ matrix.config.os }}, R ${{ matrix.config.r }}   # as R CMD check's report names a platform
           OUT: ${{ runner.temp }}/full-tests-part.md
           TIMINGS: ${{ runner.temp }}/full-tests-timings.csv
           BASELINE_DIR: ${{ runner.temp }}/full-tests-baseline
@@ -169,7 +169,7 @@ jobs:
           # A package need not have any: nothing to run isn't a failure.
           if (length(files) == 0L) {
             writeLines(
-              sprintf("\u23ed\ufe0f **Full tests, R %s:** this package has no test files.",
+              sprintf("\u23ed\ufe0f **Full tests, %s:** this package has no test files.",
                 Sys.getenv("R_LABEL")),
               Sys.getenv("OUT")
             )
@@ -201,7 +201,7 @@ jobs:
           tryCatch(write_full_tests_report(results, reporter$seconds(), reporter$elapsed(), silent), error = function(e) {
             message("::warning::The full tests report failed: ", conditionMessage(e))
             writeLines(
-              sprintf("\u26a0\ufe0f **Full tests, R %s:** the report failed (%s); the job's log has the results.",
+              sprintf("\u26a0\ufe0f **Full tests, %s:** the report failed (%s); the job's log has the results.",
                 Sys.getenv("R_LABEL"), conditionMessage(e)),
               Sys.getenv("OUT")
             )
@@ -227,17 +227,17 @@ jobs:
         shell: bash
         env:
           R_STEPS: ${{ steps.changes.outputs.r }}
-          R_LABEL: ${{ matrix.config.r }}
+          R_LABEL: ${{ matrix.config.os }}, R ${{ matrix.config.r }}   # as R CMD check's report names a platform
           JOB_STATUS: ${{ job.status }}
           OUT: ${{ runner.temp }}/full-tests-part.md
         run: |
           if [ -s "${OUT}" ]; then exit 0; fi
           if [ "${JOB_STATUS}" = "cancelled" ]; then
-            echo "⏹️ **Full tests, R ${R_LABEL}:** the job was cancelled before the tests finished." > "${OUT}"
+            echo "⏹️ **Full tests, ${R_LABEL}:** the job was cancelled before the tests finished." > "${OUT}"
           elif [ "${R_STEPS}" = "false" ]; then
-            echo "⏭️ **Full tests, R ${R_LABEL}:** not run: this pull request changes only documentation." > "${OUT}"
+            echo "⏭️ **Full tests, ${R_LABEL}:** not run: this pull request changes only documentation." > "${OUT}"
           else
-            echo "❌ **Full tests, R ${R_LABEL}:** the job failed before the tests finished (see the run's log)." > "${OUT}"
+            echo "❌ **Full tests, ${R_LABEL}:** the job failed before the tests finished (see the run's log)." > "${OUT}"
           fi
 
       - name: Keep the report

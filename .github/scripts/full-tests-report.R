@@ -3,7 +3,7 @@
 # slower than on main. Sourced by full-tests.yaml's test step, which runs the tests with file_time_reporter and
 # calls write_full_tests_report(results, reporter$seconds(), reporter$elapsed()) before it decides whether the job
 # fails.
-# Environment: R_LABEL (the matrix's R version), OUT (the Markdown part), TIMINGS (a CSV of seconds per file, kept
+# Environment: R_LABEL (the platform, such as "ubuntu-26.04, R release"), OUT (the Markdown part), TIMINGS (a CSV of seconds per file, kept
 # from main runs), BASELINE_DIR, BASELINE_FOUND and BASELINE_SHA (main's timings, from main-baseline).
 
 # A file counts as slower when it takes at least this much longer than on main, both relatively and in seconds.
@@ -114,7 +114,7 @@ write_full_tests_report <- function(results, timings, elapsed = NA_real_, silent
   )
   kinds <- table(kind)
   first <- sprintf(
-    "%s **Full tests, R %s:** %d passed · %d failed · %d skipped%s · %s%s",
+    "%s **Full tests, %s:** %d passed · %d failed · %d skipped%s · %s%s",
     if (ok) "\u2705" else "\u274c",
     label,
     passed,
@@ -181,7 +181,7 @@ write_full_tests_report <- function(results, timings, elapsed = NA_real_, silent
     "",
     details(
       sprintf(
-        "Slowest test files, R %s (%d files add up to %s; two run at once)",
+        "Slowest test files, %s (%d files add up to %s; two run at once)",
         label,
         nrow(timings),
         duration(sum(timings$seconds))
