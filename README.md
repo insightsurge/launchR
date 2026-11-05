@@ -75,6 +75,12 @@ Every check except `secret-scan` can also be started by hand from the Actions ta
 oldest R and weekly time on the site; the package's `.github/workflows/README.md` lists what you chose and how to
 change it, and `tests/README.md` explains the test file kinds.
 
+## Add CI to an existing package
+
+To add launchR's checks to a package you already have, choose **Set up an existing package** on the site
+(<https://launch-r.web.app/#yours>). The zip holds only the CI files and the settings files the chosen checks read,
+and the site says what to do with each; `R/`, `tests/` and `DESCRIPTION` are left alone.
+
 ## How your checks reach launchR
 
 Your package holds only short caller files. Each one names a check here and a launchR release:

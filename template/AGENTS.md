@@ -12,6 +12,8 @@ rules are in `.agents/rules/`: read the file that fits before you start.
 | JavaScript or CSS in `inst/` | `.agents/rules/js-css.md` |
 | Branches, commits and pull requests | `.agents/rules/git.md` |
 
+How launchR's checks, CI report and upgrades work: <https://launch-r.web.app/skill.md>.
+
 ## Always
 
 - Change only what the task needs. Ask before adding a dependency, changing a check or deleting a file.
