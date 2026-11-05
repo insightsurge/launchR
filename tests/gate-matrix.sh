@@ -6,7 +6,7 @@ run() { name=$1; shift
   Rscript "$K/cli/launchr.R" new "$name" --yes --title "Sample Tools For Tables" --author "Asha Rao" \
     --email asha@example.com --year 2026 --no-git --path "$OUT/$name" "$@" > /dev/null || { echo "BUILD FAIL $name"; fails=$((fails+1)); return; }
   (cd "$OUT/$name" && Rscript "$K/cli/launchr.R" gate "$MODE" > "$OUT/$name.log" 2>&1); code=$?
-  echo "$name ($*): exit $code; $(grep -E '^(PASS|FAIL|SKIP)' "$OUT/$name.log" | cut -d' ' -f1 | sort | uniq -c | tr -s ' ' | tr '\n' ' ')"
+  echo "$name ($*): exit $code; $(grep -E '^(PASS|FAIL|SKIP) ' "$OUT/$name.log" | cut -d' ' -f1 | sort | uniq -c | tr -s ' ' | tr '\n' ' ')"
   grep -E '^FAIL' "$OUT/$name.log" || true
   [ "$code" = 0 ] || fails=$((fails+1))
 }
