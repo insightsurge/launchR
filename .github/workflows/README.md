@@ -35,7 +35,7 @@ covers only the checks a package has caller files for. Each check that reports t
 
 | Workflow | What it does | Started by | Result shows in | Needs |
 | --- | --- | --- | --- | --- |
-| `site-tests.yaml` | The site in a browser, the zip, the site and command line making the same packages, the command line's and report builder's tests, and actionlint, caller compatibility and zizmor on the workflows | Every pull request to `main`, a push to `main`, or by hand | The pull request's Checks tab | Nothing |
+| `site-tests.yaml` | The site in a browser, the zip, the site and command line making the same packages, the command line's and report builder's tests, the gate matrix on template and gate changes, and actionlint, caller compatibility and zizmor on the workflows | Every pull request to `main`, a push to `main`, or by hand | The pull request's Checks tab | Nothing |
 | `deploy-site.yaml` | Builds the site and publishes it to Firebase Hosting | A push to `main` that changes `site/`, `template/`, `lists/` or the Firebase files, or by hand | The Actions tab | Repository variables for Google sign-in (no stored key); skipped until they are set |
 | `sandbox-e2e.yaml` | A package made on the site runs every check in the public sandbox repository, against this commit, before a release | By hand only (Actions, sandbox-e2e, Run workflow) | The Actions tab; with `release_pr`, also one comment on that pull request | The `SANDBOX_TOKEN` secret |
 

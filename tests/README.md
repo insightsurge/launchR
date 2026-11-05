@@ -9,7 +9,7 @@ What each file checks. How to run them all, and the workflow linters, is in [CON
 | `build-comment-tests.sh` | `.github/actions/pr-report-comment/build-comment.sh` with a fake `gh`: a run's state (running, failed, cancelled), the matrix race, section order, cutting long parts without breaking a character or leaving `<details>` open |
 | `caller-compat.sh` | Caller compatibility with actionlint: previous release callers against this commit's reusable workflows, and this commit's callers against the tag in `lists/settings.tsv` |
 | `check-zip.mjs` | The zip the site builds is sound (run after building the site) |
-| `gate-matrix.sh` | Generated packages for the main sets of choices pass the quality gate (slow; run by hand) |
+| `gate-matrix.sh` | Generated packages for the main sets of choices pass the quality gate (slow; runs in CI on template, list, CLI and gate changes, or by hand) |
 | `sandbox-e2e.sh` | The steps of `.github/workflows/sandbox-e2e.yaml`, run by hand before a release: a package made on the site (`site/tests/sandbox-package.spec.js`) runs its own checks in the public sandbox repository, pointed at the launchR commit under test; a planted secret must fail secret-scan, everything else must pass, and the pull request must get one report comment. Writes a report (what it did, with links, and a table of the runs) and, given `release_pr`, posts it on that launchR pull request |
 
 The browser tests are in `site/tests/`; `sandbox-package.spec.js` there runs only when `SANDBOX_ZIP` is set (the

@@ -131,3 +131,79 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: zizmor .github/workflows .github/actions
+
+  gate-matrix:
+    # Builds packages for the main sets of choices and runs the quality gate in fast mode on each.
+    runs-on: ubuntu-26.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Check for template or gate changes
+        id: changes
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          if [ "${EVENT_NAME}" = "pull_request" ]; then
+            changed=$(git diff --name-only --no-renames "${BASE_SHA}" HEAD)
+          elif [ "${EVENT_NAME}" = "push" ]; then
+            changed=$(git diff --name-only --no-renames HEAD~1 HEAD)
+          else
+            changed="template/forced"
+          fi
+          run=false
+          while IFS= read -r file; do
+            [ -z "$file" ] && continue
+            case "$file" in
+              template/* | lists/* | cli/* | quality-gate/* | tests/gate-matrix.sh)
+                run=true
+                break
+                ;;
+            esac
+          done <<<"$changed"
+
+          echo "Files changed:"
+          printf '%s\n' "$changed" | sed 's/^/  /'
+          if [ "$run" = true ]; then
+            echo "Gate matrix runs."
+          else
+            echo "No template, list, cli, quality-gate or gate-matrix changes: skipping gate matrix."
+          fi
+          echo "run=$run" >> "$GITHUB_OUTPUT"
+
+      - uses: posit-dev/setup-air@cf390573ff4fe0f198f35df3a642b1409328d859 # v1.0.1
+        if: steps.changes.outputs.run == 'true'
+        with:
+          version: "0.11.0"   # keep in step with the local install (air --version)
+
+      - uses: r-lib/actions/setup-r@v2
+        if: steps.changes.outputs.run == 'true'
+        with:
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        if: steps.changes.outputs.run == 'true'
+        # The gate's fast mode (quality-gate.R, the pkgs lines) and what the generated packages' R CMD check needs.
+        # launchR has no DESCRIPTION at its root, so the packages are listed here.
+        with:
+          packages: |
+            any::checkmate
+            any::cli
+            any::devtools
+            any::jsonlite
+            any::lintr
+            any::roxygen2
+            any::spelling
+            any::testthat
+            any::chromote
+
+      - name: Gate matrix
+        if: steps.changes.outputs.run == 'true'
+        run: bash tests/gate-matrix.sh
