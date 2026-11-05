@@ -65,7 +65,7 @@ launchR's version is the tag its users name in their caller files (`@vX.Y.Z`), s
    (the caller files, the package's `DESCRIPTION`, the next-steps text on the site) takes it from `kit_version`.
 2. Open a pull request and let the checks pass. **Run the sandbox test on its branch** (Actions, sandbox-e2e, Run
    workflow, pick the branch, and give the pull request's number; below): it runs a site-made package's checks on
-   GitHub's Linux, Mac and Windows runners against this commit, takes about 15 minutes when it passes, and posts its
+   GitHub's Linux, Mac and Windows runners against this commit, takes about 35 minutes when it passes, and posts its
    report on the pull request. Merge when it passes.
 3. **Tag the merge commit right after the merge**, `vX.Y.Z` on `main`, and push the tag. Until the tag exists, a new
    package made from `main` points at a version that does not exist yet and its checks fail.
@@ -103,7 +103,7 @@ config file) allow what it finds.
 Windows, a bash step ran under PowerShell). Run it by hand before a release, and after a change to a reusable
 workflow or an action in `.github/`. Its first job builds the site and makes the package in a browser; the second
 rewrites every caller's `@vX.Y.Z` to the commit under test, pushes the package as a new commit on the sandbox's default
-branch, starts r-cmd-check-extended by hand (it has no push trigger), opens a pull request that adds
+branch, starts r-cmd-check-extended by hand (it has no push trigger), waits for the default branch's coverage and full-tests runs (up to 60 minutes), opens a pull request that adds
 `.github/e2e-fake-secret.txt` with a made-up key, waits for every run (giving up and cancelling at 200 minutes), and
 writes the report to the job summary: a count of the runs by result (✅ passed, ❌ failed, ⏳ no runner, 🔒 the key
 caught), the verdict, what it did with links (the commit under test, the sandbox commit,

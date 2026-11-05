@@ -30,6 +30,27 @@ cases.push({ name: 'modify-private', plan: 'c', preset: 'everything',
   extra: { licence: 'mit', qc: true, badges: ['lifecycle', 'cran'], forms: [], labels: [] } });
 cases.push({ name: 'modify-no-qc', plan: 'd', preset: 'starter', flags: ['--plan', 'd', '--no-qc', '--licence', 'mit', '--badges', 'none'],
   extra: { qc: false, licence: 'mit', badges: [] } });
+// One case per setup the user journeys use, with the Modify choices that journey makes. Beginner defaults is a-starter
+// above. The CLI picks parts by preset only, so "website without the AI and front-end parts" and "CI files only" can't
+// be built by both routes, and a frozen (snapshot) setup doesn't exist yet: those three are not here.
+const journeys = [
+  { name: 'journey-open-source-site', plan: 'a', preset: 'everything',
+    flags: ['--badges', 'check,lifecycle,cran,downloads', '--navbar', 'reference,news,articles,search,github'],
+    extra: { badges: ['check', 'lifecycle', 'cran', 'downloads'], navbar: ['reference', 'news', 'articles', 'search', 'github'] } },
+  { name: 'journey-web-component', plan: 'a', preset: 'everything',
+    flags: ['--min-r', '4.3', '--badges', 'check,lifecycle,codecov', '--labels', 'bug,enhancement,documentation'],
+    extra: { minR: '4.3', badges: ['check', 'lifecycle', 'codecov'], labels: ['bug', 'enhancement', 'documentation'] } },
+  { name: 'journey-public-no-cran', plan: 'b', preset: 'everything',
+    flags: ['--licence', 'mit', '--badges', 'check,lifecycle,universe', '--navbar', 'reference,news,search,github,lightswitch'],
+    extra: { licence: 'mit', badges: ['check', 'lifecycle', 'universe'], navbar: ['reference', 'news', 'search', 'github', 'lightswitch'] } },
+  { name: 'journey-polish-first', plan: 'c', preset: 'starter',
+    flags: ['--qc', '--forms', 'bug,feature,docs', '--badges', 'check,lifecycle'],
+    extra: { qc: true, forms: ['bug', 'feature', 'docs'], badges: ['check', 'lifecycle'] } },
+  { name: 'journey-company', plan: 'd', preset: 'starter',
+    flags: ['--licence', 'proprietary', '--badges', 'none', '--forms', 'bug,docs', '--labels', 'bug,documentation,chore', '--no-ci-report'],
+    extra: { licence: 'proprietary', badges: [], forms: ['bug', 'docs'], labels: ['bug', 'documentation', 'chore'], ciReport: false } },
+];
+for (const j of journeys) cases.push({ ...j, flags: ['--plan', j.plan, '--preset', j.preset, ...j.flags] });
 let failed = 0;
 for (const item of cases) {
   const r = join(out, item.name, 'r');
