@@ -114,6 +114,7 @@ push() {
 pr() {
   : "${MAIN_SHA:?}" "${BRANCH:?}"
   local head="sandbox-e2e-${GITHUB_RUN_ID:-$(date +%s)}" secret
+  wait_baselines
   cd "${WORK}/repo"
   git switch -q -c "${head}" "${MAIN_SHA}"
   # A made-up key, new each run, that gitleaks' generic rule catches and GitHub's push protection does not (it is no
@@ -130,6 +131,25 @@ pr() {
     --body "Opened by launchR's sandbox test (${RUN_URL:-run by hand}). secret-scan must fail here; every other check must pass, and the CI report must be one comment.")
   save PR_NUMBER "${url##*/}"
   echo "Opened ${url}."
+}
+
+# A real pull request comes after the default branch's runs, so its report compares with the commit just pushed.
+# Waits (up to BASELINE_MINUTES, 60 by default) for the push runs that keep figures pull requests compare with:
+# coverage and full-tests, when the package has them.
+wait_baselines() {
+  local deadline=$(( $(date +%s) + ${BASELINE_MINUTES:-60} * 60 )) wanted path open
+  wanted=$(for path in .github/workflows/coverage.yaml .github/workflows/full-tests.yaml; do [ -f "${PKG}/${path}" ] && echo "${path}"; done)
+  [ -n "${wanted}" ] || return 0
+  while :; do
+    open=$(runs_of "${MAIN_SHA}" | jq -r --arg w "${wanted}" 'select(.event == "push" and (.path as $p | $w | split("\n") | index($p)) and .status == "completed") | .path' | sort -u)
+    [ "$(wc -l <<< "${open}" | tr -d ' ')" -ge "$(wc -l <<< "${wanted}" | tr -d ' ')" ] && [ -n "${open}" ] && return 0
+    if [ "$(date +%s)" -ge "${deadline}" ]; then
+      echo "::warning::The default branch's coverage and full-tests runs hadn't finished; the pull request's report may compare with an older commit."
+      return 0
+    fi
+    echo "$(date -u +%H:%M) waiting for the default branch's coverage and full-tests runs before opening the pull request"
+    sleep 30
+  done
 }
 
 # The runs of one commit as JSON lines: id, path (without @ref), event, status, conclusion, html_url, name.
@@ -279,6 +299,15 @@ report() {
     echo "- ❌ The CI report comment does not say the secret scan failed." >> "${list}"
     echo "::error::The CI report comment does not say the secret scan failed."
     problems=$((problems + 1))
+  else
+    # Every comparison with the default branch names the commit this run pushed there.
+    local others
+    others=$(jq -r '.[0].body' <<< "${comments}" | { grep -oE 'default branch at [0-9a-f]{7}' || true; } | { grep -v "${MAIN_SHA:0:7}" || true; } | sort -u | tr '\n' ' ')
+    if [ -n "${others}" ]; then
+      echo "- ❌ The CI report compares with an older default-branch commit, not ${MAIN_SHA:0:7}: ${others}" >> "${list}"
+      echo "::error::The CI report compares with an older default-branch commit: ${others}"
+      problems=$((problems + 1))
+    fi
   fi
 
   write_report "${runs}" "${problems}" "${list}" "${waiting}" "${verdicts}"

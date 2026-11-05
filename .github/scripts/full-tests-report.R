@@ -3,12 +3,14 @@
 # slower than on main. Sourced by full-tests.yaml's test step, which runs the tests with file_time_reporter and
 # calls write_full_tests_report(results, reporter$seconds(), reporter$elapsed()) before it decides whether the job
 # fails.
-# Environment: R_LABEL (the matrix's R version), OUT (the Markdown part), TIMINGS (a CSV of seconds per file, kept
+# Environment: R_LABEL (the platform, such as "ubuntu-26.04, R release"), OUT (the Markdown part), TIMINGS (a CSV of seconds per file, kept
 # from main runs), BASELINE_DIR, BASELINE_FOUND and BASELINE_SHA (main's timings, from main-baseline).
 
 # A file counts as slower when it takes at least this much longer than on main, both relatively and in seconds.
 slower_ratio <- 1.25
 slower_seconds <- 10
+# The timing table is shown when a file takes at least this long, or got slower.
+table_seconds <- 10
 
 # testthat's parallel progress reporter (a line per file as it finishes, with its time) that also keeps each file's
 # elapsed time. Two processes run the files at once, and in a parallel run the results' own test times are
@@ -96,6 +98,29 @@ details <- function(summary, body, open = FALSE) {
   c(if (open) "<details open>" else "<details>", sprintf("<summary>%s</summary>", summary), "", body, "", "</details>")
 }
 
+# The files much slower than on the default branch (slower_ratio and slower_seconds), from main's timings when
+# main-baseline found them: their count, and the lines that say so for the timing table.
+slower_files <- function(timings) {
+  none <- list(count = 0L, body = character())
+  if (!identical(Sys.getenv("BASELINE_FOUND"), "true")) return(none)
+  base_file <- file.path(Sys.getenv("BASELINE_DIR"), basename(Sys.getenv("TIMINGS")))
+  if (!file.exists(base_file)) return(none)
+  base <- utils::read.csv(base_file)
+  both <- merge(timings, base, by = "file", suffixes = c("", "_main"))
+  slower <- both[both$seconds >= both$seconds_main * slower_ratio & both$seconds - both$seconds_main >= slower_seconds, ]
+  sha <- substr(Sys.getenv("BASELINE_SHA"), 1, 7)
+  if (nrow(slower) == 0) {
+    return(list(count = 0L, body = sprintf("No file is much slower than on the default branch at %s.", sha)))
+  }
+  list(count = nrow(slower), body = c(
+    sprintf("Slower than on the default branch at %s:", sha),
+    "",
+    "| File | Here | Default branch |",
+    "| :--- | ---: | ---: |",
+    sprintf("| `%s` | %s | %s |", slower$file, duration(slower$seconds), duration(slower$seconds_main))
+  ))
+}
+
 # `silent`: the selected files that reported no test, which skipped as a whole (a file skipped from its first line).
 write_full_tests_report <- function(results, timings, elapsed = NA_real_, silent = character()) {
   label <- Sys.getenv("R_LABEL")
@@ -113,17 +138,21 @@ write_full_tests_report <- function(results, timings, elapsed = NA_real_, silent
     labels = c("plain", "browser", "snapshot", "extended")
   )
   kinds <- table(kind)
+  slower_note <- slower_files(timings)
   first <- sprintf(
-    "%s **Full tests, R %s:** %d passed · %d failed · %d skipped%s · %s%s",
+    "%s **Full tests, %s:** %d passed · %d failed · %d skipped%s · %s%s",
     if (ok) "\u2705" else "\u274c",
     label,
     passed,
     nrow(failed),
     nrow(skipped),
     if (is.na(elapsed)) "" else paste0(" · ", duration(elapsed)),
-    paste0(kinds, " in ", names(kinds), " files", collapse = ", "),
+    paste0(kinds[kinds > 0], " in ", names(kinds)[kinds > 0], " files", collapse = ", "),
     if (nrow(skipped) > 0 || length(silent) > 0) " (a skip fails this job: these tests must run)" else ""
   )
+  if (slower_note$count > 0) {
+    first <- paste0(first, sprintf(" · \u26a0\ufe0f %d %s slower than on the default branch", slower_note$count, if (slower_note$count == 1) "file" else "files"))
+  }
   out <- first
   if (nrow(failed) > 0) {
     out <- c(out, "", details(plural(nrow(failed), "failing test"), table_lines(failed), open = TRUE))
@@ -143,51 +172,24 @@ write_full_tests_report <- function(results, timings, elapsed = NA_real_, silent
     )
   }
 
+  # The slowest files, and those much slower than on the default branch: the table opens when there are some, and
+  # is left out when every file is quick and none got slower.
   slowest <- utils::head(timings[order(-timings$seconds), ], 5)
-  timing_rows <- sprintf("| `%s` | %s |", slowest$file, duration(slowest$seconds))
-  timing_body <- c("| File | Time |", "| :--- | ---: |", timing_rows)
+  timing_body <- c("| File | Time |", "| :--- | ---: |", sprintf("| `%s` | %s |", slowest$file, duration(slowest$seconds)))
   if (!identical(Sys.getenv("BASELINE_FOUND"), "true") && identical(Sys.getenv("GITHUB_EVENT_NAME"), "pull_request")) {
     timing_body <- c(timing_body, "", "_No test times from the default branch to compare with._")
   }
-  if (identical(Sys.getenv("BASELINE_FOUND"), "true")) {
-    base_file <- file.path(Sys.getenv("BASELINE_DIR"), basename(Sys.getenv("TIMINGS")))
-    if (file.exists(base_file)) {
-      base <- utils::read.csv(base_file)
-      both <- merge(timings, base, by = "file", suffixes = c("", "_main"))
-      slower <- both[
-        both$seconds >= both$seconds_main * slower_ratio &
-          both$seconds - both$seconds_main >= slower_seconds,
-      ]
-      sha <- substr(Sys.getenv("BASELINE_SHA"), 1, 7)
-      timing_body <- c(
+  if (length(slower_note$body) > 0) timing_body <- c(timing_body, "", slower_note$body)
+  if (slower_note$count > 0 || (nrow(timings) > 0 && max(timings$seconds) >= table_seconds)) {
+    out <- c(
+      out,
+      "",
+      details(
+        sprintf("Slowest test files, %s (%d files add up to %s; files run two at a time)", label, nrow(timings), duration(sum(timings$seconds))),
         timing_body,
-        "",
-        if (nrow(slower) == 0) {
-          sprintf("No file is much slower than on the default branch at %s.", sha)
-        } else {
-          c(
-            sprintf("Slower than on the default branch at %s:", sha),
-            "",
-            "| File | Here | Default branch |",
-            "| :--- | ---: | ---: |",
-            sprintf("| `%s` | %s | %s |", slower$file, duration(slower$seconds), duration(slower$seconds_main))
-          )
-        }
+        open = slower_note$count > 0
       )
-    }
-  }
-  out <- c(
-    out,
-    "",
-    details(
-      sprintf(
-        "Slowest test files, R %s (%d files add up to %s; two run at once)",
-        label,
-        nrow(timings),
-        duration(sum(timings$seconds))
-      ),
-      timing_body
     )
-  )
+  }
   writeLines(out, Sys.getenv("OUT"))
 }
