@@ -4,6 +4,7 @@ launchR starts an R package with tests, CI and GitHub files in place, or adds re
 
 - Site: https://launch-r.web.app/
 - Source: https://github.com/insightsurge/launchR
+- Skill for agents: https://launch-r.web.app/skill.md
 - Author: Harsh Verma, InsightSurge
 
 ## Who it is for
