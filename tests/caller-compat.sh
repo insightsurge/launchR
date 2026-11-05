@@ -17,19 +17,20 @@ command -v "$ACTIONLINT" >/dev/null 2>&1 || { echo "actionlint not found at '$AC
 TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "$TMP_DIR"' EXIT
 
+# Renders callers with a release's command line. Plans a and d must build; the --no-ci-report variant may not exist
+# in an older release, so it is skipped with a note when that command line refuses the flag.
 render_callers() {
   local cli="$1"
   local dest="$2"
+  local base=(new comppkg --yes --title "Compat Tools" --author "Asha Rao" --owner sample-org --no-git --preset everything)
 
   mkdir -p "$dest"
-  Rscript "$cli" new comppkg --yes --title "Compat Tools" --author "Asha Rao" \
-    --owner sample-org --no-git --preset everything --plan a --path "${dest}/pkg-a" >/dev/null 2>&1
-
-  Rscript "$cli" new comppkg --yes --title "Compat Tools" --author "Asha Rao" \
-    --owner sample-org --no-git --preset everything --plan d --path "${dest}/pkg-d" >/dev/null 2>&1
-
-  Rscript "$cli" new comppkg --yes --title "Compat Tools" --author "Asha Rao" \
-    --owner sample-org --no-git --preset everything --plan a --no-ci-report --path "${dest}/pkg-noci" >/dev/null 2>&1
+  Rscript "$cli" "${base[@]}" --plan a --path "${dest}/pkg-a" >"${dest}/pkg-a.log" 2>&1 ||
+    { echo "FAIL: the command line ($cli) could not build plan a:"; sed 's/^/  /' "${dest}/pkg-a.log"; return 1; }
+  Rscript "$cli" "${base[@]}" --plan d --path "${dest}/pkg-d" >"${dest}/pkg-d.log" 2>&1 ||
+    { echo "FAIL: the command line ($cli) could not build plan d:"; sed 's/^/  /' "${dest}/pkg-d.log"; return 1; }
+  Rscript "$cli" "${base[@]}" --plan a --no-ci-report --path "${dest}/pkg-noci" >"${dest}/pkg-noci.log" 2>&1 ||
+    echo "Note: this command line has no --no-ci-report; that variant is skipped."
 }
 
 prepare_callers() {
@@ -114,7 +115,7 @@ else
   git archive "$PREV_TAG" | tar -x -C "$PREV_ARCHIVE"
 
   PREV_CALLERS="${TMP_DIR}/prev_callers"
-  render_callers "$PREV_ARCHIVE/cli/launchr.R" "$PREV_CALLERS"
+  render_callers "$PREV_ARCHIVE/cli/launchr.R" "$PREV_CALLERS" || exit_code=1
 
   CHECK_DIR_1="${TMP_DIR}/check_dir_1"
   mkdir -p "${CHECK_DIR_1}/.github/workflows"
@@ -140,7 +141,7 @@ else
   KIT_TAG="v${KIT_VERSION}"
 
   THIS_CALLERS="${TMP_DIR}/this_callers"
-  render_callers "$REPO_ROOT/cli/launchr.R" "$THIS_CALLERS"
+  render_callers "$REPO_ROOT/cli/launchr.R" "$THIS_CALLERS" || exit_code=1
 
   CHECK_DIR_2="${TMP_DIR}/check_dir_2"
   mkdir -p "${CHECK_DIR_2}/.github/workflows"
@@ -163,6 +164,8 @@ else
   prepare_callers "$THIS_CALLERS" "$CHECK_DIR_2"
 
   if ! run_check "$CHECK_DIR_2" "$dir2_desc"; then
+    echo "  New packages from the site call ${KIT_TAG}, so they would fail like this until a release has these workflows."
+    echo "  Bump kit_version in this pull request (CONTRIBUTING.md, Release) and tag right after the merge."
     exit_code=1
   fi
 fi
