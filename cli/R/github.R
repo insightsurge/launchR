@@ -291,7 +291,7 @@ apply_plan <- function(ctx, plan) {
       "Each checklist is a sub-issue of this one. Unticked boxes are what's left to do.",
       "To update the ticks, run the \"Set up this repository\" workflow again, or run this in R from the package's folder:", "",
       sprintf("`source(\"https://raw.githubusercontent.com/insightsurge/launchR/v%s/cli/github-setup.R\")`", kit_setting("kit_version")), "",
-      marker("root")), "epic")
+      marker("root")), if (is.null(ctx$labels) || "epic" %in% ctx$labels) "epic" else "")
   } else {
     plan$root$number
   }

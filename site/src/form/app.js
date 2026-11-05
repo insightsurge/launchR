@@ -127,11 +127,12 @@ function paint() {
 /* the issue forms, their labels and the QC checklist: a form's own label stays on while the form is on */
 function gitChoices() {
   const forms = lists.forms.filter((row) => row.part !== 'ai' || S.ai);
-  const locked = new Set(lists.forms.filter(formOn).map((row) => row.label));
+  const locked = new Set([...lists.forms.filter(formOn).map((row) => row.label), ...lists.labels.filter((row) => row.kept).map((row) => row.name)]);
+  const why = (row) => (row.kept ? `${row.description}. Kept: ${row.kept.charAt(0).toLowerCase()}${row.kept.slice(1)}` : `${row.description}. Kept: an issue form uses it.`);
   return `${head3('Issue forms', 'The forms people fill in when they open an issue on GitHub. Each sets its label. Files in .github/ISSUE_TEMPLATE/.')}
     ${forms.map((row) => tick(`data-form="${row.key}"`, row.title, S.forms[row.key], row.help)).join('')}
-    ${head3('Labels', 'Created on GitHub by the Set up this repository button. A form\'s label stays on while the form is on.')}
-    ${lists.labels.map((row) => tick(`data-label="${esc(row.name)}"`, esc(row.name), S.labels[row.name] || locked.has(row.name), locked.has(row.name) ? `${row.description}. Kept: an issue form uses it.` : row.description, locked.has(row.name))).join('')}
+    ${head3('Labels', 'Created on GitHub by the Set up this repository button. A form\'s label stays on while the form is on, and so does a label the button itself uses.')}
+    ${lists.labels.map((row) => tick(`data-label="${esc(row.name)}"`, esc(row.name), S.labels[row.name] || locked.has(row.name), locked.has(row.name) ? why(row) : row.description, locked.has(row.name))).join('')}
     ${isPublic() ? '' : sw('qc', 'QC checklist', 'A checklist issue, QC before release, with boxes for the scope, tests, review and release evidence of a private package, for teams with a quality process. Opened by the Set up this repository button in place of Before public.', S.qc)}`;
 }
 
@@ -143,7 +144,7 @@ function summary() {
   $('#sumSite').textContent = S.website ? 'On' : 'Off';
   const forms = lists.forms.filter((row) => row.part !== 'ai' || S.ai);
   const formCount = forms.filter(formOn).length;
-  const locked = new Set(lists.forms.filter(formOn).map((row) => row.label));
+  const locked = new Set([...lists.forms.filter(formOn).map((row) => row.label), ...lists.labels.filter((row) => row.kept).map((row) => row.name)]);
   const labelCount = lists.labels.filter((row) => S.labels[row.name] || locked.has(row.name)).length;
   $('#sumGit').textContent = !S.github ? 'Off' : formCount === forms.length && labelCount === lists.labels.length
     ? `All issue forms and labels${S.qc && !isPublic() ? ', QC checklist' : ''}`

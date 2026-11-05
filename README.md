@@ -157,7 +157,7 @@ Rscript cli/launchr.R eject                           # copy launchR's checks in
 | `--licence mit` / `proprietary` | The licence (default: proprietary for plan d, MIT otherwise) |
 | `--badges check,lifecycle` | README badges, from `lists/badges.tsv` (`none` for no badges) |
 | `--navbar reference,news,search` | The website's navbar items, from `lists/navbar.tsv` |
-| `--forms bug,docs`, `--labels bug,idea` | Which issue forms (`lists/forms.tsv`) and labels (`lists/labels.tsv`); a form's label is always kept |
+| `--forms bug,docs`, `--labels bug,idea` | Which issue forms (`lists/forms.tsv`) and labels (`lists/labels.tsv`); a form's label, and `epic` (the set-up step's root issue uses it), are always kept |
 | `--qc`, `--no-qc` | The QC checklist for a private package (default: on for plan d) |
 | `--preset starter` / `everything` | Which parts and checks are on |
 | `--public`, `--internal` | Older spelling of the plan: public, and not going to CRAN |
