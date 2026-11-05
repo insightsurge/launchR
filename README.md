@@ -77,7 +77,9 @@ change it, and `tests/README.md` explains the test file kinds.
 
 ## Add CI to an existing package
 
-To add launchR's checks to a package you already have, choose **Set up an existing package** on the site (<https://launch-r.web.app/#yours>) to download the CI files. Only `.github/workflows/`, `.github/dependabot.yml` and the quality-gate settings are added; `R/`, `tests/` and your existing `DESCRIPTION` are left alone.
+To add launchR's checks to a package you already have, choose **Set up an existing package** on the site
+(<https://launch-r.web.app/#yours>). The zip holds only the CI files and the settings files the chosen checks read,
+and the site says what to do with each; `R/`, `tests/` and `DESCRIPTION` are left alone.
 
 ## How your checks reach launchR
 

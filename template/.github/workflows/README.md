@@ -89,11 +89,12 @@ The style step also needs [Air](https://posit-dev.github.io/air/), and [Biome](h
 has JS or CSS. A missing one is named in the first FAIL line; without pkgdown, the website step is skipped.
 {{#is_private}}
 
-Check your organisation's policy on running a script downloaded from the internet before using the snippet below it. The script is the one released as that launchR version ([source on GitHub](https://github.com/insightsurge/launchR/blob/v{{kit_version}}/quality-gate/quality-gate.R)), and CI on GitHub runs the same checks, so nothing is lost when local runs aren't allowed.
+The snippet below downloads a script from the internet and runs it: check your organisation's policy first. It is the
+quality gate released as launchR {{kit_version}} ([its source](https://github.com/insightsurge/launchR/blob/v{{kit_version}}/quality-gate/quality-gate.R)),
+and CI on GitHub runs the same checks, so nothing is lost when local runs aren't allowed.
 {{/is_private}}
 
-Then, from the
-package's folder, in R:
+Then, from the package's folder, in R:
 
 ```r
 gate <- tempfile(fileext = ".R")

@@ -13,7 +13,7 @@ Check for these indicators in the repository:
 
 - `DESCRIPTION` has a `Config/launchR/version` field:
   ```dcf
-  Config/launchR/version: 0.0.17
+  Config/launchR/version: x.y.z
   ```
 - Workflow caller files in `.github/workflows/` call shared workflows from launchR:
   ```yaml
@@ -43,7 +43,7 @@ Consult the package's own files first. Consult launchR's repository on GitHub on
 | Read the pull request's CI report and fix a failure | `.github/CONTRIBUTING.md` ("Workflow" and "Before you open a pull request") and `.agents/rules/checks.md` for diagnosing failures and fixing root causes. For PR report comments and token permissions, see launchR's README: [How your checks reach launchR](https://github.com/insightsurge/launchR#how-your-checks-reach-launchr). |
 | Know which tests run where (test file kinds) | `tests/README.md` ("Test file kinds") and `.github/workflows/README.md` ("Test file kinds") for file naming conventions (`-browser.R`, `-snap.R`, `-extended.R`), skip rules, and `.agents/rules/tests.md`. |
 | Set up the GitHub repository (labels, root issue, checklists) | `.github/workflows/README.md` to run the "Set up this repository" workflow. For checklist stages, root issue structure and labels, see launchR's README: [Set up GitHub](https://github.com/insightsurge/launchR#set-up-github). |
-| Move to a newer launchR version | `.github/workflows/README.md` ("Updates") for how Dependabot opens PRs updating caller `@v...` tags, and the [launchR releases page](https://github.com/insightsurge/launchR/releases) for release notes. |
+| Move to a newer launchR version | `.github/workflows/README.md` ("Updates") for how a newer launchR version reaches the caller files, and the [launchR releases page](https://github.com/insightsurge/launchR/releases) for each version's notes and what to change. |
 | Change when a check runs, turn one off, or turn the CI report comment off | `.github/workflows/README.md` ("Changing a check") for schedules, platforms, timeouts, deleting check files, and turning off comments with `ci-report: false`. |
 | Copy the checks into the package so nothing depends on launchR (eject) | `.github/workflows/README.md` ("Leaving launchR") for the R eject snippet, or launchR's README: [The command line](https://github.com/insightsurge/launchR#the-command-line) (`launchr.R eject`). |
 
@@ -57,5 +57,5 @@ Consult the package's own files first. Consult launchR's repository on GitHub on
 
 ## Reporting problems
 
-If you find a bug or false alarm in launchR's shared workflows, quality gate, or CLI scripts:
-Report problems with launchR itself at <https://github.com/insightsurge/launchR/issues>.
+Report a bug or a false alarm in launchR itself (its shared workflows, quality gate or command line) at
+<https://github.com/insightsurge/launchR/issues>.
