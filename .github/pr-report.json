@@ -2,10 +2,38 @@
   "title": "CI report",
   "header": "ci-report",
   "report_job": "report",
-  "summary_jobs": ["R-CMD-check", "full-tests"],
-  "workflows": ["r-cmd-check.yaml", "coverage.yaml", "full-tests.yaml", "no-suggests.yaml", "secret-scan.yaml", "lint.yaml"],
+  "summary_jobs": [
+    "R-CMD-check",
+    "full-tests"
+  ],
+  "workflows": [
+    "r-cmd-check.yaml",
+    "coverage.yaml",
+    "full-tests.yaml",
+    "no-suggests.yaml",
+    "secret-scan.yaml",
+    "lint.yaml"
+  ],
   "sections": [
-    {"key": "tests", "title": "Tests"},
-    {"key": "style", "title": "Code style"}
-  ]
+    {
+      "key": "tests",
+      "title": "Tests"
+    },
+    {
+      "key": "security",
+      "title": "Security"
+    },
+    {
+      "key": "style",
+      "title": "Code style"
+    }
+  ],
+  "hints": {
+    "r-cmd-check.yaml": "open the failed job's log at the step named, fix the first error, warning or note it lists, and push again. R CMD check counts a note as a failure.",
+    "coverage.yaml": "the tests cover less of the code than the limit in DESCRIPTION: add tests for the lines this pull request adds, listed above.",
+    "full-tests.yaml": "the failing tests are listed above, with their messages. Run them on your computer with devtools::test().",
+    "no-suggests.yaml": "code, examples or vignettes use a package from Suggests without checking it is installed: guard each use with rlang::is_installed() or requireNamespace().",
+    "secret-scan.yaml": "remove the secret, and replace it wherever it is used (a new password or key): removing it in a later commit leaves it in the history, where anyone can read it.",
+    "lint.yaml": "run the quality gate's lint mode on your computer and fix what it lists; Air and the spelling word list can fix most of it for you."
+  }
 }

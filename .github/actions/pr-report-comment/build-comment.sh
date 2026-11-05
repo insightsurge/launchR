@@ -54,6 +54,8 @@ waiting=()
 notstarted=()
 silent=()
 failures=()
+failed_checks=()
+done_count=0
 summary_jobs=$(jq -r '.summary_jobs // [] | .[]' "${CONFIG}")
 mkdir -p "${work}/parts"
 while IFS= read -r workflow; do
@@ -103,6 +105,8 @@ while IFS= read -r workflow; do
     state="success"
   fi
   states+=("${state}")
+  [ "${state}" = "running" ] || done_count=$((done_count + 1))
+  [ "${state}" = "failure" ] && failed_checks+=("${workflow%.*}")
   # The jobs that failed, with the step they failed at, so the comment says where to look. A summary job
   # ("summary_jobs" in the config) is listed only when it failed on its own: otherwise it repeats its matrix.
   run_failures=()
@@ -128,7 +132,13 @@ while IFS= read -r workflow; do
   elif [ "${#summary_failures[@]}" -gt 0 ]; then
     failures+=("${summary_failures[@]}")
   fi
-  footer+=("[${workflow%.*}](${url}) (${state})")
+  # What to do about a failure of this check, from the config's hints (plain text).
+  hint=$(jq -r --arg w "${workflow}" '.hints[$w] // empty' "${CONFIG}")
+  if [ "${state}" = "failure" ] && [ -n "${hint}" ]; then
+    failures+=("${workflow%.*}: ${hint}")
+  fi
+  # The footer names every run; a state other than success is written after it.
+  if [ "${state}" = "success" ]; then footer+=("[${workflow%.*}](${url})"); else footer+=("[${workflow%.*}](${url}) (${state})"); fi
   found=0
   while IFS=$'\t' read -r artifact name; do
     [ -z "${artifact}" ] && continue
@@ -152,14 +162,19 @@ while IFS= read -r workflow; do
   fi
 done < <(jq -r '.workflows[]' "${CONFIG}")
 
-# One headline status for all the runs: a failure first, then anything still running, then a cancelled run.
+# One headline for all the runs, answering "can this merge?": a failure first (which checks), then anything still
+# running (how many have finished), then a cancelled run.
 all=" ${states[*]-} "
+total=${#states[@]}
+checks_word() { if [ "$1" = 1 ]; then echo "check"; else echo "checks"; fi; }
 if [[ "${all}" =~ \ (failure|timed_out|startup_failure)\  ]]; then
-  headline="❌ ${title}: failed"
+  headline="❌ ${title}: ${#failed_checks[@]} of ${total} $(checks_word "${total}") failed ($(printf '%s, ' "${failed_checks[@]}" | sed 's/, $//'))"
 elif [[ "${all}" =~ \ running\  ]]; then
-  headline="⏳ ${title}: running"
+  headline="⏳ ${title}: running, ${done_count} of ${total} $(checks_word "${total}") finished"
 elif [[ "${all}" =~ \ cancelled\  ]]; then
   headline="⏹️ ${title}: cancelled"
+elif [ "${total}" -gt 0 ]; then
+  headline="✅ ${title}: all ${total} $(checks_word "${total}") passed"
 else
   headline="✅ ${title}: passed"
 fi
@@ -167,7 +182,26 @@ fi
 {
   echo "## ${headline} · \`${HEAD_SHA:0:7}\`"
   echo
-  echo "_Each workflow rewrites this comment when it finishes._"
+  echo "_Updated as each check finishes._"
+  # What needs attention first: the failed jobs, each with the step it failed at, then what is still to come.
+  if [ "${#failures[@]}" -gt 0 ]; then
+    echo
+    echo "**Failed jobs**, each with the step it failed at:"
+    echo
+    printf -- '- %s\n' "${failures[@]}"
+  fi
+  if [ "${#waiting[@]}" -gt 0 ]; then
+    echo
+    echo "⏳ Still running: $(printf '%s, ' "${waiting[@]}" | sed 's/, $//')."
+  fi
+  if [ "${#notstarted[@]}" -gt 0 ]; then
+    echo
+    echo "Not started for this commit: $(printf '%s, ' "${notstarted[@]}" | sed 's/, $//')."
+  fi
+  if [ "${#silent[@]}" -gt 0 ]; then
+    echo
+    echo "Finished, but wrote no summary (see the run): $(printf '%s, ' "${silent[@]}" | sed 's/, $//')."
+  fi
   while IFS=$'\t' read -r key section; do
     echo
     echo "### ${section}"
@@ -186,27 +220,6 @@ fi
   done < <(jq -r '.sections[] | [.key, .title] | @tsv' "${CONFIG}")
   echo
   echo "---"
-  if [ "${#waiting[@]}" -gt 0 ]; then
-    echo "⏳ Still running: $(printf '%s, ' "${waiting[@]}" | sed 's/, $//')."
-    echo
-  fi
-  if [ "${#notstarted[@]}" -gt 0 ]; then
-    echo "Not started for this commit: $(printf '%s, ' "${notstarted[@]}" | sed 's/, $//')."
-    echo
-  fi
-  if [ "${#silent[@]}" -gt 0 ]; then
-    echo "Finished without a report (see the run): $(printf '%s, ' "${silent[@]}" | sed 's/, $//')."
-    echo
-  fi
-  if [ "${#failures[@]}" -gt 0 ]; then
-    echo "<details open>"
-    echo "<summary><b>Failed jobs (${#failures[@]})</b>: each with the step it failed at</summary>"
-    echo
-    printf -- '- %s\n' "${failures[@]}"
-    echo
-    echo "</details>"
-    echo
-  fi
   if [ "${#footer[@]}" -gt 0 ]; then
     echo "**Runs:** $(printf '%s · ' "${footer[@]}" | sed 's/ · $//')"
   fi

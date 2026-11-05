@@ -28,7 +28,8 @@ model and search for its name (and `no_suggests`, its key) to see every place. I
    when the check is off).
 5. **The pull request report:** if the check writes a part, add its workflow file to `workflows` in
    `.github/pr-report.json` (and a section there if it needs a new one). The part's name (`tests-3-no-suggests`) puts
-   it in the section named by the text before the first `-`. Give the workflow the `ci-report` input and the `report`
+   it in the section named by the text before the first `-` (`tests`, `security` or `style`). Add a line to `hints` there:
+   what to do when the check fails, shown under its failed jobs. Give the workflow the `ci-report` input and the `report`
    job's `inputs.ci-report` condition, as the others have, add `ci-report: {{ci_report}}` to its caller template, and
    add its key to `REPORTING` in `site/src/form/app.js`.
 6. **Words that list the checks:** `.github/workflows/README.md` (launchR's overview of its workflows), the package's

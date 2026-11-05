@@ -139,12 +139,12 @@ c2() {
   add_artifact 200 3 pr-report-tests-1-unit "$(text "UNIT-TEXT")"
   run_script
   outhas "post=true"; outhas "header=ci-report"
-  has "## ✅ CI report: passed · \`${SHA:0:7}\`"
+  has "## ✅ CI report: all 2 checks passed · \`${SHA:0:7}\`"
   # Sections follow the config (Tests before Code style); parts sort by name inside a section.
   before "### Tests" "### Code style"
   before "UNIT-TEXT" "INTEGRATION-TEXT"; before "INTEGRATION-TEXT" "### Code style"; before "### Code style" "LINT-TEXT"
-  has "**Runs:** [alpha](https://example.test/runs/100) (success) · [beta](https://example.test/runs/200) (success)"
-  hasnt "Failed jobs"; hasnt "Still running"; hasnt "Not started"; hasnt "Finished without a report"
+  has "**Runs:** [alpha](https://example.test/runs/100) · [beta](https://example.test/runs/200)"; hasnt "(success)"
+  hasnt "Failed jobs"; hasnt "Still running"; hasnt "Not started"; hasnt "wrote no summary"
 }
 check c2 "all passed: parts in config order, title and header"
 
@@ -154,9 +154,12 @@ c3() {
   caller beta.yaml; add_run beta.yaml 200 completed failure
   add_jobs 200 "completed|success|lint|" "completed|failure|check (ubuntu)|Run tests" "completed|failure|timed|" "completed|failure|report|Post"
   add_artifact 200 2 pr-report-style-1-lint "$(text "LINT")"
+  jq '.hints = {"beta.yaml": "do the beta fix.", "alpha.yaml": "never shown: alpha passed."}' "${W}/config.json" >"${W}/c.new" && mv "${W}/c.new" "${W}/config.json"
   run_script
-  has "## ❌ CI report: failed"
-  has "<summary><b>Failed jobs (2)</b>"
+  has "## ❌ CI report: 1 of 2 checks failed (beta)"
+  has "- beta: do the beta fix."; hasnt "never shown"
+  has "**Failed jobs**, each with the step it failed at:"
+  before "**Failed jobs**" "### Tests"
   has "- [check (ubuntu)](https://example.test/job/check--ubuntu-) (beta): failed at \"Run tests\""
   has "- [timed](https://example.test/job/timed) (beta): failure"
   hasnt "(beta): failed at \"Post\""   # the report job is not listed
@@ -171,7 +174,7 @@ c4() {
   run_script
   has "Not started for this commit: beta."
   hasnt "Still running"
-  has "## ✅ CI report: passed"
+  has "## ✅ CI report: all 1 check passed"
   hasnt "[beta]"
   has "[alpha]"
 }
@@ -186,7 +189,7 @@ c5() {
   has "## ⏳ CI report: running"
   has "⏳ Still running: alpha."
   has "[alpha](https://example.test/runs/100) (running)"
-  hasnt "Finished without a report"
+  hasnt "wrote no summary"
   has "PARTIAL"   # parts saved so far are still shown
 }
 check c5 "run in progress: shown as running / still running"
@@ -223,11 +226,11 @@ c8() {
   add_artifact 100 1 pr-report-tests-1-unit "$(text "U")"
   jq '.summary_jobs = ["all-green"]' "${W}/config.json" >"${W}/c.new" && mv "${W}/c.new" "${W}/config.json"
   run_script
-  has "Failed jobs (1)"; has "matrix / job (a)"; hasnt "all-green"
+  has "**Failed jobs**"; has "matrix / job (a)"; hasnt "all-green"
   # Alone, the summary job is listed.
   add_jobs 100 "completed|success|matrix / job (a)|" "completed|failure|matrix / all-green|Check all"
   run_script
-  has "Failed jobs (1)"; has "matrix / all-green"
+  has "**Failed jobs**"; has "matrix / all-green"
 }
 check c8 "summary job listed only when it failed on its own"
 
@@ -238,7 +241,7 @@ c9() {
   add_jobs 100 "completed|success|build|" "in_progress|null|ci / report|"
   add_artifact 100 1 pr-report-tests-1-unit "$(text "U")"
   run_script
-  has "## ✅ CI report: passed"; hasnt "Still running"; has "(success)"
+  has "## ✅ CI report: all 1 check passed"; hasnt "Still running"; has "[alpha](https://example.test/runs/100)"
 }
 check c9 "only the report job pending: run counts as finished"
 
@@ -250,7 +253,7 @@ c10() {
   add_artifact 100 2 pr-report-badname "$(text "BADNAME")"
   add_artifact 100 3 other-artifact "$(text "OTHER")"
   run_script
-  has "Finished without a report (see the run): alpha."
+  has "Finished, but wrote no summary (see the run): alpha."
   hasnt "EXPIRED"; hasnt "BADNAME"; hasnt "OTHER"
   has "_Nothing reported yet._"
 }
@@ -295,7 +298,7 @@ c14() {
   caller alpha.yaml; add_run alpha.yaml 100 completed failure; add_jobs 100 "completed|failure|build|"
   caller beta.yaml; add_run beta.yaml 200 in_progress null; add_jobs 200 "in_progress|null|slow|"
   run_script
-  has "## ❌ CI report: failed"; has "Still running: beta."
+  has "## ❌ CI report: 1 of 2 checks failed (alpha)"; has "Still running: beta."
   has "- [build](https://example.test/job/build) (alpha): failure"
 }
 check c14 "failure outranks running in the headline; job without a failed step shows its conclusion"
@@ -319,7 +322,7 @@ c16() {
   # The same run once its matrix has been built and the report job has started.
   add_jobs 100 "completed|success|platforms|" "completed|success|check (a)|" "in_progress|null|report|"
   run_script
-  has "## ✅ CI report: passed"; hasnt "Still running"
+  has "## ✅ CI report: all 1 check passed"; hasnt "Still running"
   # No report job listed at all yet: still running.
   add_jobs 100 "completed|success|platforms|"
   run_script

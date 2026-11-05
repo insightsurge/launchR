@@ -14,8 +14,9 @@
 # or as "[elapsed]" on Windows ("122s"), and only from 10 s (_R_CHECK_TIMINGS_, which --as-cran sets).
 set -euo pipefail
 
+# A time: seconds under two minutes, as the full tests' report shows them, minutes from there.
 minutes() {
-  awk -v s="$1" 'BEGIN { printf "%.1f min", s / 60 }'
+  awk -v s="$1" 'BEGIN { if (s < 120) printf "%d s", s + 0.5; else printf "%.1f min", s / 60 }'
 }
 
 note() {
@@ -64,7 +65,7 @@ report() {
       *) icon="❌" ;;
     esac
     case "${tests}" in
-      under10) shown="under 0.2 min" ;;
+      under10) shown="under 10 s" ;;
       none) shown="not run" ;;
       *) shown=$(minutes "${tests}") ;;
     esac
