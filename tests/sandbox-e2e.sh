@@ -302,7 +302,7 @@ report() {
   else
     # Every comparison with the default branch names the commit this run pushed there.
     local others
-    others=$(jq -r '.[0].body' <<< "${comments}" | grep -oE 'default branch at [0-9a-f]{7}' | grep -v "${MAIN_SHA:0:7}" | sort -u | tr '\n' ' ')
+    others=$(jq -r '.[0].body' <<< "${comments}" | { grep -oE 'default branch at [0-9a-f]{7}' || true; } | { grep -v "${MAIN_SHA:0:7}" || true; } | sort -u | tr '\n' ' ')
     if [ -n "${others}" ]; then
       echo "- ❌ The CI report compares with an older default-branch commit, not ${MAIN_SHA:0:7}: ${others}" >> "${list}"
       echo "::error::The CI report compares with an older default-branch commit: ${others}"
