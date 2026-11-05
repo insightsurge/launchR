@@ -1,7 +1,7 @@
 # launchR's own checks on every pull request (not a check that packages call): the site works in a browser the way a
 # visitor uses it, and the site and the command line still make the same packages. A change that breaks the form or a
 # zip then fails here before it reaches the live site. The workflows and actions that packages call are linted here too
-# (actionlint for mistakes, zizmor for security problems).
+# (actionlint for mistakes, caller compatibility, zizmor for security problems).
 on:
   pull_request:
     branches: [main]
@@ -86,9 +86,10 @@ jobs:
         run: bash tests/build-comment-tests.sh
 
   workflow-lint:
-    # Lints .github/workflows and .github/actions, which every package's CI calls. Settings: .github/actionlint.yaml and
-    # .github/zizmor.yml. Both tools are pinned to an exact version and the downloads are checked against a SHA-256,
-    # so a new release cannot change the result by itself; raise them on purpose (and in CONTRIBUTING.md).
+    # Lints .github/workflows and .github/actions, which every package's CI calls, and checks caller compatibility.
+    # Settings: .github/actionlint.yaml and .github/zizmor.yml. Both tools are pinned to an exact version and the
+    # downloads are checked against a SHA-256, so a new release cannot change the result by itself; raise them on
+    # purpose (and in CONTRIBUTING.md).
     runs-on: ubuntu-26.04
     timeout-minutes: 10
     env:
@@ -100,6 +101,11 @@ jobs:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
+          fetch-depth: 0
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
 
       - name: Install actionlint and zizmor
         run: |
@@ -116,6 +122,9 @@ jobs:
       # Uses the shellcheck on the runner for the shell in `run:` steps.
       - name: actionlint
         run: actionlint
+
+      - name: Check caller compatibility
+        run: bash tests/caller-compat.sh
 
       # Online audits (a pinned SHA that is no commit of its action, a known-vulnerable action) need the token.
       - name: zizmor

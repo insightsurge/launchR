@@ -63,7 +63,9 @@ launchR's version is the tag its users name in their caller files (`@vX.Y.Z`), s
 1. **Bump the version in the three places that hold it:** `lists/settings.tsv` (`kit_version`), `cli/DESCRIPTION`
    (`Version`) and `cli/github-setup.R` (`version <-`). `tests/cli-tests.R` fails when they differ. Everything else
    (the caller files, the package's `DESCRIPTION`, the next-steps text on the site) takes it from `kit_version`.
-2. Open a pull request and let the checks pass. **Run the sandbox test on its branch** (Actions, sandbox-e2e, Run
+2. Open a pull request and let the checks pass (the `workflow-lint` job's caller compatibility check verifies
+   the previous release's callers against this commit's workflows, and this commit's callers against its own workflows
+   because the new tag does not exist yet). **Run the sandbox test on its branch** (Actions, sandbox-e2e, Run
    workflow, pick the branch, and give the pull request's number; below): it runs a site-made package's checks on
    GitHub's Linux, Mac and Windows runners against this commit, takes about 35 minutes when it passes, and posts its
    report on the pull request. Merge when it passes.
@@ -84,6 +86,7 @@ launchR's version is the tag its users name in their caller files (`@vX.Y.Z`), s
 | `tests/compare-routes.mjs` | The site and the command line build the same files for every plan | `node tests/compare-routes.mjs` |
 | `tests/cli-tests.R` | The command line against a stand-in for `gh` (about 90 s; needs `jq` and `git`), the lists' consistency, the version in three places | `Rscript tests/cli-tests.R` |
 | `tests/build-comment-tests.sh` | The pull request report builder (`.github/actions/pr-report-comment/build-comment.sh`) with a fake `gh`: states, ordering, cutting long parts, matrix races. Needs `jq`, `perl`, `unzip`, `zip`, `iconv` | `bash tests/build-comment-tests.sh` |
+| `tests/caller-compat.sh` | Caller compatibility with actionlint: previous release callers against this commit's workflows, and this commit's callers against the tag in `lists/settings.tsv` (or this commit if untagged) | `bash tests/caller-compat.sh` |
 | `tests/gate-matrix.sh` | Generated packages for the main sets of choices pass the quality gate (slow, needs R packages) | `tests/gate-matrix.sh` |
 | `tests/check-zip.mjs` | The site's zip is sound (after `npm --prefix site run build`) | `node tests/check-zip.mjs` |
 | `site/tests/form.spec.js` | The form, each plan's download and its zip, in a real browser (Playwright) | `npm --prefix site run build`, then `cd site && npx playwright test` |
@@ -92,7 +95,8 @@ launchR's version is the tag its users name in their caller files (`@vX.Y.Z`), s
 | zizmor | Security problems in `.github/workflows/` and `.github/actions/` (unpinned actions, token left in `.git`, injection, too-wide permissions). Settings: `.github/zizmor.yml` | `zizmor .github/workflows .github/actions` (set `GH_TOKEN` for the online checks) |
 
 The pull request workflow `.github/workflows/site-tests.yaml` runs the browser tests, the zip check, the route
-comparison, the command line's tests, the report builder's tests, and (job `workflow-lint`) actionlint and zizmor.
+comparison, the command line's tests, the report builder's tests, and (job `workflow-lint`) actionlint,
+caller compatibility (`tests/caller-compat.sh`), and zizmor.
 `gate-matrix.sh` and the sandbox test are not part of that workflow: run them by hand before a release. Both linters are pinned to an exact version there, with a checksum;
 to raise one, change the version and checksum together, run it locally, and fix or (with a one-line reason in its
 config file) allow what it finds.
