@@ -224,7 +224,7 @@ or the release branch), makes a package on the site with every check, R devel an
 Windows, points its checks at the launchR commit under test, and runs them in the public repository
 `insightsurge/launchr-sandbox`: a push to its default branch, and a pull request with a planted fake secret that
 secret-scan must catch. It fails when any other check fails, with a link to each failed job, or when the pull request
-gets other than one report comment. A passing run takes about 15 minutes; given the release pull request's number,
+gets other than one report comment. A passing run takes about 35 minutes (it waits for the default branch's coverage and full-tests runs before it opens its pull request); given the release pull request's number,
 it posts its report there as one comment. It needs the `SANDBOX_TOKEN` secret described in
 `CONTRIBUTING.md`.
 
