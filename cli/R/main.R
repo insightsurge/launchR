@@ -191,7 +191,7 @@ run_command <- function(args) {
   )
 }
 
-# The site's Modify choices, as flags: --no-ci-report, --licence, --badges, --navbar, --forms, --labels, --checklists,
+# The site's settings, as flags: --no-ci-report, --licence, --badges, --navbar, --forms, --labels, --checklists,
 # --qc and --no-qc.
 # A list flag replaces the default list with the comma-separated keys given ("none" for an empty one). Returns the
 # choices, or a message saying what is wrong.

@@ -5,7 +5,7 @@
 # extended; see tests/README.md). label goes in the workflows README; help is the site's longer tip.
 key	check	label	starter	everything	events	cron	platforms_public	platforms_private	test_kinds	help
 r_cmd_check	r-cmd-check	R CMD check, the core check	yes	yes	pr,push,schedule,manual	17 5 * * 1	ubuntu/release, windows/release, macos/release	ubuntu/release, ubuntu/oldrel-1	plain	R CMD check, the core check. It runs on every pull request and push, and weekly.
-lint	lint	Check style, docs in sync and spelling	yes	yes	pr,push,manual	17 5 * * 1				Checks style, that the docs are in sync, and spelling.
+lint	lint	Check style, docs in sync and spelling	yes	yes	pr,push,manual	17 5 * * 1				Checks style, that the docs are in sync, and spelling. Style means Air, the formatter for R code: to run the check on your computer, install it from posit-dev.github.io/air.
 no_suggests	no-suggests	Check the package works without its optional packages	yes	yes	pr,push,manual	17 5 * * 1				Checks the package works without its optional packages.
 secret_scan	secret-scan	Catch passwords and tokens committed by mistake	yes	yes	pr,push					Catches passwords and tokens committed by mistake.
 coverage	coverage	Measure how much code your tests run	yes	yes	pr,push,manual	17 5 * * 1			plain,extended	Measures how much of your code the tests run.

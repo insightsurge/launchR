@@ -473,7 +473,7 @@ p { text-wrap: pretty; }
   .nav-start { min-height: 44px; padding: 0 8px; margin-right: 0; }
 }
 
-/* the form's other two views: Modify, and what to do after the download */
+/* the form's other two views: the settings steps, and what to do after the download */
 .setup-grid { transition: width 420ms cubic-bezier(0.22, 1, 0.36, 1); }
 #setup[data-view='modify'] .setup-grid { width: min(1160px, 100%); grid-template-columns: minmax(0, 1.9fr) minmax(0, 0.7fr); }
 #setup[data-view='next'] .setup-grid { width: min(720px, 100%); grid-template-columns: minmax(0, 1fr); }
@@ -485,16 +485,6 @@ p { text-wrap: pretty; }
 .back { display: inline-flex; align-items: center; gap: 4px; min-height: 36px; margin-bottom: 6px; }
 .back svg { width: 15px; height: 15px; }
 .back:hover, .reset:hover { text-decoration: underline; text-underline-offset: 3px; }
-.mod { border-top: 1px solid var(--line); }
-.mod:last-of-type { border-bottom: 1px solid var(--line); }
-.mod summary { display: flex; align-items: baseline; gap: 14px; padding: 14px 0; cursor: pointer; list-style: none; border-radius: 6px; }
-.mod summary::-webkit-details-marker { display: none; }
-.mod summary::after { content: ''; flex: none; align-self: center; width: 8px; height: 8px; margin: 0 4px 0 auto; border-right: 1.6px solid var(--soft); border-bottom: 1.6px solid var(--soft); transform: rotate(45deg); transition: transform 180ms; order: 3; }
-.mod[open] summary::after { transform: rotate(-135deg); }
-.mod summary b { font-weight: 500; font-size: 16px; }
-.mod summary span { color: var(--soft); font-size: 14.5px; }
-.mod summary:hover b { color: var(--accent); }
-.mod summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .mod-body { padding: 0 0 18px; }
 .mod-body h4 { margin: 18px 0 8px; font-size: 14.5px; font-weight: 500; }
 .mod-body h4:first-child { margin-top: 2px; }
@@ -560,8 +550,6 @@ select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
   #setup[data-view='modify'] .setup-grid { grid-template-columns: minmax(0, 1fr); }
   #setup[data-view='modify'] .preview { display: none; }
   .pick { grid-template-columns: minmax(0, 1fr); }
-  .mod summary { flex-wrap: wrap; gap: 2px 12px; padding: 13px 0; min-height: 44px; }
-  .mod summary span { order: 4; width: 100%; font-size: 13.5px; }
   .mod-actions { position: sticky; bottom: 0; margin: 14px calc(var(--gut) * -1) -56px; padding: 12px var(--gut) calc(12px + env(safe-area-inset-bottom)); background: var(--bg); border-top: 1px solid var(--line); }
   .mod-actions .primary { width: 100%; }
 }
@@ -569,7 +557,7 @@ select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 @keyframes view-in { from { opacity: 0; transform: translateY(6px); } }
 @media (prefers-reduced-motion: reduce) { #form, #modifyView, #nextView { animation: none; } }
 
-/* Modify: every explanation sits behind a small info mark */
+/* The settings steps: every explanation sits behind a small info mark */
 .opt { display: inline-flex; align-items: center; gap: 7px; min-width: 0; }
 .opt .tag, h4 .tag { margin: 0; font-size: 12px; }
 .opt > .sw, .opt > label { margin: 0; }
@@ -599,8 +587,7 @@ input.short.bad { border-color: var(--no); }
   .line { flex-wrap: wrap; }
 }
 
-/* Modify: headings a step up, their contents set in, and what can't be chosen yet greyed */
-.mod summary b { font-size: 18px; }
+/* The settings steps: headings a step up, their contents set in, and what can't be chosen yet greyed */
 .mod-body { padding-left: 20px; }
 .sw:has(input:disabled), .pick label:has(input:disabled) { opacity: 0.5; cursor: not-allowed; }
 .sw:has(input:disabled) input { cursor: not-allowed; }
@@ -613,7 +600,7 @@ input.short.bad { border-color: var(--no); }
   #modifyView .wide-tip [role='tooltip'] { position: fixed; top: auto; left: 16px; right: 16px; bottom: 84px; width: auto; max-width: none; }
 }
 
-/* Modify: tappable pills in place of checkboxes */
+/* The settings steps: tappable pills in place of checkboxes */
 #modifyView .ticks { display: flex; flex-wrap: wrap; gap: 8px; }
 .pill { position: relative; display: inline-flex; margin: 0; font-weight: 400; cursor: pointer; }
 .pill input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; }
@@ -656,7 +643,7 @@ input.short.bad { border-color: var(--no); }
 .cell input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
 .rmatrix .none::after { content: ''; display: inline-block; width: 12px; height: 1.5px; background: var(--line); vertical-align: middle; }
 
-/* Modify: one type scale and one rhythm.
+/* The settings steps: one type scale and one rhythm.
    Group 18/500. Subsection and field label 14.5/500. Option and input 14.5/400. Small note 13.5. Tag 12. */
 #modifyView .mod-body { display: grid; gap: 14px; padding: 2px 0 22px 20px; }
 #modifyView .mod-body > * { margin: 0; }
@@ -788,3 +775,236 @@ input { caret-color: var(--accent); }
 }
 @keyframes menu-in { from { opacity: 0; transform: translateY(-8px); } }
 @media (prefers-reduced-motion: reduce) { .menu:not([hidden]) { animation: none; } }
+
+/* the form in steps: Use a plan and Download, or Customise a plan and four more steps */
+.views { min-width: 0; }
+#setup:not([data-mode='existing']) .ex-only { display: none; }
+.stepbar { margin: 0 0 18px; }
+.stepbar ol { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.stepbar li[hidden] { display: none; }
+.stepbar button { display: inline-flex; align-items: center; gap: 7px; min-height: 36px; padding: 0 12px 0 6px; border: 1.5px solid var(--line); border-radius: 99px; background: none; color: var(--soft); font: inherit; font-size: 14px; cursor: pointer; }
+.stepbar button i { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid currentColor; font-style: normal; font-size: 12.5px; }
+.stepbar button:hover { border-color: var(--soft); color: var(--ink); }
+.stepbar button.done { color: var(--ink); }
+.stepbar button[aria-current='step'] { border-color: var(--accent); color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.stepbar button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.primary[aria-disabled='true'] { opacity: 0.55; box-shadow: none; }
+#missing { color: var(--soft); }
+#modTitle .for { color: var(--soft); font-weight: 400; font-size: 0.62em; }
+#modifyView .mod[hidden] { display: none; }
+#modifyView .mod-body { padding-left: 0; }
+.mod-actions { justify-content: flex-start; }
+.mod-actions .quiet { margin-right: auto; }
+.sw-note { font-size: 13.5px; color: var(--soft); }
+.sw-note code { font-size: 12.5px; }
+.git-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+#modifyView .git-head h4 { margin: 0; }
+.peek-link { padding: 0; border: 0; background: none; font: inherit; font-size: 14px; color: var(--accent); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.peek-link:hover { color: var(--ink); }
+.ai-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+
+/* issue forms as cards, each with the label it sets */
+.fcards { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 10px; }
+.fcard { position: relative; display: block; margin: 0; font-weight: 400; cursor: pointer; }
+.fcard input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; }
+.fcard > span { display: flex; flex-direction: column; gap: 6px; height: 100%; padding: 11px 12px; background: var(--surface); border: 1.5px solid var(--line); border-radius: 12px; transition: border-color .15s; }
+.fcard b { display: flex; align-items: center; font-weight: 500; font-size: 14.5px; color: var(--soft); }
+.fcard b svg { width: 0; height: 13px; transition: width .15s, margin-right .15s; }
+.fcard small { font-size: 13px; color: var(--soft); line-height: 1.35; }
+.fcard-label { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: auto; }
+.fcard input:checked + span { border-color: var(--accent); }
+.fcard input:checked + span b { color: var(--ink); }
+.fcard input:checked + span b svg { width: 13px; margin-right: 6px; color: var(--accent); }
+.fcard:hover > span { border-color: var(--soft); }
+.fcard input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+.fcard input:not(:checked) + span .label-chip { opacity: 0.6; }
+.label-chip { display: inline-block; padding: 1px 9px; border-radius: 99px; font-size: 12.5px; font-weight: 500; line-height: 1.6; color: var(--ink); background: color-mix(in srgb, var(--lc) 30%, var(--surface)); border: 1px solid color-mix(in srgb, var(--lc) 70%, transparent); }
+.auto { display: inline-flex; align-items: center; gap: 4px; font-size: 12.5px; color: var(--soft); }
+.auto svg { width: 13px; height: 13px; }
+.kept-line { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-size: 13.5px; color: var(--soft); }
+.pill .dot { flex: none; width: 9px; height: 9px; margin-right: 7px; border-radius: 50%; background: var(--lc); }
+
+/* README badges drawn as they look in a README */
+.shields { display: flex; flex-wrap: wrap; gap: 10px 14px; }
+.shield-opt { flex-wrap: wrap; }
+.shield { position: relative; display: inline-flex; margin: 0; font-weight: 400; cursor: pointer; }
+.shield input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; }
+.shield > span { display: inline-flex; align-items: stretch; height: 30px; padding: 2px; border: 1.5px solid var(--line); border-radius: 8px; transition: border-color .15s; }
+.shield svg { align-self: center; width: 0; height: 13px; color: var(--accent); transition: width .15s, margin .15s; }
+.shield b, .shield i { display: grid; place-items: center; padding: 0 8px; font: 500 13px/1 Verdana, 'DejaVu Sans', sans-serif; font-style: normal; color: #fff; text-shadow: 0 1px 0 rgb(0 0 0 / 30%); }
+.shield b { background: #555; border-radius: 4px 0 0 4px; }
+.shield i { background: var(--sc); border-radius: 0 4px 4px 0; }
+.shield input:checked + span { border-color: var(--accent); }
+.shield input:checked + span svg { width: 13px; margin: 0 6px 0 4px; }
+.shield:hover > span { border-color: var(--soft); }
+.shield input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+.shield:has(input:disabled) { cursor: default; }
+.shield:has(input:disabled:not(:checked)) > span { opacity: 0.55; }
+
+/* After that: four short bullets */
+.after h3 { margin: 0 0 6px; font-size: 15px; font-weight: 500; color: var(--ink); }
+.after ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
+.after li { line-height: 1.5; }
+.after code { font-size: 13px; overflow-wrap: anywhere; }
+
+/* the shared preview window: a list on the left, what it shows on the right; the whole screen on a phone */
+dialog.peek { width: min(980px, calc(100% - 32px)); height: min(720px, calc(100% - 48px)); max-width: none; max-height: none; padding: 0; border: 1px solid var(--line); border-radius: 18px; background: var(--bg); color: var(--ink); overflow: hidden; }
+dialog.peek[open] { display: flex; flex-direction: column; }
+dialog.peek::backdrop { background: rgb(0 0 0 / 55%); }
+.peek-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px 12px 20px; border-bottom: 1px solid var(--line); }
+.peek-head h2 { margin: 0; font-size: 18px; }
+.peek .peek-close { position: static; }
+.peek-grid { flex: 1; min-height: 0; display: grid; grid-template-columns: 220px minmax(0, 1fr); }
+.peek-list { overflow: auto; padding: 12px; border-right: 1px solid var(--line); }
+.peek-list h3 { margin: 12px 8px 4px; font-size: 12.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--soft); font-weight: 500; }
+.peek-list h3:first-child { margin-top: 2px; }
+.peek-list ul { margin: 0; padding: 0; list-style: none; }
+.peek-list button { display: block; width: 100%; min-height: 34px; padding: 6px 8px; border: 0; border-radius: 8px; background: none; color: var(--ink); font: inherit; font-size: 14.5px; text-align: left; cursor: pointer; }
+.peek-list button:hover { background: var(--surface); }
+.peek-list button[aria-current='true'] { background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent); }
+.peek-pane { overflow: auto; padding: 18px 22px 28px; }
+.peek-kind { margin: 0 0 4px; font-size: 13px; color: var(--soft); }
+.peek-title { margin: 0; font-size: 22px; }
+.peek-when { margin: 4px 0 14px; color: var(--soft); font-size: 14.5px; }
+.peek-pane h4 { margin: 16px 0 6px; font-size: 15px; font-weight: 600; }
+.peek-boxes { margin: 0; padding: 0; list-style: none; display: grid; gap: 7px; }
+.peek-boxes li { display: flex; gap: 9px; font-size: 14.5px; line-height: 1.45; }
+.peek-boxes em { font-style: normal; color: var(--soft); }
+.peek-boxes .tag { margin: 0 0 0 6px; padding: 0 7px; font-size: 11.5px; vertical-align: 1px; }
+.peek-box { flex: none; width: 14px; height: 14px; margin-top: 4px; border: 1.5px solid var(--soft); border-radius: 3px; }
+.peek-foot { margin-top: 18px; font-size: 13.5px; color: var(--soft); }
+.peek-md p { margin: 0 0 6px; font-size: 14px; color: var(--soft); }
+.peek-field { margin: 14px 0 0; }
+.peek-label { margin: 0; font-weight: 600; font-size: 14.5px; }
+.peek-req { color: var(--no); }
+.peek-help { margin: 2px 0 6px; font-size: 13.5px; color: var(--soft); white-space: pre-line; }
+.peek-input { height: 34px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+.peek-input.tall { height: 90px; }
+.peek-md-doc { font-size: 14.5px; line-height: 1.55; }
+.peek-md-doc h1 { font-size: 22px; margin: 4px 0 8px; }
+.peek-md-doc h2 { font-size: 17px; margin: 18px 0 6px; }
+.peek-md-doc code { font-size: 13px; }
+.peek-md-doc pre { overflow: auto; padding: 10px 12px; background: var(--surface); border-radius: 8px; }
+.peek-md-doc table { border-collapse: collapse; font-size: 13.5px; }
+.peek-md-doc th, .peek-md-doc td { padding: 6px 8px; border: 1px solid var(--line); text-align: left; vertical-align: top; }
+@media (max-width: 860px) {
+  dialog.peek { width: 100%; height: 100%; border-radius: 0; border: 0; }
+  .peek-grid { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
+  .peek-list { display: flex; gap: 6px; overflow-x: auto; padding: 10px 12px; border-right: 0; border-bottom: 1px solid var(--line); }
+  .peek-list h3 { display: none; }
+  .peek-list ul { display: flex; gap: 6px; }
+  .peek-list button { white-space: nowrap; min-height: 44px; border: 1px solid var(--line); border-radius: 99px; padding: 0 14px; }
+  .peek-pane { padding: 16px var(--gut) 28px; }
+  .fcards { grid-template-columns: minmax(0, 1fr); }
+  .stepbar button span { font-size: 13px; }
+  .stepbar button { min-height: 44px; }
+  .git-head, .ai-row { flex-wrap: wrap; }
+}
+/* hidden means hidden, whatever display a touch rule gives the element */
+.reset[hidden], .primary[hidden], .quiet[hidden] { display: none; }
+@media (max-width: 860px) {
+  .mod-actions { flex-wrap: nowrap; }
+  .mod-actions .quiet { flex: none; }
+  .mod-actions .primary { flex: 1; width: auto; }
+}
+
+/* the form keeps one width and one top margin on every view and step: nothing moves when a button is pressed */
+dialog#setup { scrollbar-gutter: stable; }
+@media (min-width: 861px) {
+  .setup-inner { place-items: start center; padding: 72px 72px 56px; }
+  #setup .setup-grid, #setup[data-view] .setup-grid, #setup[data-mode='existing'][data-view='modify'] .setup-grid {
+    width: min(1160px, 100%); grid-template-columns: minmax(0, 1.9fr) minmax(0, 0.7fr); transition: none;
+  }
+  #setup[data-view='modify'] .setup-inner { padding-right: 72px; }
+  #setup[data-view='next'] .preview, #setup[data-view='existing'] .preview, #setup[data-mode='existing'] .preview { display: block !important; visibility: hidden; }
+}
+.stepbar.off { visibility: hidden; }
+.new-only > h4 + .shields { margin-top: 14px; }
+.shield input:checked + span { box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 35%, transparent); }
+/* an info mark sits on the line of its label */
+.field-head { margin-bottom: 5px; }
+.field-head label { margin-bottom: 0; }
+.tip.warn { color: var(--no); }
+.reset:disabled { color: var(--soft); opacity: 0.6; cursor: default; text-decoration: none; }
+.how-row { display: flex; align-items: center; gap: 8px; margin: 18px 0 10px; }
+.how-row .routes { margin: 0; }
+.how-row + fieldset.plans { margin-top: 0; }
+
+/* one selected look for every choice that toggles: an accent border and a light accent fill, no tick */
+.pill input:checked + span, .fcard input:checked + span, .shield input:checked + span {
+  border-color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); box-shadow: none;
+}
+.pill svg, .fcard b svg, .shield > span > svg { display: none; }
+.shield > span { background: transparent; }
+/* what a heading holds sits in under it */
+#modifyView .nest { margin-left: 20px; }
+@media (max-width: 860px) { #modifyView .nest { margin-left: 12px; } }
+/* the main buttons sit on the right; Back stays on the left */
+#form .actions { justify-content: flex-end; }
+#form #missing { text-align: right; }
+/* a choice sits a little below its heading */
+#modifyView h4 + .nest { margin-top: 8px; }
+/* the oldest R: one box, sized to what is typed, with the .0 inside it */
+.affix { display: inline-flex; align-items: center; gap: 0; width: 5.2em; padding-right: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; }
+.affix:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent); }
+#modifyView .affix input.short[type='text'], .affix input.short[type='text'] { flex: 1; width: 0; min-width: 0; padding: 7px 0 7px 10px; border: 0; background: transparent; box-shadow: none; text-align: right; }
+.affix input.short[type='text']:focus { box-shadow: none; }
+.affix .unit { color: var(--ink); font-size: 14.5px; }
+.affix:has(input.bad) { border-color: var(--no); }
+#existingView .actions { justify-content: flex-end; }
+
+/* The form's type scale, one rule per kind of text, the same on every view.
+   Question and heading: 15px, 500, ink. Answer (typed text, choices): 15px, 400. Card title: 15px, 500.
+   Placeholder: 14px, soft, lighter, so it never looks louder than its question. Note and help: 13.5px, soft.
+   Spacing: question to answer 8px; one question to the next 20px; a heading to its choices 10px. */
+#setup .field-head label, #setup .field > label, #setup .field.two label, #setup legend, #setup .plans legend,
+#setup .mod-body h4, #setup #modifyView .mod-body h4, #setup .ex-head, #setup .routes legend { font-size: 15px; font-weight: 500; }
+#setup input[type='text'], #setup input[type='email'], #setup textarea, #setup select,
+#setup #modifyView input[type='text'], #setup #modifyView select { font-size: 15px; }
+#setup ::placeholder { font-size: 14px; color: var(--soft); opacity: 0.7; }
+#setup .pill span, #setup #modifyView .pill span, #setup .routes span, #setup .pick b, #setup #modifyView .pick b, #setup .sw b,
+#setup #modifyView .sw b, #setup .line label, #setup #modifyView .line label, #setup .rmatrix tbody th { font-size: 15px; font-weight: 400; }
+#setup .plan b, #setup .fcard b { font-size: 15px; font-weight: 500; }
+#setup .fieldnote, #setup .field-note, #setup .note, #setup .sw-note, #setup .kept-line, #setup .fcard small,
+#setup .plan em, #setup .err, #setup .plan-line, #setup .unit { font-size: 13.5px; }
+#setup .sublabel { margin: 0 0 6px; font-size: 14px; font-weight: 500; color: var(--soft); }
+#setup .field { margin-bottom: 20px; }
+#setup .field-head, #setup .field.two label { margin-bottom: 8px; }
+#setup #modifyView h4 + .nest { margin-top: 10px; }
+@media (max-width: 860px) {
+  /* phones zoom into a field typed in below 16px */
+  #setup input[type='text'], #setup input[type='email'], #setup textarea, #setup select, #setup #modifyView input[type='text'], #setup #modifyView select { font-size: 16px; }
+}
+/* the oldest R sits centred in its box */
+.affix { justify-content: center; padding: 0 8px; }
+#modifyView .affix input.short[type='text'], .affix input.short[type='text'] { flex: none; width: 3ch; padding: 7px 0; text-align: right; }
+/* issue form cards: no fill until chosen, like the pills */
+.fcard > span { background: transparent; }
+/* why a badge can't be chosen yet: a (!) inside the badge */
+.shield > span { position: relative; }
+.shield-why { align-self: center; margin: 0 2px 0 6px; color: var(--no); cursor: help; }
+.shield-why em { display: grid; place-items: center; width: 16px; height: 16px; border: 1.5px solid currentColor; border-radius: 50%; font: 700 11px/1 var(--font); font-style: normal; }
+.shield:has(input:disabled:not(:checked)) > span { opacity: 1; }
+.shield:has(input:disabled:not(:checked)) > span > b, .shield:has(input:disabled:not(:checked)) > span > i { opacity: 0.55; }
+#modifyView .shield-why [role='tooltip'] { left: 50%; transform: translateX(-50%); width: max-content; max-width: 240px; }
+
+/* phones: the first screen's tips open as a sheet at the bottom, as in the steps, so nothing runs off the side */
+@media (max-width: 860px) {
+  #form .tip [role='tooltip'], #nextView .tip [role='tooltip'] { position: fixed; left: 16px; right: 16px; bottom: 16px; width: auto; max-width: none; transform: none; }
+  /* every control a thumb can reach is at least 44px: the target grows, the drawing stays */
+  .cell, .sw, .peek-link, .shield, .field-note a, .reset, .back { position: relative; }
+  .cell::after, .sw::after, .peek-link::after, .shield::after, .field-note a::after {
+    content: ''; position: absolute; left: 50%; top: 50%; width: max(100%, 44px); height: max(100%, 44px); transform: translate(-50%, -50%);
+  }
+  .peek-link, .field-note a { display: inline-block; }
+}
+/* paper theme: soft text stays readable at small sizes */
+[data-palette='paper'] #setup ::placeholder { opacity: 1; }
+#setup .reset:disabled { opacity: 1; color: var(--soft); }
+#setup .pick .soon, #setup .pick label.soon { opacity: 1; color: var(--soft); }
+#setup .pick .opt:has(.soon) { opacity: 1; }
+[data-palette='paper'] .stepbar button[aria-current='step'] { color: color-mix(in srgb, var(--accent) 80%, var(--ink)); }
+/* Back to recommended reads as a link in both states */
+#setup .reset#modReset { text-decoration: underline; text-underline-offset: 3px; }
+/* ci-report sits with the checks but apart from them: it reports on them */
+.tick-divider { align-self: center; width: 1px; height: 24px; margin: 0 4px; background: var(--line); }

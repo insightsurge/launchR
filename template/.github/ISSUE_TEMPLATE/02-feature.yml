@@ -1,6 +1,6 @@
 name: New feature
 description: Propose something {{package}} can't do yet.
-labels: [enhancement]
+labels: [feature]
 body:
   - type: markdown
     attributes:

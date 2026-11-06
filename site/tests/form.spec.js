@@ -1,5 +1,6 @@
 // The setup form as a visitor uses it: the questions and their errors, each plan's download and what its zip holds,
-// the Modify page, and the route for a package that already exists. Each download is opened and its files checked.
+// the switch that customises every setting and its steps, the preview window, and the route for a package that already
+// exists. Each download is opened and its files checked.
 import { readFile } from 'node:fs/promises';
 import { expect, test } from '@playwright/test';
 import JSZip from 'jszip';
@@ -18,6 +19,8 @@ async function openForm(page) {
   if (await reject.isVisible()) await reject.click();
   await page.locator('#endStart').click();
   await expect(page.locator('#pkg')).toBeVisible();
+  // The form opens with a short animation; a forced click (on a Download button that looks off) waits for it.
+  await page.waitForFunction(() => document.querySelector('#setup').getAnimations().every((a) => a.playState !== 'running'));
 }
 
 async function fillForm(page, { name = 'tablePkg', owner = 'sample-org', email = 'a@example.com' } = {}) {
@@ -32,6 +35,8 @@ async function fillForm(page, { name = 'tablePkg', owner = 'sample-org', email =
 // Clicks a download button and returns the zip's files as { path: text }. When no zip comes, fails with the message
 // the site showed (for example "The zip could not be built").
 async function download(page, button) {
+  // The settings steps download from their last step.
+  if (button === '#modDownload' && !(await page.locator(button).isVisible())) await page.locator('#stepBar button:visible').last().click();
   const waiting = page.waitForEvent('download', { timeout: 15_000 });
   await page.locator(button).click();
   const file = await waiting.catch(async () => {
@@ -44,10 +49,20 @@ async function download(page, button) {
   return { name: file.suggestedFilename(), files };
 }
 
+// Customise a plan, then Next: the first settings step, CI checks.
+async function customise(page) {
+  if (!(await page.locator('#custom').isChecked())) await page.locator('#how label', { hasText: 'Customise a plan' }).click();
+  await page.locator('#modify').click();
+  await expect(page.locator('#stepTitle')).toHaveText('CI checks');
+}
+const step = (page, name) => page.locator('#stepBar button', { hasText: name }).click();
+
 test.describe('the questions', () => {
   test('an empty form names what is missing', async ({ page }) => {
     await openForm(page);
-    await page.locator('#download').click();
+    await expect(page.locator('#download')).toHaveAttribute('aria-disabled', 'true');
+    await expect(page.locator('#missing')).toHaveText('Add a package name, a one-line title, the author\'s name and your GitHub name to download.');
+    await page.locator('#download').click({ force: true });
     await expect(page.locator('#err-pkg')).toHaveText(/Give your package a name/);
     await expect(page.locator('#err-owner')).toHaveText(/Give your GitHub username or organisation/);
   });
@@ -55,17 +70,17 @@ test.describe('the questions', () => {
   test('names R refuses are refused', async ({ page }) => {
     await openForm(page);
     await fillForm(page, { name: 'stats' });
-    await page.locator('#download').click();
+    await page.locator('#download').click({ force: true });
     await expect(page.locator('#err-pkg')).toHaveText(/part of R itself/);
     await page.locator('#pkg').fill('my-pkg');
-    await page.locator('#download').click();
+    await page.locator('#download').click({ force: true });
     await expect(page.locator('#err-pkg')).toHaveText(/letters, numbers and dots/);
   });
 
   test('a link is not a GitHub name, and the title stops at 65 characters', async ({ page }) => {
     await openForm(page);
     await fillForm(page, { owner: 'https://github.com/sample-org' });
-    await page.locator('#download').click();
+    await page.locator('#download').click({ force: true });
     await expect(page.locator('#err-owner')).toHaveText(/not a link/);
     await expect(page.locator('#what')).toHaveAttribute('maxlength', '65');
   });
@@ -90,7 +105,8 @@ for (const [plan, want] of Object.entries(PLANS)) {
     expect(description.includes('Config/quality-gate/target: internal')).toBe(want.internal);
     const readme = files['tablePkg/README.md'];
     expect(readme).toContain('Set up with [launchR]');
-    expect(readme.includes('img.shields.io/badge/set%20up%20with-launchR')).toBe(want.public);
+    // The launchR credit badge is always on, whatever the plan.
+    expect(readme).toContain('img.shields.io/badge/set%20up%20with-launchR');
     expect(files['tablePkg/inst/WORDLIST']).toContain('CMD');
     expect(files['tablePkg/.Renviron']).toMatch(/^EXTENDED_TESTS=true$/m);
     // No AI files unless asked for, and the issue forms are numbered without a gap.
@@ -125,10 +141,10 @@ test('the longer description reaches DESCRIPTION and the help page, and CRAN wor
   await openForm(page);
   await fillForm(page);
   await page.locator('#details').fill('This package builds tables.');
-  await page.locator('#download').click();
+  await page.locator('#download').click({ force: true });
   await expect(page.locator('#err-details')).toHaveText(/not with "This package"/);
   await page.locator('#details').fill('builds tables.');
-  await page.locator('#download').click();
+  await page.locator('#download').click({ force: true });
   await expect(page.locator('#err-details')).toHaveText(/capital letter/);
   await page.locator('#details').fill('Builds   tables for clinical study reports');
   const { files } = await download(page, '#download');
@@ -136,13 +152,12 @@ test('the longer description reaches DESCRIPTION and the help page, and CRAN wor
   expect(files['tablePkg/man/tablePkg-package.Rd']).toContain('Builds tables for clinical study reports.');
 });
 
-test('Modify: the AI switch adds AGENTS.md, its rules files, CLAUDE.md and their issue form', async ({ page }) => {
+test('Customise: the AI switch adds AGENTS.md, its rules files, CLAUDE.md and their issue form', async ({ page }) => {
   await openForm(page);
   await fillForm(page);
-  await page.locator('#modify').click();
-  await page.locator('#modifyView summary', { hasText: 'Extras' }).click();
+  await customise(page);
+  await step(page, 'Extras');
   await page.locator('label.sw', { hasText: 'Instructions for AI assistants' }).click();
-  await expect(page.locator('#sumMore')).toContainText('AI instructions');
   const { files } = await download(page, '#modDownload');
   expect(files['tablePkg/AGENTS.md']).toContain('.agents/rules/');
   for (const rule of ['checks', 'docs', 'git', 'js-css', 'r-code', 'tests']) expect(`tablePkg/.agents/rules/${rule}.md` in files, rule).toBe(true);
@@ -150,22 +165,23 @@ test('Modify: the AI switch adds AGENTS.md, its rules files, CLAUDE.md and their
   expect('tablePkg/.github/ISSUE_TEMPLATE/06-ai-instructions.yml' in files).toBe(true);
 });
 
-test('Modify: the CI report comment, licence, badges, issue forms, labels and QC checklist reach the zip', async ({ page }) => {
+test('Customise: the CI report comment, licence, badges, issue forms, labels and QC checklist reach the zip', async ({ page }) => {
   await openForm(page);
   await fillForm(page);
   await page.locator('input[name=plan][value=d]').check();
-  await page.locator('#modify').click();
-  // Checks on GitHub is the section open on arrival.
-  await page.locator('label.sw', { hasText: 'CI report comment' }).click();
-  await page.locator('#modifyView summary', { hasText: 'GitHub setup' }).click();
-  await page.locator('label.pill', { hasText: /^Idea$/ }).click();
-  await expect(page.locator('[data-label="idea"]')).toBeEnabled();
-  await page.locator('label.pill', { hasText: /^idea$/ }).click();
+  await customise(page);
+  await page.locator('label.pill', { hasText: 'ci-report' }).click();
+  await step(page, 'Issues');
+  // A form's label is on its card while the form is on; without the form it joins the other labels.
+  await expect(page.locator('[data-label="idea"]')).toHaveCount(0);
+  await page.locator('label.fcard', { hasText: 'Idea' }).click();
+  // Its label joins the other labels, last and unticked.
   await expect(page.locator('[data-label="idea"]')).not.toBeChecked();
-  await expect(page.locator('#sumGit')).toHaveText('4 of 5 issue forms, 10 of 11 labels, QC checklist');
-  await page.locator('#modifyView summary', { hasText: 'Extras' }).click();
-  await expect(page.locator('#sumMore')).toHaveText('Proprietary licence, no badges');
-  await page.locator('label.pill', { hasText: 'Lifecycle' }).click();
+  await expect(page.locator('#bodyGit .ticks').first().locator('label.pill').last()).toContainText('idea');
+  await expect(page.locator('[data-stage="qc"]')).toBeChecked();
+  await step(page, 'README');
+  await page.locator('label.shield[title="Lifecycle"]').click();
+  await step(page, 'Extras');
   const { files } = await download(page, '#modDownload');
   expect(files['tablePkg/.github/workflows/lint.yaml']).toContain('ci-report: false');
   expect(files['tablePkg/LICENSE']).toContain('All rights reserved');
@@ -178,29 +194,11 @@ test('Modify: the CI report comment, licence, badges, issue forms, labels and QC
   expect(files['tablePkg/README.md']).toContain('lifecycle-experimental');
 });
 
-test('the plan preview lists the QC checklist while it is on', async ({ page }) => {
+test('Customise: the navbar choices reach _pkgdown.yml', async ({ page }) => {
   await openForm(page);
   await fillForm(page);
-  await page.locator('input[name=plan][value=d]').check();
-  await expect(page.locator('#pvLists')).toContainText('QC before release');
-  await expect(page.locator('#pvLists')).not.toContainText('Before public');
-  await page.locator('#modify').click();
-  await page.locator('#modifyView summary', { hasText: 'GitHub setup' }).click();
-  await page.locator('label.sw', { hasText: 'QC checklist' }).click();
-  await expect(page.locator('#pvLists')).not.toContainText('QC before release');
-  // Private for good starts with the QC checklist alone, so without it there is none.
-  await expect(page.locator('#pvLists')).toHaveText('None, no release features');
-  await page.locator('#modBack').click();
-  await page.locator('input[name=plan][value=a]').check();
-  await expect(page.locator('#pvLists')).not.toContainText('QC before release');
-  await expect(page.locator('#pvLists')).toContainText('After public');
-});
-
-test('Modify: the navbar choices reach _pkgdown.yml', async ({ page }) => {
-  await openForm(page);
-  await fillForm(page);
-  await page.locator('#modify').click();
-  await page.locator('#modifyView summary', { hasText: 'Website' }).click();
+  await customise(page);
+  await step(page, 'README');
   await page.locator('label.sw', { hasText: 'Add a website' }).click();
   await page.locator('label.pill', { hasText: 'Changelog' }).click();
   await page.locator('label.pill', { hasText: 'Light and dark switch' }).click();
@@ -209,11 +207,11 @@ test('Modify: the navbar choices reach _pkgdown.yml', async ({ page }) => {
   expect(files['tablePkg/_pkgdown.yml']).toContain('right: [search, github]');
 });
 
-test('Modify: the front-end switch adds the JS and CSS wording', async ({ page }) => {
+test('Customise: the front-end switch adds the JS and CSS wording', async ({ page }) => {
   await openForm(page);
   await fillForm(page);
-  await page.locator('#modify').click();
-  await page.locator('#modifyView summary', { hasText: 'Extras' }).click();
+  await customise(page);
+  await step(page, 'Extras');
   await page.locator('label.sw', { hasText: 'JS or CSS' }).click();
   const { files } = await download(page, '#modDownload');
   expect(files['tablePkg/.github/CONTRIBUTING.md']).toMatch(/Biome[\s\S]*Chrome/);
@@ -221,10 +219,10 @@ test('Modify: the front-end switch adds the JS and CSS wording', async ({ page }
   expect(files['tablePkg/tests/README.md']).toContain('test-demo-browser.R');
 });
 
-test('Modify: with every check off, there is no run-locally section, no Dependabot file and no caller files', async ({ page }) => {
+test('Customise: with every check off, there is no run-locally section, no Dependabot file and no caller files', async ({ page }) => {
   await openForm(page);
   await fillForm(page);
-  await page.locator('#modify').click();
+  await customise(page);
   // The page repaints after each click, so pick each check by its key.
   for (const key of ['r_cmd_check', 'lint', 'no_suggests', 'secret_scan', 'coverage', 'full_tests', 'r_cmd_check_extended']) {
     await page.locator(`#bodyCi [data-check=${key}]`).evaluate((input) => input.click());
@@ -240,16 +238,16 @@ test('Modify: with every check off, there is no run-locally section, no Dependab
   expect(files['tablePkg/.github/CONTRIBUTING.md']).not.toContain('CI runs on every pull request');
 });
 
-test('Modify: the oldest R reaches DESCRIPTION, and the download works from there', async ({ page }) => {
+test('Customise: the oldest R reaches DESCRIPTION, and the download works from there', async ({ page }) => {
   await openForm(page);
   await fillForm(page);
   await page.locator('input[name=plan][value=d]').check();
-  await page.locator('#modify').click();
+  await customise(page);
   await page.locator('#minR').fill('4.3');
   await page.locator('#minR').dispatchEvent('change');
   await expect(page.locator('#minRZero')).toHaveText('.0');
-  // The website note sits in the Website section, closed until the visitor opens it.
-  await page.locator('#modifyView summary', { hasText: 'Website' }).click();
+  // The website note sits in the README and website step.
+  await step(page, 'README');
   await expect(page.locator('#pagesNote')).toBeVisible();
   const { files } = await download(page, '#modDownload');
   await expect(page.locator('#nextView')).toBeVisible();
@@ -260,11 +258,11 @@ test('Modify: the oldest R reaches DESCRIPTION, and the download works from ther
   expect(files['tablePkg/.github/workflows/r-cmd-check.yaml']).toContain('platforms: ubuntu/release, ubuntu/oldrel-1, ubuntu/4.3');
 });
 
-test('Modify: on a public plan, no check runs on an R older than the oldest R chosen', async ({ page }) => {
+test('Customise: on a public plan, no check runs on an R older than the oldest R chosen', async ({ page }) => {
   await openForm(page);
   await fillForm(page);
   await page.locator('input[name=plan][value=a]').check();
-  await page.locator('#modify').click();
+  await customise(page);
   await page.locator('#minR').fill('4.3');
   await page.locator('#minR').dispatchEvent('change');
   const { files } = await download(page, '#modDownload');
@@ -273,16 +271,16 @@ test('Modify: on a public plan, no check runs on an R older than the oldest R ch
   expect(files['tablePkg/.github/workflows/full-tests.yaml']).toContain('platforms: ubuntu/release, ubuntu/4.3');
 });
 
-test('Modify refuses an oldest R below 4.1 or with a patch number', async ({ page }) => {
+test('Customise refuses an oldest R below 4.1 or with a patch number', async ({ page }) => {
   await openForm(page);
   await fillForm(page);
-  await page.locator('#modify').click();
+  await customise(page);
   await page.locator('#minR').fill('4.1');
   await page.locator('#minR').dispatchEvent('change');
   const { files } = await download(page, '#modDownload');
   expect(files['tablePkg/.github/workflows/r-cmd-check.yaml'], 'the default oldest R adds no extra system').not.toContain('ubuntu/4.1');
   await page.locator('#nextChange').click();
-  await page.locator('#modify').click();
+  await customise(page);
   await page.locator('#minR').fill('4.0');
   await page.locator('#minR').dispatchEvent('change');
   await expect(page.locator('#minRNote')).toHaveText(/from 4.1 on/);
@@ -371,4 +369,217 @@ test('the existing-package button works when it is pressed before the lists have
   open();
   await expect(page.locator('#exRows .pill')).toHaveCount(3);
   expect(errors).toEqual([]);
+});
+
+test('Use a plan downloads at once; Customise a plan turns Download into Next and shows the steps', async ({ page }) => {
+  await openForm(page);
+  await expect(page.locator('#stepBar')).toBeHidden();
+  await expect(page.locator('#modify')).toBeHidden();
+  await fillForm(page);
+  await expect(page.locator('#download')).toHaveAttribute('aria-disabled', 'false');
+  await expect(page.locator('#missing')).toHaveText('');
+  await page.locator('#how label', { hasText: 'Customise a plan' }).click();
+  await expect(page.locator('#planLegend')).toHaveText('Start from this plan');
+  await expect(page.locator('#download')).toBeHidden();
+  await expect(page.locator('#stepBar button')).toHaveText([/^1\s*About$/, /^2\s*CI checks$/, /^3\s*Issues and checklists$/, /^4\s*README and website$/, /^5\s*Extras$/], { useInnerText: true });
+  await page.locator('#modify').click();
+  for (const [name, title] of [['Issues', 'Issues and checklists'], ['README', 'README and website'], ['Extras', 'Extras']]) {
+    await page.locator('#stepNext').click();
+    await expect(page.locator('#stepTitle')).toHaveText(title);
+    await expect(page.locator(`#stepBar button[aria-current="step"]`)).toContainText(name);
+  }
+  await expect(page.locator('#stepNext')).toBeHidden();
+  await expect(page.locator('#modDownload')).toHaveText('Download tablePkg.zip');
+  // A change, then the switch off: the plan's own settings come back.
+  await step(page, 'Extras');
+  await page.locator('label.sw', { hasText: 'JS or CSS' }).click();
+  await expect(page.locator('#pvCustom')).toBeVisible();
+  await step(page, 'About');
+  await page.locator('#how label', { hasText: 'Use a plan' }).click();
+  await expect(page.locator('#planNote')).toHaveText("Your own settings were reset to the plan's.");
+  await expect(page.locator('#pvCustom')).toBeHidden();
+  await expect(page.locator('#download')).toBeVisible();
+});
+
+test('Customise: the checklists chosen reach DESCRIPTION, the preview beside the form and the steps after the download', async ({ page }) => {
+  await openForm(page);
+  await fillForm(page);
+  await expect(page.locator('#pvLists li')).toHaveText(['After public', 'Before CRAN', 'After acceptance', 'Next release']);
+  await customise(page);
+  await step(page, 'Issues');
+  // A public plan isn't offered the QC checklist, and says why.
+  await expect(page.locator('[data-stage="qc"]')).toHaveCount(0);
+  await expect(page.locator('#bodyGit')).toContainText('Before public and QC before release are for a private package.');
+  await page.locator('label.pill', { hasText: 'After acceptance' }).click();
+  await expect(page.locator('#pvLists li')).toHaveText(['After public', 'Before CRAN', 'Next release']);
+  const { files } = await download(page, '#modDownload');
+  expect(files['tablePkg/DESCRIPTION']).toContain('Config/launchR/checklists: After public, Before CRAN, Next release');
+  const after = page.locator('#nextAfter');
+  await expect(after).toContainText('After public and Before CRAN open in your repository\'s issues on the first run of Set up this repository.');
+  await expect(after).toContainText('Next release opens on a later run, once its stage arrives.');
+  await expect(after.locator('li')).toHaveCount(4);
+});
+
+test('Customise: plan d starts with the QC checklist, opened first after the download', async ({ page }) => {
+  await openForm(page);
+  await fillForm(page);
+  await page.locator('input[name=plan][value=d]').check();
+  await expect(page.locator('#pvLists li')).toHaveText(['QC before release']);
+  await download(page, '#download');
+  await expect(page.locator('#nextAfter')).toContainText('QC before release opens in your repository\'s issues on the first run of Set up this repository.');
+});
+
+test('Customise: the launchR credit is not offered but every README gets it, and a badge that needs something says what', async ({ page }) => {
+  await openForm(page);
+  await fillForm(page);
+  await page.locator('input[name=plan][value=d]').check();
+  await customise(page);
+  await step(page, 'README');
+  await expect(page.locator('[data-badge="launchr"]')).toHaveCount(0);
+  await expect(page.locator('.shield-opt', { has: page.locator('[data-badge="cran"]') }).locator('.shield-why')).toHaveAttribute('aria-label', 'For a package going to CRAN.');
+  // One tooltip on the heading explains every badge; the shields carry none.
+  await expect(page.locator('.shield-opt .tip:not(.shield-why)')).toHaveCount(0);
+  await expect(page.locator('#bodySite h4 .tip')).toContainText('CRAN downloads');
+  const { files } = await download(page, '#modDownload');
+  expect(files['tablePkg/README.md']).toContain('img.shields.io/badge/set%20up%20with-launchR');
+});
+
+test('the preview window shows the checklists, the issue forms and the guide for agents', async ({ page }) => {
+  await openForm(page);
+  await fillForm(page);
+  await customise(page);
+  await step(page, 'Issues');
+  await page.getByRole('button', { name: 'Preview the checklists' }).click();
+  const win = page.locator('#peek');
+  await expect(win).toBeVisible();
+  await expect(win.locator('article:visible .peek-title')).toHaveText('Checklist: After public');
+  await win.getByRole('button', { name: 'QC before release' }).click();
+  await expect(win.locator('article:visible')).toContainText('Coverage is at or above the limit in DESCRIPTION');
+  await win.getByRole('button', { name: 'Bug report' }).click();
+  await expect(win.locator('article:visible')).toContainText('Minimal reproducible example (reprex)');
+  await expect(win.locator('article:visible')).toContainText('sets the label bug');
+  await win.getByRole('button', { name: 'SKILL.md' }).click();
+  await expect(win.locator('article:visible h1')).toHaveText('Working on a launchR package');
+  await page.keyboard.press('Escape');
+  await expect(win).toBeHidden();
+  await expect(page.locator('#setup')).toBeVisible();
+});
+
+test('an existing package goes through Checks and Website only', async ({ page }) => {
+  await openExisting(page);
+  await page.locator('#exModify').click();
+  await expect(page.locator('#stepBar button:visible')).toHaveText([/^1\s*CI checks$/, /^2\s*Website$/], { useInnerText: true });
+  await page.locator('#stepNext').click();
+  await expect(page.locator('#stepTitle')).toHaveText('Website');
+  await expect(page.locator('.shields')).toBeHidden();
+  await page.locator('#modBack').click();
+  await page.locator('#modBack').click();
+  await expect(page.locator('#existingView')).toBeVisible();
+});
+
+test('Customise: each plan is offered only the checklists it can open', async ({ page }) => {
+  await openForm(page);
+  await fillForm(page);
+  const offered = async () => page.locator('#bodyGit [data-stage]').evaluateAll((boxes) => boxes.map((box) => box.dataset.stage));
+  await page.locator('input[name=plan][value=c]').check();
+  await customise(page);
+  await step(page, 'Issues');
+  expect(await offered()).toEqual(['before-public', 'after-public', 'before-cran', 'after-acceptance', 'next-release', 'qc']);
+  await step(page, 'About');
+  await page.locator('input[name=plan][value=a]').check();
+  await step(page, 'Issues');
+  expect(await offered()).toEqual(['after-public', 'before-cran', 'after-acceptance', 'next-release']);
+  await expect(page.locator('#bodyGit')).toContainText('Before public and QC before release are for a private package.');
+  await step(page, 'About');
+  await page.locator('input[name=plan][value=d]').check();
+  await step(page, 'Issues');
+  expect(await offered()).toEqual(['before-public', 'after-public', 'qc']);
+  await expect(page.locator('#bodyGit')).toContainText('Before CRAN, After acceptance and Next release are for a package going to CRAN.');
+  // Plan d without its QC checklist has none, and the preview says so.
+  await page.locator('label.pill', { hasText: 'QC before release' }).click();
+  await expect(page.locator('#pvLists li')).toHaveText(['None']);
+});
+
+test('Customise: one tooltip explains the AI files, naming every rules file the zip gets', async ({ page }) => {
+  await openForm(page);
+  await fillForm(page);
+  await customise(page);
+  await step(page, 'Extras');
+  const tip = page.locator('.opt', { has: page.locator('#ai') }).locator('.tip');
+  await expect(tip).toHaveAttribute('aria-label', /\.agents\/rules\/: One rules file each for checks, docs, git, js-css, r-code, tests\./);
+  await expect(tip).toHaveAttribute('aria-label', /SKILL\.md: launchR's skill/);
+  await expect(page.locator('#bodyMore .sw-note')).toHaveCount(0);
+});
+
+test('Customise: New feature sets its own label, a shared label says which form still sets it, and the oldest R is filled in', async ({ page }) => {
+  await openForm(page);
+  await fillForm(page);
+  await customise(page);
+  await expect(page.locator('#minR')).toHaveValue('4.1');
+  await expect(page.locator('#bodyCi h4', { hasText: 'R CMD check: R versions × systems' })).toBeVisible();
+  await step(page, 'Issues');
+  await expect(page.locator('label.fcard', { hasText: 'New feature' })).toContainText('feature');
+  await page.locator('label.fcard', { hasText: 'Bug report' }).click();
+  await expect(page.locator('label.fcard', { hasText: 'Bug report' })).toContainText('not added');
+  await step(page, 'README');
+  await page.locator('label.sw', { hasText: 'Add a website' }).click();
+  await expect(page.locator('#bodySite h4', { hasText: /^Navbar/ }).locator('.tip').first()).toHaveAttribute('aria-label', /_pkgdown\.yml: /);
+  await expect(page.locator('#bodySite .sublabel', { hasText: 'Left' })).toBeVisible();
+  await expect(page.locator('#bodySite .tip')).toHaveCount(3);
+  // Every toggle shows its choice by its outline and fill, never by a tick.
+  await expect(page.locator('#modifyView .pill svg:visible, #modifyView .fcard svg:visible')).toHaveCount(0);
+  const { files } = await download(page, '#modDownload');
+  expect(files['tablePkg/.github/ISSUE_TEMPLATE/02-feature.yml']).toContain('labels: [feature]');
+  expect(files['tablePkg/DESCRIPTION']).toContain('R (>= 4.1.0)');
+});
+
+test('after Change something, the keyboard lands on the button that is there', async ({ page }) => {
+  await openForm(page);
+  await fillForm(page);
+  await download(page, '#download');
+  await page.locator('#nextChange').click();
+  await expect(page.locator('#download')).toBeFocused();
+});
+
+test('an existing package goes through its steps to a zip', async ({ page }) => {
+  await openExisting(page);
+  await page.locator('#exModify').click();
+  await page.locator('#stepNext').click();
+  const { name } = await download(page, '#modDownload');
+  expect(name).toBe('launchR-files.zip');
+  await expect(page.locator('#nextView')).toBeVisible();
+});
+
+test('an existing package with only a website is not pointed to the workflows README', async ({ page }) => {
+  await openExisting(page);
+  await page.locator('#exRows label.pill', { hasText: 'Automatic checks' }).click();
+  await page.locator('#exRows label.pill', { hasText: 'Website' }).click();
+  const { files } = await download(page, '#exDownload');
+  expect('.github/workflows/README.md' in files).toBe(false);
+  await expect(page.locator('#nextAfter')).not.toContainText('Codecov');
+});
+
+test('on a phone the preview window fills the screen', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await openForm(page);
+  await fillForm(page);
+  await customise(page);
+  await step(page, 'Issues');
+  await page.getByRole('button', { name: 'Preview the issue forms' }).click();
+  const box = await page.locator('#peek').boundingBox();
+  expect(box.width).toBeGreaterThanOrEqual(389);
+  expect(box.height).toBeGreaterThanOrEqual(843);
+  await expect(page.locator('#peek article:visible .peek-title')).toHaveText('Bug report');
+});
+
+test('the oldest R takes one digit on each side of the dot, and puts the dot in for you', async ({ page }) => {
+  await openForm(page);
+  await fillForm(page);
+  await customise(page);
+  const box = page.locator('#minR');
+  for (const [typed, shown] of [['44', '4.4'], ['22.0', '2.2'], ['4.3', '4.3']]) {
+    await box.fill('');
+    await box.pressSequentially(typed);
+    await expect(box).toHaveValue(shown);
+  }
 });

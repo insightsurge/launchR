@@ -177,12 +177,11 @@ import { createHexes } from './hexes.js';
 
   /* ---------- the form ---------- */
   const dialog = $('#setup');
-  const routes = { a: ['After public', 'Before CRAN', 'After acceptance', 'Next release'], b: ['After public', 'Next release'], c: ['Before public', 'After public', 'Before CRAN', 'After acceptance', 'Next release'], d: [] };
   const releases = { a: 'Yes, up to CRAN and after', b: 'Yes, for GitHub or R-universe', c: 'Held until you go public', d: 'None. It stays private.' };
   const names = { a: 'Public, going to CRAN', b: 'Public, not for CRAN', c: 'Private for now, public and CRAN later', d: 'Private for good' };
   const hues = { a: '--c1', b: '--c2', c: '--c3', d: '--c4' };
   function showPlan(plan, bump) {
-    $('#pvLists').innerHTML = routes[plan].length ? routes[plan].map((s, i) => `<li style="animation-delay:${i * 50}ms">${s}</li>`).join('') : '<li class="none">None, no release features</li>';
+    // the checklists row follows the form's ticks: src/form/app.js fills it
     $('#pvRelease').textContent = releases[plan];
     $('#pvPlan').textContent = names[plan];
     const h = $('#pvHex');

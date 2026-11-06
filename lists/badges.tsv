@@ -9,4 +9,4 @@ codecov	Codecov	Shows the test coverage. Needs the coverage check, and a Codecov
 cran	CRAN version	Shows the version on CRAN. Says "not published" until the package is accepted.			cran	[![CRAN status](https://www.r-pkg.org/badges/version/{package})](https://CRAN.R-project.org/package={package})
 downloads	CRAN downloads	How many times the package was downloaded from CRAN each month.			cran	[![CRAN downloads](https://cranlogs.r-pkg.org/badges/{package})](https://CRAN.R-project.org/package={package})
 universe	R-universe	The version built on R-universe, where people can install it from before or instead of CRAN. Needs an R-universe set up for your GitHub name.			owner	[![R-universe](https://{owner}.r-universe.dev/badges/{package})](https://{owner}.r-universe.dev/{package})
-launchr	Set up with launchR	A small credit that links to launchR.	yes			[![Set up with launchR](https://img.shields.io/badge/set%20up%20with-launchR-f6ab85)]({site_url})
+launchr	Set up with launchR	A small credit that links to launchR.	yes	yes		[![Set up with launchR](https://img.shields.io/badge/set%20up%20with-launchR-f6ab85)]({site_url})

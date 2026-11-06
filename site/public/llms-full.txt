@@ -4,7 +4,7 @@ launchR starts an R package with tests, CI and GitHub files in place, or adds re
 
 - Site: https://launch-r.web.app/
 - Source: https://github.com/insightsurge/launchR
-- Skill for agents: https://launch-r.web.app/skill.md
+- Skill for agents: https://launch-r.web.app/SKILL.md
 - Author: Harsh Verma, InsightSurge
 
 ## Who it is for
@@ -45,16 +45,16 @@ Each check is a short workflow file in the package that calls a shared workflow 
 | `r-cmd-check-extended` | Weekly R CMD check on more systems, with the extended tests (Mac and Windows for public packages, Linux only for private ones) | Yes, except for private packages that won't go to CRAN |
 | `pkgdown` | Builds and publishes a package website | When a website is chosen |
 
-## Modify
+## Customise a plan
 
-Each plan sets defaults; Modify on the site, or a flag on the command line, changes them:
+Each plan sets defaults. On the site, pick a plan and download, or choose Customise a plan and go through four more steps (Checks, Issues and checklists, README and website, Extras); on the command line, a flag changes them:
 
 - The checks, their R versions and systems, the minimum R version, and the weekly time.
 - The CI report comment: one comment on each pull request with the results of the chosen checks. On by default.
 - The licence: MIT, or proprietary (all rights reserved). Proprietary is the default only for a private package that won't go to CRAN.
-- README badges: R-CMD-check, Lifecycle, Codecov, CRAN version, CRAN downloads, R-universe and "Set up with launchR". R-CMD-check, Lifecycle and the launchR credit are on by default for public packages; private packages start with none.
+- README badges: R-CMD-check, Lifecycle, Codecov, CRAN version, CRAN downloads, R-universe and "Set up with launchR". R-CMD-check and Lifecycle are on by default for public packages, and the "Set up with launchR" credit for every package. On the site the credit is always on; the command line can leave it out with `--badges`.
 - The website's navbar items.
-- Which issue forms and labels (five forms and eleven labels by default, each chosen one by one), and which stage checklists the package gets (a plan starts with its own; a QC checklist is offered for private packages and on by default for a private package that won't go to CRAN).
+- Which issue forms and labels (five forms and twelve labels by default, each chosen one by one), and which stage checklists the package gets (a plan starts with its own; a QC checklist is offered for private packages and on by default for a private package that won't go to CRAN).
 
 ## Existing packages
 

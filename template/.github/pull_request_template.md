@@ -44,7 +44,7 @@ CI runs the full checks on this pull request; local results do not replace it. -
 
 - [ ] The linked issue's "done when" list is met.
 - [ ] I have reviewed the whole diff, understand the changes and can explain the checks reported above.
-- [ ] A suggested type label is named in Notes (`enhancement`, `bug`, `documentation` or `chore`); the maintainer applies it, and the release notes are built from it.
+- [ ] A suggested type label is named in Notes (`feature`, `enhancement`, `bug`, `documentation` or `chore`); the maintainer applies it, and the release notes are built from it.
 - [ ] A user-facing change has a `NEWS.md` bullet.
 - [ ] New behaviour and each fixed bug have a test.
 - [ ] Changes to exported functions keep their help pages, `NAMESPACE` and examples in step (`devtools::document()`).

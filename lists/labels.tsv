@@ -1,7 +1,8 @@
 # Labels created on GitHub. kept: why the label stays on even when not chosen (the Set up this repository step uses it).
 name	color	description	kept
 bug	d73a4a	Something doesn't work as documented	
-enhancement	a2eeef	A new or better feature	
+feature	1d76db	Something new the package can do	
+enhancement	a2eeef	Something it does, done better	
 documentation	0075ca	Docs only	
 chore	cfd3d7	Tests, CI and tidy-ups	
 idea	d876e3	Worth talking about, not ready to build	
