@@ -1021,8 +1021,7 @@ dialog#setup { scrollbar-gutter: stable; }
 .field.pair > div > label { margin-bottom: 0; }
 /* the first screen fits a laptop screen: tighter rhythm, and the "what is missing" line beside the button */
 @media (min-width: 861px) {
-  .setup-inner { padding-top: 40px; }
-  .stepbar { margin-bottom: 12px; }
+  .setup-inner { padding-top: 22px; }
   #form .sub { margin: 4px 0 16px; }
   #setup #form .field { margin-bottom: 14px; }
   #setup #form .field-head, #setup #form .field.two > div > label { margin-bottom: 6px; }
@@ -1033,4 +1032,10 @@ dialog#setup { scrollbar-gutter: stable; }
   #form #missing { margin: -44px 0 0; max-width: calc(100% - 260px); min-height: 44px; display: flex; align-items: center; text-align: left; }
 }
 /* the preview card sits level with the middle of the form beside it */
-@media (min-width: 861px) { #setup .setup-grid > .preview { align-self: center; margin-top: 48px; } }
+@media (min-width: 861px) { #setup .setup-grid > .preview { align-self: center; } }
+
+/* the step bar is the dialog's progress line: one centred row above the form and the preview card */
+.setup-grid > .stepbar { grid-column: 1 / -1; justify-self: center; margin: 0 0 28px; }
+.stepbar ol { justify-content: center; }
+@media (max-width: 860px) { .setup-grid > .stepbar { margin-bottom: 18px; } }
+#setup .setup-grid { row-gap: 0; }
