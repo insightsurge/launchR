@@ -99,7 +99,7 @@ function badgeWhy(row) {
   return '';
 }
 
-const help = (text) => `<span class="tip" tabindex="0" role="note" aria-label="${esc(text)}"><svg aria-hidden="true"><use href="#i-info" /></svg><span role="tooltip" aria-hidden="true">${esc(text)}</span></span>`;
+const help = (text, warn) => `<span class="tip${warn ? ' warn' : ''}" tabindex="0" role="note" aria-label="${esc(text)}"><svg aria-hidden="true"><use href="#i-info" /></svg><span role="tooltip" aria-hidden="true">${esc(text)}</span></span>`;
 const bullets = (list) => `<span class="tip wide-tip" tabindex="0" role="note" aria-label="${esc(list.map(([k, w]) => `${k}: ${w}`).join(' '))}"><svg aria-hidden="true"><use href="#i-info" /></svg><span role="tooltip" aria-hidden="true"><ul>${list.map(([k, w]) => `<li><b>${esc(k)}</b> ${esc(w)}</li>`).join('')}</ul></span></span>`;
 const sw = (id, text, why, on, soon) => `<div class="opt"><label class="sw"><input type="checkbox" id="${id}"${on ? ' checked' : ''}${soon ? ' disabled' : ''} /><i aria-hidden="true"></i><b>${text}</b></label>${soon ? '<span class="tag">Coming soon</span>' : ''}${help(why)}</div>`;
 const pill = (attrs, text, on) => `<label class="pill"><input type="checkbox" ${attrs}${on ? ' checked' : ''} /><span><svg aria-hidden="true"><use href="#i-tick" /></svg>${text}</span></label>`;
@@ -127,8 +127,9 @@ function paint() {
     </div>`;
   const pagesNote = isPublic() ? '' : `<p class="fieldnote" id="pagesNote">On GitHub's free plan a private repository can't publish a website. The site is still built and checked on every push, and goes online once the repository is public or on a paid plan.</p>`;
   const nav = (side, title) => `${head3(title, lists.navbar.filter((row) => row.side === side).map((row) => [row.label, row.help]))}<div class="ticks">${lists.navbar.filter((row) => row.side === side).map((row) => pill(`data-nav="${row.key}"`, row.label, S.navbar[row.key])).join('')}</div>`;
-  $('#bodySite').innerHTML = `<div class="new-only">${head3('README badges', 'Small images at the top of the README, also shown on the website\'s home page. They sit between the badges: start and end lines, where you can add or remove one later.')}
-    <div class="shields">${lists.badges.map(shield).join('')}</div></div>
+  const shown = lists.badges.filter((row) => row.key !== ALWAYS_BADGE);
+  $('#bodySite').innerHTML = `<div class="new-only">${head3('README badges', [['README badges', 'Small images at the top of the README, also shown on the website\'s home page. They sit between the badges: start and end lines, where you can add or remove one later.'], ...shown.map((row) => [row.label, row.help])])}
+    <div class="shields">${shown.map(shield).join('')}</div></div>
     ${sw('website', 'Add a website', 'A pkgdown site published to GitHub Pages. Its address comes from your GitHub name. A private repository needs a paid GitHub plan for this.', S.website)}${pagesNote}
     ${S.website ? `${nav('left', 'Navbar, left')}${nav('right', 'Navbar, right')}<p class="fieldnote">Saved in _pkgdown.yml, under navbar: structure. Change it there any time.</p>` : ''}
     <div class="opt soonline"><span>Theme colours</span><span class="tag">Coming soon</span></div>`;
@@ -137,17 +138,15 @@ function paint() {
     ${S.github ? gitChoices() : ''}`;
   const rules = lists.files.filter((row) => row.path.startsWith('.agents/rules/')).map((row) => row.path.replace(/^.*\/|\.md$/g, ''));
   $('#bodyMore').innerHTML = `${head3('Licence', [['MIT', 'Others may use, change and share the code, as long as they keep the copyright notice. CRAN accepts it.'], ['Proprietary', 'All rights reserved: for a package used only inside the organisation that owns it. CRAN does not accept it.']])}
-    <div class="pick">${[['mit', 'MIT'], ['proprietary', 'Proprietary']].map(([k, t]) => `<div class="opt"><label><input type="radio" name="licence" value="${k}"${S.licence === k ? ' checked' : ''} /><b>${t}</b></label></div>`).join('')}</div>
-    ${S.licence === 'proprietary' && release() === 'cran' ? '<p class="fieldnote">CRAN only accepts open-source licences, and R CMD check as CRAN gives a NOTE for this one, so the check fails. Choose MIT, or the plan Private for good.</p>' : ''}
+    <div class="pick">${[['mit', 'MIT'], ['proprietary', 'Proprietary']].map(([k, t]) => `<div class="opt"><label><input type="radio" name="licence" value="${k}"${S.licence === k ? ' checked' : ''} /><b>${t}</b></label>${k === 'proprietary' && release() === 'cran' ? help('CRAN only accepts open-source licences, and R CMD check as CRAN gives a NOTE for this one, so the check fails. Choose MIT, or the plan Private for good.', S.licence === k) : ''}</div>`).join('')}</div>
     ${sw('frontend', 'My package ships its own JS or CSS', 'Adds browser tests and the style checks for them.', S.frontend)}
-    <div class="ai-row">${sw('ai', 'Instructions for AI assistants', 'AGENTS.md and rules files in .agents/rules/ (R code, tests, docs, checks, JS and CSS, git), the same for every package, read by Codex, Gemini, Copilot and others, and a CLAUDE.md that loads AGENTS.md for Claude. Also an issue form for changing them.', S.ai)}${peekLink('skill', 'Preview launchR\'s guide for AI agents')}</div>
-    ${S.ai ? `<p class="sw-note">You get <code>AGENTS.md</code>, a <code>CLAUDE.md</code> that loads it, and rules in <code>.agents/rules/</code> (${rules.join(', ')}).</p>` : ''}
-    <div class="opt soonline"><span>Skills and agents for AI assistants</span><span class="tag">Coming soon</span></div>`;
+    <div class="ai-row">${sw('ai', 'Instructions for AI assistants', 'AGENTS.md and rules files in .agents/rules/ (R code, tests, docs, checks, JS and CSS, git), the same for every package, read by Codex, Gemini, Copilot and others, and a CLAUDE.md that loads AGENTS.md for Claude. Also an issue form for changing them.', S.ai)}${peekLink('skill', 'Preview launchR\'s skill for AI agents')}</div>
+    ${S.ai ? `<p class="sw-note">You get <code>AGENTS.md</code>, a <code>CLAUDE.md</code> that loads it, and rules in <code>.agents/rules/</code> (${rules.join(', ')}). <code>AGENTS.md</code> points your assistant to launchR's skill, <code>SKILL.md</code>: how the checks, the CI report and upgrades work.</p>` : ''}`;
   summary();
 }
 
 /* a README badge as it looks in the README: its words and colours are the badge's own, drawn here so nothing is
-   fetched. The Set up with launchR badge is always on. */
+   fetched. The Set up with launchR credit isn't shown: every package gets it. */
 const SHIELDS = {
   check: ['R-CMD-check', 'passing', '#2ea44f'], lifecycle: ['lifecycle', 'experimental', '#fe7d37'], codecov: ['codecov', '87%', '#2ea44f'],
   cran: ['CRAN status', 'not published', '#9f9f9f'], downloads: ['downloads', '120/month', '#2ea44f'], universe: ['r-universe', '0.1.0', '#3e7cc4'],
@@ -155,10 +154,9 @@ const SHIELDS = {
 };
 function shield(row) {
   const [left, right, colour] = SHIELDS[row.key] ?? [row.label, '', '#9f9f9f'];
-  const always = row.key === ALWAYS_BADGE;
-  const why = always ? '' : badgeWhy(row);
-  const on = always || (S.badges[row.key] && !why);
-  return `<div class="opt shield-opt"><label class="shield" title="${esc(row.label)}"><input type="checkbox" data-badge="${row.key}" aria-label="${esc(row.label)}"${on ? ' checked' : ''}${why || always ? ' disabled' : ''} /><span><svg aria-hidden="true"><use href="#i-tick" /></svg><b>${esc(left)}</b><i style="--sc:${colour}">${esc(right)}</i></span></label>${always ? '<span class="shield-note"><svg aria-hidden="true"><use href="#i-lock" /></svg>always on</span>' : why ? `<span class="shield-note">${esc(why)}</span>` : ''}${help(row.help)}</div>`;
+  const why = badgeWhy(row);
+  const on = S.badges[row.key] && !why;
+  return `<div class="opt shield-opt"><label class="shield" title="${esc(row.label)}"><input type="checkbox" data-badge="${row.key}" aria-label="${esc(row.label)}"${on ? ' checked' : ''}${why ? ' disabled' : ''} /><span><b>${esc(left)}</b><i style="--sc:${colour}">${esc(right)}</i></span></label>${why ? `<span class="shield-note">${esc(why)}</span>` : ''}</div>`;
 }
 
 const peekLink = (target, label) => `<button type="button" class="peek-link" data-open="${target}" aria-label="${esc(label)}">Preview</button>`;
@@ -170,7 +168,10 @@ function gitChoices() {
   const colour = (name) => `#${lists.labels.find((row) => row.name === name)?.color ?? 'cfd3d7'}`;
   const chip = (name) => `<span class="label-chip" style="--lc:${colour(name)}" title="${esc(lists.labels.find((row) => row.name === name)?.description ?? '')}">${esc(name)}</span>`;
   const kept = lists.labels.filter((row) => row.kept);
-  const free = lists.labels.filter((row) => !locked.has(row.name));
+  /* the other labels; a label whose form was taken off goes last */
+  const freed = new Set(forms.filter((row) => !S.forms[row.key]).map((row) => row.label));
+  const others = lists.labels.filter((row) => !locked.has(row.name));
+  const free = [...others.filter((row) => !freed.has(row.name)), ...others.filter((row) => freed.has(row.name))];
   const stages = lists.stages.filter(stageOffered);
   const notOffered = lists.stages.filter((row) => !stageOffered(row));
   return `<div class="git-head">${head3('Issue forms', 'The forms people fill in when they open an issue on GitHub. Each sets its label. Files in .github/ISSUE_TEMPLATE/.')}${peekLink(`form-${forms[0].key}`, 'Preview the issue forms')}</div>
@@ -188,8 +189,8 @@ function summary() {
   const on = CHECKS.filter(([k]) => S.checks[k]).length;
   const sysText = SYSTEMS.filter(([k]) => RS.some(([r]) => S.matrix[`${k}/${r}`])).map(([, t]) => t).join(', ') || 'None';
   $('#sumCi').textContent = `${WORDS[on]} ${on === 1 ? 'check' : 'checks'} on ${sysText}`;
-  const badgeCount = lists.badges.filter((row) => row.key === ALWAYS_BADGE || (S.badges[row.key] && !badgeWhy(row))).length;
-  $('#sumSite').textContent = [mode === 'new' && `${badgeCount} ${badgeCount === 1 ? 'badge' : 'badges'}`, `website ${S.website ? 'on' : 'off'}`].filter(Boolean).join(', ');
+  const badgeCount = lists.badges.filter((row) => row.key !== ALWAYS_BADGE && S.badges[row.key] && !badgeWhy(row)).length;
+  $('#sumSite').textContent = [mode === 'new' && `${badgeCount || 'No'} ${badgeCount === 1 ? 'badge' : 'badges'}`, `website ${S.website ? 'on' : 'off'}`].filter(Boolean).join(', ');
   const forms = lists.forms.filter((row) => row.part !== 'ai' || S.ai);
   const formCount = forms.filter(formOn).length;
   const locked = new Set([...lists.forms.filter(formOn).map((row) => row.label), ...lists.labels.filter((row) => row.kept).map((row) => row.name)]);
@@ -211,8 +212,13 @@ function summary() {
     $('#pvLists').dataset.key = key;
     $('#pvLists').innerHTML = shown.length ? shown.map((stage, i) => `<li style="animation-delay:${i * 50}ms">${esc(stage)}</li>`).join('') : '<li class="none">None</li>';
   }
-  $('#modReset').hidden = !changed;
+  $('#modReset').disabled = !changed;
   $('#planLine').textContent = `${on === 7 ? 'All seven' : WORDS[on]} ${on === 1 ? 'check' : 'checks'}, ${shown.length ? `${shown.length} ${shown.length === 1 ? 'checklist' : 'checklists'}` : 'no checklists'}. ${$('#pvRelease').textContent.replace(/^None\. /, '')}`;
+}
+
+function offLabel(name) {
+  const stillSet = lists.forms.some((row) => formOn(row) && row.label === name) || lists.labels.some((row) => row.kept && row.name === name);
+  if (!stillSet) S.labels[name] = false;
 }
 
 function touched(fn) { fn(); changed = true; summary(); }
@@ -223,7 +229,12 @@ body.addEventListener('change', (e) => {
   if (t.dataset.check) { touched(() => { S.checks[t.dataset.check] = t.checked; }); paint(); return; }
   if (t.dataset.matrix) { touched(() => { S.matrix[t.dataset.matrix] = t.checked; }); return; }
   for (const [data, list] of [['badge', 'badges'], ['nav', 'navbar'], ['form', 'forms'], ['label', 'labels'], ['stage', 'checklists']]) {
-    if (t.dataset[data] !== undefined) { touched(() => { S[list][t.dataset[data]] = t.checked; }); if (data === 'form') paint(); return; }
+    if (t.dataset[data] !== undefined) {
+      touched(() => { S[list][t.dataset[data]] = t.checked; });
+      // a form taken off leaves its label unticked, unless another chosen form still sets it
+      if (data === 'form') { if (!t.checked) offLabel(lists.forms.find((row) => row.key === t.dataset.form).label); paint(); }
+      return;
+    }
   }
   if (t.name === 'licence') { touched(() => { S.licence = t.value; }); paint(); return; }
   if (t.id === 'day') { touched(() => { S.day = t.value; }); return; }
@@ -272,7 +283,8 @@ function paintSteps() {
   const name = dialog.dataset.view;
   const list = stepList();
   const current = name === 'main' ? 1 : currentStep;
-  $('#stepBar').hidden = !(name === 'modify' || (name === 'main' && custom));
+  // the bar keeps its room on every view, so the form never moves; it shows while there are steps to take
+  $('#stepBar').classList.toggle('off', !(name === 'modify' || (name === 'main' && custom)));
   $$('#stepBar button').forEach((b) => {
     const n = Number(b.dataset.step);
     b.parentElement.hidden = !list.includes(n);
@@ -296,10 +308,9 @@ function goStep(n) {
   view('modify', $('#modTitle'));
 }
 
-/* the first screen: a plan and Download, or, with Customise every setting on, the plan to start from and Next */
+/* the first screen: Use a plan (the plan and Download), or Customise a plan (the plan to start from, and Next) */
 function paintMain() {
   $('#planLegend').textContent = custom ? 'Start from this plan' : 'What is the plan for this package?';
-  $('#plans').classList.toggle('framed', custom);
   $('#download').hidden = custom;
   $('#modify').hidden = !custom;
   paintSteps();
@@ -324,8 +335,8 @@ function missing() {
   ['#download', '#modify'].forEach((id) => $(id).setAttribute('aria-disabled', String(off)));
 }
 
-$('#custom').addEventListener('change', (e) => {
-  custom = e.target.checked;
+$('#how').addEventListener('change', () => {
+  custom = $('#custom').checked;
   if (!custom && changed) {
     S = recommended();
     changed = false;

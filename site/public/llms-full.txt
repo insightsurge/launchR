@@ -4,7 +4,7 @@ launchR starts an R package with tests, CI and GitHub files in place, or adds re
 
 - Site: https://launch-r.web.app/
 - Source: https://github.com/insightsurge/launchR
-- Skill for agents: https://launch-r.web.app/skill.md
+- Skill for agents: https://launch-r.web.app/SKILL.md
 - Author: Harsh Verma, InsightSurge
 
 ## Who it is for
@@ -45,9 +45,9 @@ Each check is a short workflow file in the package that calls a shared workflow 
 | `r-cmd-check-extended` | Weekly R CMD check on more systems, with the extended tests (Mac and Windows for public packages, Linux only for private ones) | Yes, except for private packages that won't go to CRAN |
 | `pkgdown` | Builds and publishes a package website | When a website is chosen |
 
-## Customise every setting
+## Customise a plan
 
-Each plan sets defaults. On the site, pick a plan and download, or switch on Customise every setting and go through four more steps (Checks, Issues and checklists, README and website, Extras); on the command line, a flag changes them:
+Each plan sets defaults. On the site, pick a plan and download, or choose Customise a plan and go through four more steps (Checks, Issues and checklists, README and website, Extras); on the command line, a flag changes them:
 
 - The checks, their R versions and systems, the minimum R version, and the weekly time.
 - The CI report comment: one comment on each pull request with the results of the chosen checks. On by default.

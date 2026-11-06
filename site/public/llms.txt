@@ -24,4 +24,4 @@ launchR builds a zip in the visitor's browser. There is no account, and nothing 
 ## Optional
 
 - [Full text for agents](https://launch-r.web.app/llms-full.txt): everything above in one file, with the checks and plans listed.
-- [Skill for agents](https://launch-r.web.app/skill.md): how launchR's checks, CI report and upgrades work.
+- [Skill for agents](https://launch-r.web.app/SKILL.md): how launchR's checks, CI report and upgrades work.

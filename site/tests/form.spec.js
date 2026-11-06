@@ -49,9 +49,9 @@ async function download(page, button) {
   return { name: file.suggestedFilename(), files };
 }
 
-// Customise every setting, then Next: the first settings step, Checks on GitHub.
+// Customise a plan, then Next: the first settings step, Checks on GitHub.
 async function customise(page) {
-  if (!(await page.locator('#custom').isChecked())) await page.locator('label.sw', { hasText: 'Customise every setting' }).click();
+  if (!(await page.locator('#custom').isChecked())) await page.locator('#how label', { hasText: 'Customise a plan' }).click();
   await page.locator('#modify').click();
   await expect(page.locator('#stepTitle')).toHaveText('Checks on GitHub');
 }
@@ -176,12 +176,13 @@ test('Customise: the CI report comment, licence, badges, issue forms, labels and
   // A form's label is on its card while the form is on; without the form it joins the other labels.
   await expect(page.locator('[data-label="idea"]')).toHaveCount(0);
   await page.locator('label.fcard', { hasText: 'Idea' }).click();
-  await page.locator('label.pill', { hasText: /^idea$/ }).click();
+  // Its label joins the other labels, last and unticked.
   await expect(page.locator('[data-label="idea"]')).not.toBeChecked();
+  await expect(page.locator('#bodyGit .ticks').first().locator('label.pill').last()).toContainText('idea');
   await expect(page.locator('#sumGit')).toHaveText('4 of 5 issue forms, 10 of 11 labels, 1 checklist');
   await expect(page.locator('[data-stage="qc"]')).toBeChecked();
   await step(page, 'README');
-  await expect(page.locator('#sumSite')).toHaveText('1 badge, website off');
+  await expect(page.locator('#sumSite')).toHaveText('No badges, website off');
   await page.locator('label.shield[title="Lifecycle"]').click();
   await step(page, 'Extras');
   await expect(page.locator('#sumMore')).toHaveText('Proprietary licence');
@@ -374,14 +375,14 @@ test('the existing-package button works when it is pressed before the lists have
   expect(errors).toEqual([]);
 });
 
-test('a plan downloads at once; Customise every setting turns Download into Next and shows the steps', async ({ page }) => {
+test('Use a plan downloads at once; Customise a plan turns Download into Next and shows the steps', async ({ page }) => {
   await openForm(page);
   await expect(page.locator('#stepBar')).toBeHidden();
   await expect(page.locator('#modify')).toBeHidden();
   await fillForm(page);
   await expect(page.locator('#download')).toHaveAttribute('aria-disabled', 'false');
   await expect(page.locator('#missing')).toHaveText('');
-  await page.locator('label.sw', { hasText: 'Customise every setting' }).click();
+  await page.locator('#how label', { hasText: 'Customise a plan' }).click();
   await expect(page.locator('#planLegend')).toHaveText('Start from this plan');
   await expect(page.locator('#download')).toBeHidden();
   await expect(page.locator('#stepBar button')).toHaveText([/^1\s*About$/, /^2\s*Checks$/, /^3\s*Issues$/, /^4\s*README$/, /^5\s*Extras$/], { useInnerText: true });
@@ -398,7 +399,7 @@ test('a plan downloads at once; Customise every setting turns Download into Next
   await page.locator('label.sw', { hasText: 'JS or CSS' }).click();
   await expect(page.locator('#pvCustom')).toBeVisible();
   await step(page, 'About');
-  await page.locator('label.sw', { hasText: 'Customise every setting' }).click();
+  await page.locator('#how label', { hasText: 'Use a plan' }).click();
   await expect(page.locator('#planNote')).toHaveText("Your own settings were reset to the plan's.");
   await expect(page.locator('#pvCustom')).toBeHidden();
   await expect(page.locator('#download')).toBeVisible();
@@ -432,17 +433,19 @@ test('Customise: plan d starts with the QC checklist, opened first after the dow
   await expect(page.locator('#nextAfter')).toContainText('QC before release opens in your repository\'s issues now');
 });
 
-test('Customise: the launchR badge is always on, and a badge that needs something says what', async ({ page }) => {
+test('Customise: the launchR credit is not offered but every README gets it, and a badge that needs something says what', async ({ page }) => {
   await openForm(page);
   await fillForm(page);
-  await page.locator('input[name=plan][value=b]').check();
+  await page.locator('input[name=plan][value=d]').check();
   await customise(page);
   await step(page, 'README');
-  const credit = page.locator('[data-badge="launchr"]');
-  await expect(credit).toBeChecked();
-  await expect(credit).toBeDisabled();
-  await expect(page.locator('.shield-opt', { has: credit })).toContainText('always on');
+  await expect(page.locator('[data-badge="launchr"]')).toHaveCount(0);
   await expect(page.locator('.shield-opt', { has: page.locator('[data-badge="cran"]') })).toContainText('For a package going to CRAN.');
+  // One tooltip on the heading explains every badge; the shields carry none.
+  await expect(page.locator('.shield-opt .tip')).toHaveCount(0);
+  await expect(page.locator('#bodySite h4 .tip')).toContainText('CRAN downloads');
+  const { files } = await download(page, '#modDownload');
+  expect(files['tablePkg/README.md']).toContain('img.shields.io/badge/set%20up%20with-launchR');
 });
 
 test('the preview window shows the checklists, the issue forms and the guide for agents', async ({ page }) => {
@@ -459,7 +462,7 @@ test('the preview window shows the checklists, the issue forms and the guide for
   await win.getByRole('button', { name: 'Bug report' }).click();
   await expect(win.locator('article:visible')).toContainText('Minimal reproducible example (reprex)');
   await expect(win.locator('article:visible')).toContainText('sets the label bug');
-  await win.getByRole('button', { name: 'skill.md' }).click();
+  await win.getByRole('button', { name: 'SKILL.md' }).click();
   await expect(win.locator('article:visible h1')).toHaveText('Working on a launchR package');
   await page.keyboard.press('Escape');
   await expect(win).toBeHidden();

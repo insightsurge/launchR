@@ -1,8 +1,8 @@
 ---
 // The setup form. The shared preview window's contents are rendered here, at build time, from the same lists and
-// templates the zip is built from (src/form/peek.js), and from public/skill.md.
+// templates the zip is built from (src/form/peek.js), and from public/SKILL.md.
 import { checklists, issueForms } from '../form/peek.js';
-import { Content as Skill } from '../../public/skill.md';
+import { Content as Skill } from '../../public/SKILL.md';
 
 const stages = checklists();
 const forms = issueForms();
@@ -13,7 +13,7 @@ const box = (b) => [b.where && b.pick ? `${b.where}: ${b.pick}` : b.where || b.p
       <button type="button" class="close" id="close" aria-label="Close the form"><svg aria-hidden="true"><use href="#i-close" /></svg></button>
       <div class="setup-grid">
         <div class="views">
-        <nav class="stepbar" id="stepBar" aria-label="Steps" hidden>
+        <nav class="stepbar off" id="stepBar" aria-label="Steps">
           <ol>
             <li><button type="button" data-step="1"><i>1</i><span>About</span></button></li>
             <li><button type="button" data-step="2"><i>2</i><span>Checks</span></button></li>
@@ -55,14 +55,21 @@ const box = (b) => [b.where && b.pick ? `${b.where}: ${b.pick}` : b.where || b.p
             <p class="err" id="err-owner"></p>
             <p class="field-note" id="owner-note">No GitHub account yet? <a href="https://github.com/signup" target="_blank" rel="noopener">Sign up free</a>, then come back with your username.</p>
           </div>
+          <div class="how-row">
+            <fieldset class="routes how" id="how">
+              <legend class="sr">How do you want to set it up?</legend>
+              <label><input type="radio" name="how" value="plan" checked /><span>Use a plan</span></label>
+              <label><input type="radio" name="how" value="custom" id="custom" /><span>Customise a plan</span></label>
+            </fieldset>
+            <span class="tip" tabindex="0" role="note" aria-label="Use a plan: download it as it is. Customise a plan: start from one and go through four more steps: checks, issues and checklists, README and website, and extras."><svg aria-hidden="true"><use href="#i-info" /></svg><span role="tooltip" aria-hidden="true">Use a plan: download it as it is. Customise a plan: start from one and go through four more steps: checks, issues and checklists, README and website, and extras.</span></span>
+          </div>
           <fieldset class="plans" id="plans">
-            <legend id="planLegend">What is the plan for this package?</legend>
+            <legend id="planLegend" class="sr">What is the plan for this package?</legend>
             <label class="plan p1"><input type="radio" name="plan" value="a" checked /><i class="chip c1"></i><span><b>Public, going to CRAN</b></span></label>
             <label class="plan p2"><input type="radio" name="plan" value="b" /><i class="chip c2"></i><span><b>Public, not for CRAN</b><em>Installed from GitHub</em></span></label>
             <label class="plan p3"><input type="radio" name="plan" value="c" /><i class="chip c3"></i><span><b>Private for now</b><em>Public and CRAN later</em></span></label>
             <label class="plan p4"><input type="radio" name="plan" value="d" /><i class="chip c4"></i><span><b>Private for good</b><em>Company or personal</em></span></label>
           </fieldset>
-          <div class="opt custom-opt"><label class="sw"><input type="checkbox" id="custom" /><i aria-hidden="true"></i><b>Customise every setting</b></label><span class="tip" tabindex="0" role="note" aria-label="Go through four more steps: checks, issues and checklists, README and website, and extras. Your plan's choices are the starting point."><svg aria-hidden="true"><use href="#i-info" /></svg><span role="tooltip" aria-hidden="true">Go through four more steps: checks, issues and checklists, README and website, and extras. Your plan's choices are the starting point.</span></span></div>
           <p class="plan-line" id="planLine" role="status"></p>
           <div class="actions">
             <button type="button" class="primary" id="download" aria-disabled="true" aria-describedby="missing">Download <span id="dlName">fooBarPkg</span>.zip</button>
@@ -73,7 +80,7 @@ const box = (b) => [b.where && b.pick ? `${b.where}: ${b.pick}` : b.where || b.p
                   </form>
         <section id="modifyView" aria-labelledby="modTitle" hidden>
           <h2 id="modTitle" tabindex="-1"><span id="stepTitle">Checks on GitHub</span> <span class="for">for <span id="modPkg">fooBarPkg</span></span></h2>
-          <p class="sub">Already set up for your plan. Change only what you want. <button type="button" class="reset" id="modReset" hidden>Back to recommended</button></p>
+          <p class="sub">Already set up for your plan. Change only what you want. <button type="button" class="reset" id="modReset" disabled>Back to recommended</button></p>
           <section class="mod" data-step="2" aria-label="Checks on GitHub"><p class="step-sum" id="sumCi"></p><div class="mod-body" id="bodyCi"></div></section>
           <section class="mod new-only" data-step="3" aria-label="Issues and checklists"><p class="step-sum" id="sumGit"></p><div class="mod-body" id="bodyGit"></div></section>
           <section class="mod" data-step="4" aria-label="README and website"><p class="step-sum" id="sumSite"></p><div class="mod-body" id="bodySite"></div></section>
@@ -145,7 +152,7 @@ const box = (b) => [b.where && b.pick ? `${b.where}: ${b.pick}` : b.where || b.p
           <h3>Issue forms</h3>
           <ul>{forms.map((f) => <li><button type="button" data-peek={`form-${f.key}`}>{f.title}</button></li>)}</ul>
           <h3>For AI assistants</h3>
-          <ul><li><button type="button" data-peek="skill">skill.md</button></li></ul>
+          <ul><li><button type="button" data-peek="skill">SKILL.md</button></li></ul>
         </nav>
         <div class="peek-pane">
           {stages.map((s) => (
@@ -186,7 +193,7 @@ const box = (b) => [b.where && b.pick ? `${b.where}: ${b.pick}` : b.where || b.p
             </article>
           ))}
           <article class="peek-md-doc" data-peek="skill" hidden>
-            <p class="peek-kind">launchR's guide for AI agents, at <a href="/skill.md">/skill.md</a></p>
+            <p class="peek-kind">launchR's guide for AI agents, at <a href="/SKILL.md">/SKILL.md</a></p>
             <Skill />
           </article>
         </div>

@@ -776,7 +776,7 @@ input { caret-color: var(--accent); }
 @keyframes menu-in { from { opacity: 0; transform: translateY(-8px); } }
 @media (prefers-reduced-motion: reduce) { .menu:not([hidden]) { animation: none; } }
 
-/* the form in steps: a plan and Download, or Customise every setting and four more steps */
+/* the form in steps: Use a plan and Download, or Customise a plan and four more steps */
 .views { min-width: 0; }
 #setup:not([data-mode='existing']) .ex-only { display: none; }
 .stepbar { margin: 0 0 18px; }
@@ -914,3 +914,25 @@ dialog.peek::backdrop { background: rgb(0 0 0 / 55%); }
   .mod-actions .quiet { flex: none; }
   .mod-actions .primary { flex: 1; width: auto; }
 }
+
+/* the form keeps one width and one top margin on every view and step: nothing moves when a button is pressed */
+dialog#setup { scrollbar-gutter: stable; }
+@media (min-width: 861px) {
+  .setup-inner { place-items: start center; padding: 72px 72px 56px; }
+  #setup .setup-grid, #setup[data-view] .setup-grid, #setup[data-mode='existing'][data-view='modify'] .setup-grid {
+    width: min(1160px, 100%); grid-template-columns: minmax(0, 1.9fr) minmax(0, 0.7fr); transition: none;
+  }
+  #setup[data-view='modify'] .setup-inner { padding-right: 72px; }
+  #setup[data-view='next'] .preview, #setup[data-view='existing'] .preview, #setup[data-mode='existing'] .preview { display: block !important; visibility: hidden; }
+}
+.stepbar.off { visibility: hidden; }
+.new-only > h4 + .shields { margin-top: 14px; }
+.shield input:checked + span { box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 35%, transparent); }
+/* an info mark sits on the line of its label */
+.field-head { margin-bottom: 5px; }
+.field-head label { margin-bottom: 0; }
+.tip.warn { color: var(--no); }
+.reset:disabled { color: var(--soft); opacity: 0.6; cursor: default; text-decoration: none; }
+.how-row { display: flex; align-items: center; gap: 8px; margin: 18px 0 10px; }
+.how-row .routes { margin: 0; }
+.how-row + fieldset.plans { margin-top: 0; }

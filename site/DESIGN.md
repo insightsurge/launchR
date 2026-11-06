@@ -79,7 +79,7 @@ components:
 
 A package is built from small, honest parts, and the page shows them. Hexagons made of dots start as a honeycomb with gaps, grow into a file tree, become checks and paths, and close into one package. The scene carries the story, so the words beside it stay short and calm.
 
-The form is a workbench: plain, ordered and quiet. The first screen asks four things and a plan, and everything else waits behind one switch, Customise every setting, in four more steps, each with a one-line summary. Explanations sit behind an info mark, not on the page.
+The form is a workbench: plain, ordered and quiet. The first screen asks four things and a plan, and everything else waits behind one choice, Customise a plan, in four more steps, each with a one-line summary. Explanations sit behind an info mark, not on the page.
 
 **Key Characteristics:**
 - One typeface, two themes, one accent per theme
