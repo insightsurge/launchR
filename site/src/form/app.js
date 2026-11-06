@@ -104,7 +104,6 @@ const bullets = (list) => `<span class="tip wide-tip" tabindex="0" role="note" a
 const sw = (id, text, why, on, soon) => `<div class="opt"><label class="sw"><input type="checkbox" id="${id}"${on ? ' checked' : ''}${soon ? ' disabled' : ''} /><i aria-hidden="true"></i><b>${text}</b></label>${soon ? '<span class="tag">Coming soon</span>' : ''}${help(why)}</div>`;
 const swList = (id, text, list, on) => `<div class="opt"><label class="sw"><input type="checkbox" id="${id}"${on ? ' checked' : ''} /><i aria-hidden="true"></i><b>${text}</b></label>${bullets(list)}</div>`;
 const pill = (attrs, text, on) => `<label class="pill"><input type="checkbox" ${attrs}${on ? ' checked' : ''} /><span>${text}</span></label>`;
-const tick = (attrs, text, on, why, off) => `<div class="opt"><label class="pill"><input type="checkbox" ${attrs}${on ? ' checked' : ''}${off ? ' disabled' : ''} /><span><svg aria-hidden="true"><use href="#i-tick" /></svg>${text}</span></label>${why ? help(why) : ''}</div>`;
 const nest = (html) => `<div class="nest">${html}</div>`;
 const head3 = (text, why) => `<h4>${text}${Array.isArray(why) ? bullets(why) : why ? help(why) : ''}</h4>`;
 

@@ -788,16 +788,10 @@ input { caret-color: var(--accent); }
 .stepbar button.done { color: var(--ink); }
 .stepbar button[aria-current='step'] { border-color: var(--accent); color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); }
 .stepbar button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.custom-opt { display: flex; margin-top: 16px; }
-.custom-opt .sw { margin: 0; align-items: center; }
-fieldset.plans.framed { padding: 12px; border: 1.5px dashed color-mix(in srgb, var(--accent) 60%, var(--line)); border-radius: 16px; }
-fieldset.plans.framed legend { padding: 0 6px; margin-left: -6px; color: var(--accent); }
 .primary[aria-disabled='true'] { opacity: 0.55; box-shadow: none; }
 #missing { color: var(--soft); }
 #modTitle .for { color: var(--soft); font-weight: 400; font-size: 0.62em; }
 #modifyView .mod[hidden] { display: none; }
-.step-sum { margin: -14px 0 14px; font-size: 14.5px; color: var(--soft); }
-.step-sum:empty { display: none; }
 #modifyView .mod-body { padding-left: 0; }
 .mod-actions { justify-content: flex-start; }
 .mod-actions .quiet { margin-right: auto; }
@@ -826,7 +820,7 @@ fieldset.plans.framed legend { padding: 0 6px; margin-left: -6px; color: var(--a
 .fcard input:not(:checked) + span .label-chip { opacity: 0.6; }
 .label-chip { display: inline-block; padding: 1px 9px; border-radius: 99px; font-size: 12.5px; font-weight: 500; line-height: 1.6; color: var(--ink); background: color-mix(in srgb, var(--lc) 30%, var(--surface)); border: 1px solid color-mix(in srgb, var(--lc) 70%, transparent); }
 .auto { display: inline-flex; align-items: center; gap: 4px; font-size: 12.5px; color: var(--soft); }
-.auto svg, .shield-note svg { width: 13px; height: 13px; }
+.auto svg { width: 13px; height: 13px; }
 .kept-line { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-size: 13.5px; color: var(--soft); }
 .pill .dot { flex: none; width: 9px; height: 9px; margin-right: 7px; border-radius: 50%; background: var(--lc); }
 
@@ -846,7 +840,6 @@ fieldset.plans.framed legend { padding: 0 6px; margin-left: -6px; color: var(--a
 .shield input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
 .shield:has(input:disabled) { cursor: default; }
 .shield:has(input:disabled:not(:checked)) > span { opacity: 0.55; }
-.shield-note { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; color: var(--ink); }
 
 /* After that: four short bullets */
 .after h3 { margin: 0 0 6px; font-size: 15px; font-weight: 500; color: var(--ink); }
@@ -972,8 +965,8 @@ dialog#setup { scrollbar-gutter: stable; }
 #setup .pill span, #setup #modifyView .pill span, #setup .routes span, #setup .pick b, #setup #modifyView .pick b, #setup .sw b,
 #setup #modifyView .sw b, #setup .line label, #setup #modifyView .line label, #setup .rmatrix tbody th { font-size: 15px; font-weight: 400; }
 #setup .plan b, #setup .fcard b { font-size: 15px; font-weight: 500; }
-#setup .fieldnote, #setup .field-note, #setup .note, #setup .step-sum, #setup .sw-note, #setup .kept-line, #setup .fcard small,
-#setup .plan em, #setup .err, #setup .plan-line, #setup .unit, #setup .shield-note { font-size: 13.5px; }
+#setup .fieldnote, #setup .field-note, #setup .note, #setup .sw-note, #setup .kept-line, #setup .fcard small,
+#setup .plan em, #setup .err, #setup .plan-line, #setup .unit { font-size: 13.5px; }
 #setup .sublabel { margin: 0 0 6px; font-size: 14px; font-weight: 500; color: var(--soft); }
 #setup .field { margin-bottom: 20px; }
 #setup .field-head, #setup .field.two label { margin-bottom: 8px; }
