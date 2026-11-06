@@ -945,8 +945,32 @@ dialog#setup { scrollbar-gutter: stable; }
 .shield > span { background: transparent; }
 /* what a heading holds sits in under it */
 #modifyView .nest { margin-left: 20px; }
-#modifyView .nest .nest { margin-left: 0; }
 @media (max-width: 860px) { #modifyView .nest { margin-left: 12px; } }
 /* the main buttons sit on the right; Back stays on the left */
 #form .actions { justify-content: flex-end; }
 #form #missing { text-align: right; }
+/* a choice sits a little below its heading */
+#modifyView h4 + .nest { margin-top: 8px; }
+/* the first screen and the existing-package view: each answer sits in under its question */
+@media (min-width: 861px) {
+  #form .field:not(.two) > :not(.field-head), #form .field.two > div > :not(label),
+  #existingView .field.two > div > :not(label) { margin-left: 20px; width: calc(100% - 20px); }
+  #form .field:not(.two) > p, #form .field.two > div > p, #existingView .field.two > div > p { width: auto; }
+  #form fieldset.plans { margin-left: 20px; }
+  #exPlans { padding-left: 20px; }
+  #exPlans legend { margin-left: -20px; }
+  #existingView .ex-head + .exrows { margin-left: 20px; }
+}
+@media (max-width: 860px) {
+  #form .field:not(.two) > :not(.field-head), #form .field.two > div > :not(label), #existingView .field.two > div > :not(label) { margin-left: 12px; width: calc(100% - 12px); }
+  #form .field:not(.two) > p, #form .field.two > div > p, #existingView .field.two > div > p { width: auto; }
+  #form fieldset.plans { margin-left: 12px; }
+}
+/* the oldest R: one box, sized to what is typed, with the .0 inside it */
+.affix { display: inline-flex; align-items: center; gap: 0; padding-right: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; }
+.affix:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent); }
+#modifyView .affix input.short[type='text'], .affix input.short[type='text'] { width: 3ch; field-sizing: content; min-width: 1ch; padding: 7px 0 7px 10px; border: 0; background: transparent; box-shadow: none; }
+.affix input.short[type='text']:focus { box-shadow: none; }
+.affix .unit { color: var(--ink); font-size: 14.5px; }
+.affix:has(input.bad) { border-color: var(--no); }
+#existingView .actions { justify-content: flex-end; }

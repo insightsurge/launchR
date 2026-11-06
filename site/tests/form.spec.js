@@ -527,7 +527,8 @@ test('Customise: New feature sets its own label, a shared label says which form 
   await expect(page.locator('label.fcard', { hasText: 'Bug report' })).toContainText('not added');
   await step(page, 'README');
   await page.locator('label.sw', { hasText: 'Add a website' }).click();
-  await expect(page.locator('#bodySite h4', { hasText: 'Navbar: right' }).locator('.tip')).toHaveAttribute('aria-label', /_pkgdown\.yml: /);
+  await expect(page.locator('#bodySite h4', { hasText: /^Navbar/ }).locator('.tip').first()).toHaveAttribute('aria-label', /_pkgdown\.yml: /);
+  await expect(page.locator('#bodySite h4', { hasText: 'Left' })).toBeVisible();
   // Every toggle shows its choice by its outline and fill, never by a tick.
   await expect(page.locator('#modifyView .pill svg:visible, #modifyView .fcard svg:visible')).toHaveCount(0);
   const { files } = await download(page, '#modDownload');
