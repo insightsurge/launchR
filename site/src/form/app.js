@@ -60,7 +60,7 @@ function modifyExtras() {
   const extras = planExtras(lists, planRow(lists, plan()));
   const ticks = (rows, key, on) => Object.fromEntries(rows.map((row) => [row[key], on.includes(row[key])]));
   return {
-    ciReport: extras.ciReport, licence: extras.licence, qc: extras.qc,
+    ciReport: extras.ciReport, licence: extras.licence, qc: extras.checklists.includes('qc'),
     badges: ticks(lists.badges, 'key', extras.badges), navbar: ticks(lists.navbar, 'key', extras.navbar),
     forms: ticks(lists.forms, 'key', extras.forms), labels: ticks(lists.labels, 'name', extras.labels),
   };
@@ -290,7 +290,8 @@ function choices() {
     ...base, parts, checks, existing: mode === 'existing', visibility: visibility(), release: release(), owner: mode === 'new' ? v('owner') : v('exOwner'),
     package: pkg(), title: mode === 'new' ? v('what') : '', description: mode === 'new' ? v('details') : '', given: v('first'), family: v('last'), email,
     minR: minRProblem() ? base.minR : S.minR || base.minR,
-    ciReport: S.ciReport, licence: S.licence, qc: S.qc && !isPublic(),
+    ciReport: S.ciReport, licence: S.licence,
+    checklists: [...planExtras(lists, planRow(lists, plan())).checklists.filter((key) => key !== 'qc'), ...(S.qc && !isPublic() ? ['qc'] : [])],
     badges: keys(S.badges), navbar: keys(S.navbar), forms: keys(S.forms), labels: keys(S.labels),
   };
 }

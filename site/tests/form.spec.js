@@ -171,7 +171,7 @@ test('Modify: the CI report comment, licence, badges, issue forms, labels and QC
   expect(files['tablePkg/LICENSE']).toContain('All rights reserved');
   expect('tablePkg/LICENSE.md' in files).toBe(false);
   expect(files['tablePkg/DESCRIPTION']).toContain('License: file LICENSE');
-  expect(files['tablePkg/DESCRIPTION']).toContain('Config/launchR/checklist: QC before release');
+  expect(files['tablePkg/DESCRIPTION']).toContain('Config/launchR/checklists: QC before release');
   expect(files['tablePkg/DESCRIPTION']).toMatch(/Config\/launchR\/labels: .*bug/);
   expect(files['tablePkg/DESCRIPTION']).not.toMatch(/Config\/launchR\/labels: .*idea/);
   expect('tablePkg/.github/ISSUE_TEMPLATE/05-idea.yml' in files).toBe(false);

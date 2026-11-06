@@ -30,10 +30,15 @@ find_repo <- function(args) {
 }
 
 package_context <- function(args) {
-  description <- read.dcf("DESCRIPTION", fields = c("Package", "Config/quality-gate/target", "Config/launchR/labels", "Config/launchR/checklist"))
+  description <- read.dcf("DESCRIPTION", fields = c("Package", "Config/quality-gate/target", "Config/launchR/labels", "Config/launchR/checklists", "Config/launchR/checklist"))
   # A package made with some of launchR's labels names them; without the field it gets them all.
   chosen <- unname(description[1, "Config/launchR/labels"])
   labels <- if (is.na(chosen)) NULL else trimws(strsplit(chosen, ",", fixed = TRUE)[[1]])
+  # The stage checklists a package chose; without the field it gets all but QC. A package from before v0.0.18 recorded
+  # only the QC checklist, as Config/launchR/checklist.
+  chosen_stages <- unname(description[1, "Config/launchR/checklists"])
+  stages <- if (is.na(chosen_stages)) NULL else trimws(strsplit(chosen_stages, ",", fixed = TRUE)[[1]])
+  qc_old <- identical(unname(description[1, "Config/launchR/checklist"]), kit_setting("qc_stage"))
   found <- find_repo(args)
   repo <- if (found$connected) found$repo else ""
   public <- if (found$connected) found$visibility == "PUBLIC" else has_flag(args, "public")
@@ -48,24 +53,29 @@ package_context <- function(args) {
     remove_labels = has_flag(args, "remove-other-labels"),
     internal = identical(unname(description[1, "Config/quality-gate/target"]), "internal"),
     labels = labels,
-    qc = identical(unname(description[1, "Config/launchR/checklist"]), kit_setting("qc_stage"))
+    checklists = stages,
+    qc = if (is.null(stages)) qc_old else kit_setting("qc_stage") %in% stages
   )
 }
 
 # The checklists that should be open now. Internal packages never get the CRAN ones. A package on CRAN moves on to
-# After acceptance and Next release. A private package with the QC checklist (Config/launchR/checklist) gets it too, in
-# place of Before public when it stays private.
+# After acceptance and Next release. Only the checklists the package chose (Config/launchR/checklists) open; without
+# the field it gets all of these. A private package with the QC checklist gets it too.
 open_stages <- function(ctx, on_cran = FALSE) {
-  if (isTRUE(ctx$qc) && !ctx$public) {
-    return(c(kit_setting("qc_stage"), if (!ctx$internal) c("Before public", "Before CRAN")))
+  stages <- if (ctx$internal) {
+    if (ctx$public) "After public" else "Before public"
+  } else if (isTRUE(on_cran)) {
+    c("After acceptance", "Next release")
+  } else {
+    c(if (ctx$public) "After public" else "Before public", "Before CRAN")
   }
-  if (ctx$internal) {
-    return(if (ctx$public) "After public" else "Before public")
+  if (!is.null(ctx$checklists)) {
+    stages <- stages[stages %in% ctx$checklists]
+  } else if (isTRUE(ctx$qc) && ctx$internal) {
+    stages <- setdiff(stages, "Before public") # a package from before v0.0.18: QC took the place of Before public
   }
-  if (isTRUE(on_cran)) {
-    return(c("After acceptance", "Next release"))
-  }
-  c(if (ctx$public) "After public" else "Before public", "Before CRAN")
+  if (isTRUE(ctx$qc) && !ctx$public) stages <- c(kit_setting("qc_stage"), stages)
+  stages
 }
 
 # --- A checklist's text -------------------------------------------------------------------------------------------

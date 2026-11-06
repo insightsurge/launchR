@@ -36,7 +36,7 @@ model and search for its name (and `no_suggests`, its key) to see every place. I
    `template/.github/workflows/README.md`, the root README's checks table
    and "seven automatic checks", the site's text (`site/src/components/Story.astro`, `site/public/llms-full.txt`),
    `quality-gate/quality-gate.R` if a gate mode mirrors the check, and `lists/checklists.tsv` if a stage checklist
-   mentions CI. Search for a neighbouring check's name to find them.
+   mentions CI (a new checklist stage also goes in `lists/stages.tsv` and in the plans that start with it). Search for a neighbouring check's name to find them.
 7. **Tests:** run the route comparison and the command line's tests (below). `tests/cli-tests.R` checks the lists
    against each other, and the browser tests drive the form.
 

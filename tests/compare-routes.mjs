@@ -27,9 +27,11 @@ cases.push({ name: 'modify-public', plan: 'a', preset: 'everything',
   extra: { ciReport: false, badges: ['check', 'codecov', 'cran', 'downloads', 'universe', 'launchr'], navbar: ['reference', 'search'], forms: ['bug', 'docs'], labels: ['priority: high'] } });
 cases.push({ name: 'modify-private', plan: 'c', preset: 'everything',
   flags: ['--plan', 'c', '--preset', 'everything', '--licence', 'mit', '--qc', '--badges', 'lifecycle,cran', '--forms', 'none', '--labels', 'none'],
-  extra: { licence: 'mit', qc: true, badges: ['lifecycle', 'cran'], forms: [], labels: [] } });
+  extra: { licence: 'mit', checklists: ['before-public', 'after-public', 'before-cran', 'after-acceptance', 'next-release', 'qc'], badges: ['lifecycle', 'cran'], forms: [], labels: [] } });
 cases.push({ name: 'modify-no-qc', plan: 'd', preset: 'starter', flags: ['--plan', 'd', '--no-qc', '--licence', 'mit', '--badges', 'none'],
-  extra: { qc: false, licence: 'mit', badges: [] } });
+  extra: { checklists: [], licence: 'mit', badges: [] } });
+cases.push({ name: 'checklists', plan: 'a', preset: 'everything', flags: ['--plan', 'a', '--preset', 'everything', '--checklists', 'after-public,next-release'],
+  extra: { checklists: ['after-public', 'next-release'] } });
 // One case per setup the user journeys use, with the Modify choices that journey makes. Beginner defaults is a-starter
 // above. The CLI picks parts by preset only, so "website without the AI and front-end parts" and "CI files only" can't
 // be built by both routes, and a frozen (snapshot) setup doesn't exist yet: those three are not here.
@@ -45,7 +47,7 @@ const journeys = [
     extra: { licence: 'mit', badges: ['check', 'lifecycle', 'universe'], navbar: ['reference', 'news', 'search', 'github', 'lightswitch'] } },
   { name: 'journey-polish-first', plan: 'c', preset: 'starter',
     flags: ['--qc', '--forms', 'bug,feature,docs', '--badges', 'check,lifecycle'],
-    extra: { qc: true, forms: ['bug', 'feature', 'docs'], badges: ['check', 'lifecycle'] } },
+    extra: { checklists: ['before-public', 'after-public', 'before-cran', 'after-acceptance', 'next-release', 'qc'], forms: ['bug', 'feature', 'docs'], badges: ['check', 'lifecycle'] } },
   { name: 'journey-company', plan: 'd', preset: 'starter',
     flags: ['--licence', 'proprietary', '--badges', 'none', '--forms', 'bug,docs', '--labels', 'bug,documentation,chore', '--no-ci-report'],
     extra: { licence: 'proprietary', badges: [], forms: ['bug', 'docs'], labels: ['bug', 'documentation', 'chore'], ciReport: false } },

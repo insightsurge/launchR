@@ -191,7 +191,8 @@ run_command <- function(args) {
   )
 }
 
-# The site's Modify choices, as flags: --no-ci-report, --licence, --badges, --navbar, --forms, --labels, --qc and --no-qc.
+# The site's Modify choices, as flags: --no-ci-report, --licence, --badges, --navbar, --forms, --labels, --checklists,
+# --qc and --no-qc.
 # A list flag replaces the default list with the comma-separated keys given ("none" for an empty one). Returns the
 # choices, or a message saying what is wrong.
 modify_from_flags <- function(args, choices) {
@@ -205,7 +206,7 @@ modify_from_flags <- function(args, choices) {
   }
   known <- list(
     badges = read_list("badges.tsv")$key, navbar = read_list("navbar.tsv")$key,
-    forms = read_list("forms.tsv")$key, labels = read_list("labels.tsv")$name
+    forms = read_list("forms.tsv")$key, labels = read_list("labels.tsv")$name, checklists = read_list("stages.tsv")$key
   )
   for (name in names(known)) {
     if (!paste0("--", name) %in% args) next
@@ -217,10 +218,11 @@ modify_from_flags <- function(args, choices) {
     }
     choices[[name]] <- known[[name]][known[[name]] %in% given]
   }
-  if (has_flag(args, "qc")) choices$qc <- TRUE
-  if (has_flag(args, "no-qc")) choices$qc <- FALSE
-  if (isTRUE(choices$qc) && choices$visibility == "public") {
-    return("--qc is for private packages (plans c and d).")
+  # --qc and --no-qc, from before --checklists, add and remove the QC checklist.
+  if (has_flag(args, "qc")) choices$checklists <- union(choices$checklists, "qc")
+  if (has_flag(args, "no-qc")) choices$checklists <- setdiff(choices$checklists, "qc")
+  if ("qc" %in% choices$checklists && choices$visibility == "public") {
+    return("The QC checklist is for private packages (plans c and d).")
   }
   choices
 }

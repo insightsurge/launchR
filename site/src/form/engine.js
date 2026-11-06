@@ -22,6 +22,7 @@ export function readLists(bundle) {
     navbar: list('navbar.tsv'),
     forms: list('forms.tsv'),
     labels: list('labels.tsv'),
+    stages: list('stages.tsv'),
   };
 }
 
@@ -118,7 +119,7 @@ export function defaultChoices(lists, preset = lists.settings.preset, plan = lis
   };
 }
 
-// The Modify choices that follow from the plan: badges and the QC checklist depend on the visibility; the licence is
+// The Modify choices that follow from the plan: badges and the stage checklists depend on the plan; the licence is
 // proprietary only for a private package that won't go to CRAN, since R CMD check as CRAN gives a NOTE for any other
 // licence than an open-source one. cli/R/choices.R has the same.
 export function planExtras(lists, chosen) {
@@ -129,7 +130,7 @@ export function planExtras(lists, chosen) {
     navbar: lists.navbar.filter((row) => row.on === 'yes').map((row) => row.key),
     forms: lists.forms.map((row) => row.key),
     labels: lists.labels.map((row) => row.name),
-    qc: chosen.qc === 'yes',
+    checklists: chosen.checklists.split(',').map((key) => key.trim()),
   };
 }
 
@@ -140,6 +141,16 @@ export function badgeOffered(row, choices) {
     if (need === 'cran') return choices.release === 'cran';
     return choices.parts.includes('ci') && !!choices.checks[need]?.on;
   });
+}
+
+// The stage checklists as DESCRIPTION records them (Config/launchR/checklists): their names in lists/stages.tsv order.
+// The QC checklist is only for a private package, and "none" says no checklist at all. All but QC is what a package without the line gets, so it needs none.
+// cli/R/choices.R has the same.
+export function checklistLine(choices, lists, isPublic) {
+  const keys = lists.stages.filter((row) => choices.checklists.includes(row.key) && !(isPublic && row.key === 'qc'));
+  const usual = lists.stages.filter((row) => row.key !== 'qc');
+  if (!choices.parts.includes('github') || (keys.length === usual.length && keys.every((row, i) => row.key === usual[i].key))) return '';
+  return `Config/launchR/checklists: ${keys.length ? keys.map((row) => row.stage).join(', ') : 'none'}`;
 }
 
 // The labels a package gets: the chosen ones, the label of every chosen issue form, and the ones the set-up step
@@ -256,10 +267,10 @@ export function placeholderValues(choices, lists) {
     values[`navbar_${side}`] = lists.navbar.filter((row) => row.side === side && choices.navbar.includes(row.key)).map((row) => row.name).join(', ');
   }
   for (const row of lists.forms) values[`form_${row.key}`] = yes(choices.forms.includes(row.key));
-  // DESCRIPTION records a choice of labels and the QC checklist, for the Set up this repository step (cli/R/github.R).
+  // DESCRIPTION records a choice of labels and of stage checklists, for the Set up this repository step (cli/R/github.R).
   const labels = chosenLabels(choices, lists);
   values.labels_line = choices.parts.includes('github') && labels.length < lists.labels.length ? `Config/launchR/labels: ${labels.join(', ')}` : '';
-  values.checklist_line = choices.parts.includes('github') && choices.qc && !isPublic ? `Config/launchR/checklist: ${lists.settings.qc_stage}` : '';
+  values.checklist_line = checklistLine(choices, lists, isPublic);
   for (const row of lists.checks) {
     const check = choices.checks[row.key];
     for (const event of ['pr', 'push', 'schedule', 'manual']) {

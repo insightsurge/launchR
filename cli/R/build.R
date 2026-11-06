@@ -84,11 +84,11 @@ placeholder_values <- function(choices) {
   }
   forms <- read_list("forms.tsv")
   for (key in forms$key) values[[paste0("form_", key)]] <- yes(key %in% choices$forms)
-  # DESCRIPTION records a choice of labels and the QC checklist, for the Set up this repository step (cli/R/github.R).
+  # DESCRIPTION records a choice of labels and of stage checklists, for the Set up this repository step (cli/R/github.R).
   labels <- chosen_labels(choices)
   github <- "github" %in% choices$parts
   values$labels_line <- if (github && length(labels) < nrow(read_list("labels.tsv"))) paste0("Config/launchR/labels: ", paste(labels, collapse = ", ")) else ""
-  values$checklist_line <- if (github && isTRUE(choices$qc) && !public) paste0("Config/launchR/checklist: ", kit_setting("qc_stage")) else ""
+  values$checklist_line <- checklist_line(choices, public)
   for (i in seq_len(nrow(checks))) {
     key <- checks$key[i]
     check <- choices$checks[[key]]
