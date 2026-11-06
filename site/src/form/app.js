@@ -128,12 +128,12 @@ function paint() {
       <div class="opt"><label class="soon"><input type="radio" name="delivery" disabled /><b>Snapshot</b></label><span class="tag">Coming soon</span>${help("The checks are copied into your repository and frozen, so nothing changes under a validated process. When a new launchR version is released, you won't get any updates, security fixes included.")}</div>
     </div>`;
   const pagesNote = isPublic() ? '' : `<p class="fieldnote" id="pagesNote">On GitHub's free plan a private repository can't publish a website. The site is still built and checked on every push, and goes online once the repository is public or on a paid plan.</p>`;
-  const nav = (side, title) => `${head3(title, lists.navbar.filter((row) => row.side === side).map((row) => [row.label, row.help]))}${nest(`<div class="ticks">${lists.navbar.filter((row) => row.side === side).map((row) => pill(`data-nav="${row.key}"`, row.label, S.navbar[row.key])).join('')}</div>`)}`;
+  const nav = (side, title) => `<p class="sublabel">${title}</p>${nest(`<div class="ticks">${lists.navbar.filter((row) => row.side === side).map((row) => pill(`data-nav="${row.key}"`, row.label, S.navbar[row.key])).join('')}</div>`)}`;
   const shown = lists.badges.filter((row) => row.key !== ALWAYS_BADGE);
   $('#bodySite').innerHTML = `<div class="new-only">${head3('README badges', [['README badges', 'Small images at the top of the README, also shown on the website\'s home page. They sit between the badges: start and end lines, where you can add or remove one later.'], ...shown.map((row) => [row.label, row.help])])}
     ${nest(`<div class="shields">${shown.map(shield).join('')}</div>`)}</div>
     ${sw('website', 'Add a website', 'A pkgdown site published to GitHub Pages. Its address comes from your GitHub name. A private repository needs a paid GitHub plan for this.', S.website)}${pagesNote}
-    ${S.website ? nest(`${head3('Navbar', [['Navbar', 'The links across the top of every page of the website.'], ['_pkgdown.yml', 'Your choices are saved there, under navbar: structure. Change them there any time.']])}${nest(`${nav('left', 'Left')}${nav('right', 'Right')}`)}`) : ''}
+    ${S.website ? nest(`${head3('Navbar', [['Navbar', 'The links across the top of every page of the website, on the left and on the right.'], ...lists.navbar.map((row) => [`${row.label} (${row.side})`, row.help]), ['_pkgdown.yml', 'Your choices are saved there, under navbar: structure. Change them there any time.']])}${nest(`${nav('left', 'Left')}${nav('right', 'Right')}`)}`) : ''}
     <div class="opt soonline"><span>Theme colours</span><span class="tag">Coming soon</span></div>`;
   $('#bodyGit').innerHTML = `
     ${sw('github', 'Issue forms, labels and checklists', 'The issue forms and labels you tick below, a pull request template, and the stage checklists. The Set up this repository button creates the labels on GitHub, next to GitHub\'s own (it can remove those).', S.github)}
@@ -244,7 +244,11 @@ body.addEventListener('change', (e) => {
   if (t.id === 'time') { touched(() => { S.time = t.value; }); timeProblem(); }
 });
 body.addEventListener('input', (e) => {
-  if (e.target.id === 'minR') e.target.value = e.target.value.replace(/[^0-9.]/g, '').replace(/^(\d\.?\d?).*/, '$1').slice(0, 3);
+  // the oldest R is x.y with one digit each side: a second digit gets the dot put in front of it ("44" reads 4.4)
+  if (e.target.id === 'minR') {
+    const digits = e.target.value.replace(/\D/g, '').slice(0, 2);
+    e.target.value = digits.length === 2 ? `${digits[0]}.${digits[1]}` : digits + (digits && e.target.value.includes('.') ? '.' : '');
+  }
 });
 
 function minRProblem() {

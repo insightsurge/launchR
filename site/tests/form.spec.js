@@ -528,7 +528,8 @@ test('Customise: New feature sets its own label, a shared label says which form 
   await step(page, 'README');
   await page.locator('label.sw', { hasText: 'Add a website' }).click();
   await expect(page.locator('#bodySite h4', { hasText: /^Navbar/ }).locator('.tip').first()).toHaveAttribute('aria-label', /_pkgdown\.yml: /);
-  await expect(page.locator('#bodySite h4', { hasText: 'Left' })).toBeVisible();
+  await expect(page.locator('#bodySite .sublabel', { hasText: 'Left' })).toBeVisible();
+  await expect(page.locator('#bodySite .tip')).toHaveCount(3);
   // Every toggle shows its choice by its outline and fill, never by a tick.
   await expect(page.locator('#modifyView .pill svg:visible, #modifyView .fcard svg:visible')).toHaveCount(0);
   const { files } = await download(page, '#modDownload');
@@ -573,4 +574,16 @@ test('on a phone the preview window fills the screen', async ({ page }) => {
   expect(box.width).toBeGreaterThanOrEqual(389);
   expect(box.height).toBeGreaterThanOrEqual(843);
   await expect(page.locator('#peek article:visible .peek-title')).toHaveText('Bug report');
+});
+
+test('the oldest R takes one digit on each side of the dot, and puts the dot in for you', async ({ page }) => {
+  await openForm(page);
+  await fillForm(page);
+  await customise(page);
+  const box = page.locator('#minR');
+  for (const [typed, shown] of [['44', '4.4'], ['22.0', '2.2'], ['4.3', '4.3']]) {
+    await box.fill('');
+    await box.pressSequentially(typed);
+    await expect(box).toHaveValue(shown);
+  }
 });

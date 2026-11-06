@@ -951,26 +951,34 @@ dialog#setup { scrollbar-gutter: stable; }
 #form #missing { text-align: right; }
 /* a choice sits a little below its heading */
 #modifyView h4 + .nest { margin-top: 8px; }
-/* the first screen and the existing-package view: each answer sits in under its question */
-@media (min-width: 861px) {
-  #form .field:not(.two) > :not(.field-head), #form .field.two > div > :not(label),
-  #existingView .field.two > div > :not(label) { margin-left: 20px; width: calc(100% - 20px); }
-  #form .field:not(.two) > p, #form .field.two > div > p, #existingView .field.two > div > p { width: auto; }
-  #form fieldset.plans { margin-left: 20px; }
-  #exPlans { padding-left: 20px; }
-  #exPlans legend { margin-left: -20px; }
-  #existingView .ex-head + .exrows { margin-left: 20px; }
-}
-@media (max-width: 860px) {
-  #form .field:not(.two) > :not(.field-head), #form .field.two > div > :not(label), #existingView .field.two > div > :not(label) { margin-left: 12px; width: calc(100% - 12px); }
-  #form .field:not(.two) > p, #form .field.two > div > p, #existingView .field.two > div > p { width: auto; }
-  #form fieldset.plans { margin-left: 12px; }
-}
 /* the oldest R: one box, sized to what is typed, with the .0 inside it */
-.affix { display: inline-flex; align-items: center; gap: 0; padding-right: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; }
+.affix { display: inline-flex; align-items: center; gap: 0; width: 5.2em; padding-right: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; }
 .affix:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent); }
-#modifyView .affix input.short[type='text'], .affix input.short[type='text'] { width: 3ch; field-sizing: content; min-width: 1ch; padding: 7px 0 7px 10px; border: 0; background: transparent; box-shadow: none; }
+#modifyView .affix input.short[type='text'], .affix input.short[type='text'] { flex: 1; width: 0; min-width: 0; padding: 7px 0 7px 10px; border: 0; background: transparent; box-shadow: none; text-align: right; }
 .affix input.short[type='text']:focus { box-shadow: none; }
 .affix .unit { color: var(--ink); font-size: 14.5px; }
 .affix:has(input.bad) { border-color: var(--no); }
 #existingView .actions { justify-content: flex-end; }
+
+/* The form's type scale, one rule per kind of text, the same on every view.
+   Question and heading: 15px, 500, ink. Answer (typed text, choices): 15px, 400. Card title: 15px, 500.
+   Placeholder: 14px, soft, lighter, so it never looks louder than its question. Note and help: 13.5px, soft.
+   Spacing: question to answer 8px; one question to the next 20px; a heading to its choices 10px. */
+#setup .field-head label, #setup .field > label, #setup .field.two label, #setup legend, #setup .plans legend,
+#setup .mod-body h4, #setup #modifyView .mod-body h4, #setup .ex-head, #setup .routes legend { font-size: 15px; font-weight: 500; }
+#setup input[type='text'], #setup input[type='email'], #setup textarea, #setup select,
+#setup #modifyView input[type='text'], #setup #modifyView select { font-size: 15px; }
+#setup ::placeholder { font-size: 14px; color: var(--soft); opacity: 0.7; }
+#setup .pill span, #setup #modifyView .pill span, #setup .routes span, #setup .pick b, #setup #modifyView .pick b, #setup .sw b,
+#setup #modifyView .sw b, #setup .line label, #setup #modifyView .line label, #setup .rmatrix tbody th { font-size: 15px; font-weight: 400; }
+#setup .plan b, #setup .fcard b { font-size: 15px; font-weight: 500; }
+#setup .fieldnote, #setup .field-note, #setup .note, #setup .step-sum, #setup .sw-note, #setup .kept-line, #setup .fcard small,
+#setup .plan em, #setup .err, #setup .plan-line, #setup .unit, #setup .shield-note { font-size: 13.5px; }
+#setup .sublabel { margin: 0 0 6px; font-size: 14px; font-weight: 500; color: var(--soft); }
+#setup .field { margin-bottom: 20px; }
+#setup .field-head, #setup .field.two label { margin-bottom: 8px; }
+#setup #modifyView h4 + .nest { margin-top: 10px; }
+@media (max-width: 860px) {
+  /* phones zoom into a field typed in below 16px */
+  #setup input[type='text'], #setup input[type='email'], #setup textarea, #setup select, #setup #modifyView input[type='text'], #setup #modifyView select { font-size: 16px; }
+}
