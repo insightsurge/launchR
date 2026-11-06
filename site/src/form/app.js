@@ -113,8 +113,8 @@ function paint() {
   const weekly = WEEKLY.some((k) => S.checks[k]);
   const extra = S.checks.full_tests || S.checks.r_cmd_check_extended;
   $('#bodyCi').innerHTML = `
-    ${head3('Checks to run', [...CHECKS.map(([, n, w]) => [n, w]), ...(REPORTING.some((k) => S.checks[k]) ? [['ci-report', 'The CI report comment: one comment on each pull request with the results of the checks you chose, updated as each one finishes: failures with links to their logs, test counts, coverage and its change, style findings. Off leaves the comment out; each run still shows its results on its own page under Actions. You can change it later: ci-report in each file in .github/workflows/.']] : [])])}
-    ${nest(`<div class="ticks">${CHECKS.map(([k, name]) => pill(`data-check="${k}"`, `<code>${name}</code>`, S.checks[k])).join('')}${REPORTING.some((k) => S.checks[k]) ? pill('id="ciReport"', '<code>ci-report</code>', S.ciReport) : ''}</div>`)}
+    ${head3('Checks to run', [...CHECKS.map(([, n, w]) => [n, w]), ...(REPORTING.some((k) => S.checks[k]) ? [['ci-report', 'Not a check: one comment on each pull request with the results of the checks you chose, updated as each one finishes: failures with links to their logs, test counts, coverage and its change, style findings. Off leaves the comment out; each run still shows its results on its own page under Actions. You can change it later: ci-report in each file in .github/workflows/.']] : [])])}
+    ${nest(`<div class="ticks">${CHECKS.map(([k, name]) => pill(`data-check="${k}"`, `<code>${name}</code>`, S.checks[k])).join('')}${REPORTING.some((k) => S.checks[k]) ? `<span class="tick-divider" aria-hidden="true"></span>${pill('id="ciReport"', '<code>ci-report</code>', S.ciReport)}` : ''}</div>`)}
     ${head3('R CMD check: R versions × systems', [['release', 'The current R.'], ['oldrel-1', 'The R release before it. Linux only.'], ['devel', 'The next R, not released yet: it shows early what will break. Linux only.'], ['Oldest R your package supports', 'As x.y from 4.1 up, such as 4.3. DESCRIPTION gets 4.3.0, as R CMD check asks, and Linux checks the newest 4.3. 4.1 is the default.'], ['Systems', 'launchR picks the system version: Ubuntu 26.04, and the latest Windows and macOS on GitHub.'], ['Cost', 'Free on a public repository. A private one gets 2,000 free minutes a month on GitHub\'s free plan, and Mac minutes count ten times, Windows twice.']])}
     <div class="nest"><div class="line"><label for="minR">Oldest R your package supports</label><span class="when affix"><input id="minR" class="short" type="text" inputmode="decimal" autocomplete="off" maxlength="3" size="3" placeholder="4.1" aria-describedby="minRZero" value="${esc(S.minR)}" /><span class="unit" id="minRZero">.0</span></span></div>
     <p class="fieldnote" id="minRNote" role="status"></p>
@@ -123,7 +123,7 @@ function paint() {
     ${weekly ? `${head3('Weekly checks', 'The weekly run of r-cmd-check, full-tests and r-cmd-check-extended, whichever are on. Why weekly: R and the packages yours uses keep changing, so it shows a break even when you changed nothing. It shows here when any of them is on, and the workflows README lists the time. Time is in 24-hour UTC, which is what GitHub uses. It may run some minutes late when GitHub is busy.')}<div class="nest"><div class="line"><label for="day">Run on</label><span class="when"><select id="day">${[...DAYS.slice(1), DAYS[0]].map((d) => `<option${d === S.day ? ' selected' : ''}>${d}</option>`).join('')}</select><label class="sr" for="time">Time in 24-hour UTC</label><input id="time" class="short" type="text" inputmode="numeric" autocomplete="off" maxlength="5" value="${esc(S.time)}" /><span class="unit">UTC</span></span></div><p class="fieldnote" id="timeNote" role="status"></p></div>` : ''}
     ${head3('How the checks reach your package')}
     <div class="pick nest">
-      <div class="opt"><label><input type="radio" name="delivery" checked /><b>Shared</b></label>${help('Your files call the checks kept in launchR, so you get fixes and updates by themselves.')}</div>
+      <div class="opt"><label><input type="radio" name="delivery" checked /><b>Shared</b></label>${help('Your workflow files call the checks kept in launchR, at a fixed version. When a new minor version is out, Dependabot opens a pull request that moves them to it, so you get its fixes and updates once you merge it. Patch releases come with the next minor one.')}</div>
       <div class="opt"><label class="soon"><input type="radio" name="delivery" disabled /><b>Snapshot</b></label><span class="tag">Coming soon</span>${help("The checks are copied into your repository and frozen, so nothing changes under a validated process. When a new launchR version is released, you won't get any updates, security fixes included.")}</div>
     </div>`;
   const pagesNote = isPublic() ? '' : `<p class="fieldnote" id="pagesNote">On GitHub's free plan a private repository can't publish a website. The site is still built and checked on every push, and goes online once the repository is public or on a paid plan.</p>`;
@@ -188,29 +188,12 @@ function summary() {
   if (!S) return;
   const on = CHECKS.filter(([k]) => S.checks[k]).length;
   const sysText = SYSTEMS.filter(([k]) => RS.some(([r]) => S.matrix[`${k}/${r}`])).map(([, t]) => t).join(', ') || 'None';
-  // each step opens with one plain sentence: what its choices add up to
-  const and = (items) => (items.length > 1 ? `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}` : items[0] ?? '');
-  const systems = SYSTEMS.filter(([k]) => RS.some(([r]) => S.matrix[`${k}/${r}`])).map(([, t]) => t);
-  const weekly = WEEKLY.some((k) => S.checks[k]);
-  $('#sumCi').textContent = on === 0 ? 'No check runs on GitHub.'
-    : `${on === 7 ? 'All seven' : WORDS[on]} ${on === 1 ? 'check is' : 'checks are'} on.${S.checks.r_cmd_check && systems.length ? ` R CMD check runs on ${and(systems)}.` : ''}${weekly ? ` The weekly run is every ${S.day} at ${S.time} UTC.` : ''}`;
-  const badgeCount = lists.badges.filter((row) => row.key !== ALWAYS_BADGE && S.badges[row.key] && !badgeWhy(row)).length;
-  $('#sumSite').textContent = `${mode === 'new' ? `${badgeCount ? `${WORDS[badgeCount]} ${badgeCount === 1 ? 'badge' : 'badges'}` : 'No badges'} in the README, and ` : ''}${S.website ? 'a website on GitHub Pages' : 'no website'}.`.replace(/^a/, 'A').replace(/^no w/, 'No w');
-  const forms = lists.forms.filter((row) => row.part !== 'ai' || S.ai);
-  const formCount = forms.filter(formOn).length;
-  const locked = new Set([...lists.forms.filter(formOn).map((row) => row.label), ...lists.labels.filter((row) => row.kept).map((row) => row.name)]);
-  const labelCount = lists.labels.filter((row) => S.labels[row.name] || locked.has(row.name)).length;
-  const stages = chosenStages();
-  const lists_ = `${stages.length || 'no'} ${stages.length === 1 ? 'checklist' : 'checklists'}`;
-  $('#sumGit').textContent = !S.github ? 'No issue forms, labels or checklists.'
-    : `${formCount} of ${forms.length} issue forms, ${labelCount} of ${lists.labels.length} labels and ${lists_} go to GitHub.`;
-  $('#sumMore').textContent = `${S.licence === 'mit' ? 'MIT licence' : 'Proprietary licence'}${S.frontend ? ', JS or CSS with its checks' : ''}${S.ai ? ', and instructions for AI assistants' : ''}.`;
   $('#pvChecks').textContent = on === 7 ? 'All seven' : WORDS[on];
   $('#pvSystems').textContent = sysText;
   $('#pvSite').textContent = S.website ? 'On' : 'Off';
   $('#pvCustom').hidden = !changed;
   /* the checklists in the preview follow the ticks; animated only when they change */
-  const shown = mode === 'new' && S.github ? stages.map((row) => row.stage) : [];
+  const shown = mode === 'new' && S.github ? chosenStages().map((row) => row.stage) : [];
   const key = shown.join('|');
   if ($('#pvLists').dataset.key !== key) {
     $('#pvLists').dataset.key = key;

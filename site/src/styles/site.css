@@ -1011,3 +1011,7 @@ dialog#setup { scrollbar-gutter: stable; }
 #setup .pick .soon, #setup .pick label.soon { opacity: 1; color: var(--soft); }
 #setup .pick .opt:has(.soon) { opacity: 1; }
 [data-palette='paper'] .stepbar button[aria-current='step'] { color: color-mix(in srgb, var(--accent) 80%, var(--ink)); }
+/* Back to recommended reads as a link in both states */
+#setup .reset#modReset { text-decoration: underline; text-underline-offset: 3px; }
+/* ci-report sits with the checks but apart from them: it reports on them */
+.tick-divider { align-self: center; width: 1px; height: 24px; margin: 0 4px; background: var(--line); }

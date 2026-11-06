@@ -81,10 +81,10 @@ const box = (b) => [b.where && b.pick ? `${b.where}: ${b.pick}` : b.where || b.p
         <section id="modifyView" aria-labelledby="modTitle" hidden>
           <h2 id="modTitle" tabindex="-1"><span id="stepTitle">CI checks on GitHub</span> <span class="for">for <span id="modPkg">fooBarPkg</span></span></h2>
           <p class="sub">Already set up for your plan. Change only what you want. <button type="button" class="reset" id="modReset" disabled>Back to recommended</button></p>
-          <section class="mod" data-step="2" aria-label="CI checks on GitHub"><p class="step-sum" id="sumCi"></p><div class="mod-body" id="bodyCi"></div></section>
-          <section class="mod new-only" data-step="3" aria-label="Issues and checklists"><p class="step-sum" id="sumGit"></p><div class="mod-body" id="bodyGit"></div></section>
-          <section class="mod" data-step="4" aria-label="README and website"><p class="step-sum" id="sumSite"></p><div class="mod-body" id="bodySite"></div></section>
-          <section class="mod new-only" data-step="5" aria-label="Extras"><p class="step-sum" id="sumMore"></p><div class="mod-body" id="bodyMore"></div></section>
+          <section class="mod" data-step="2" aria-label="CI checks on GitHub"><div class="mod-body" id="bodyCi"></div></section>
+          <section class="mod new-only" data-step="3" aria-label="Issues and checklists"><div class="mod-body" id="bodyGit"></div></section>
+          <section class="mod" data-step="4" aria-label="README and website"><div class="mod-body" id="bodySite"></div></section>
+          <section class="mod new-only" data-step="5" aria-label="Extras"><div class="mod-body" id="bodyMore"></div></section>
           <div class="actions mod-actions"><button type="button" class="quiet" id="modBack">Back</button><button type="button" class="primary" id="stepNext">Next</button><button type="button" class="primary" id="modDownload" hidden>Download</button></div>
         </section>
         <section id="existingView" aria-labelledby="exTitle" hidden>
