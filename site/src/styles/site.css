@@ -1032,3 +1032,5 @@ dialog#setup { scrollbar-gutter: stable; }
   #form .actions { margin-top: 14px; flex-wrap: nowrap; }
   #form #missing { margin: -44px 0 0; max-width: calc(100% - 260px); min-height: 44px; display: flex; align-items: center; text-align: left; }
 }
+/* the preview card sits level with the middle of the form beside it */
+@media (min-width: 861px) { #setup .setup-grid > .preview { align-self: center; margin-top: 48px; } }
