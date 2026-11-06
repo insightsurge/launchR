@@ -44,16 +44,17 @@ const box = (b) => [b.where && b.pick ? `${b.where}: ${b.pick}` : b.where || b.p
             <div><label for="first">Author first name</label><input id="first" type="text" autocomplete="off" /><p class="err" id="err-first"></p></div>
             <div><label for="last">Author last name</label><input id="last" type="text" autocomplete="off" /><p class="err" id="err-last"></p></div>
           </div>
-          <div class="field">
-            <div class="field-head"><label for="email">Email <span class="opt">(optional)</span></label><span class="tip" tabindex="0" aria-describedby="tip-email"><svg aria-hidden="true"><use href="#i-info" /></svg><span role="tooltip" id="tip-email">Goes in DESCRIPTION. Left empty, a placeholder goes there: replace it before you release, as CRAN needs a real one.</span></span></div>
-            <input id="email" type="email" autocomplete="off" aria-describedby="tip-email" />
-            <p class="err" id="err-email"></p>
-          </div>
-          <div class="field">
-            <div class="field-head"><label for="owner">GitHub username or organisation</label><span class="tip" tabindex="0" aria-describedby="tip-owner"><svg aria-hidden="true"><use href="#i-info" /></svg><span role="tooltip" id="tip-owner">Where the package will live on GitHub, such as github.com/yourname/yourpackage. It fills in the links in your README and DESCRIPTION.</span></span></div>
-            <input id="owner" type="text" autocomplete="off" spellcheck="false" aria-describedby="tip-owner owner-note" />
-            <p class="err" id="err-owner"></p>
-            <p class="field-note" id="owner-note">No GitHub account yet? <a href="https://github.com/signup" target="_blank" rel="noopener">Sign up free</a>, then come back with your username.</p>
+          <div class="field two pair">
+            <div>
+              <div class="field-head"><label for="email">Email <span class="opt">(optional)</span></label><span class="tip" tabindex="0" aria-describedby="tip-email"><svg aria-hidden="true"><use href="#i-info" /></svg><span role="tooltip" id="tip-email">Goes in DESCRIPTION. Left empty, a placeholder goes there: replace it before you release, as CRAN needs a real one.</span></span></div>
+              <input id="email" type="email" autocomplete="off" aria-describedby="tip-email" />
+              <p class="err" id="err-email"></p>
+            </div>
+            <div>
+              <div class="field-head"><label for="owner">GitHub username or organisation</label><span class="tip" tabindex="0" aria-describedby="tip-owner"><svg aria-hidden="true"><use href="#i-info" /></svg><span role="tooltip" id="tip-owner">Where the package will live on GitHub, such as github.com/yourname/yourpackage. It fills in the links in your README and DESCRIPTION. No GitHub account yet? Sign up free at github.com/signup, then come back with your username.</span></span></div>
+              <input id="owner" type="text" autocomplete="off" spellcheck="false" aria-describedby="tip-owner" />
+              <p class="err" id="err-owner"></p>
+            </div>
           </div>
           <div class="how-row">
             <fieldset class="routes how" id="how">
@@ -140,63 +141,63 @@ const box = (b) => [b.where && b.pick ? `${b.where}: ${b.pick}` : b.where || b.p
         </aside>
       </div>
     </div>
-    <dialog id="peek" class="peek" aria-labelledby="peekTitle">
-      <div class="peek-head">
-        <h2 id="peekTitle">Preview</h2>
-        <button type="button" class="close peek-close" id="peekClose" aria-label="Close the preview"><svg aria-hidden="true"><use href="#i-close" /></svg></button>
-      </div>
-      <div class="peek-grid">
-        <nav class="peek-list" aria-label="What to preview">
-          <h3>Checklists</h3>
-          <ul>{stages.map((s) => <li><button type="button" data-peek={`cl-${s.key}`}>{s.stage}</button></li>)}</ul>
-          <h3>Issue forms</h3>
-          <ul>{forms.map((f) => <li><button type="button" data-peek={`form-${f.key}`}>{f.title}</button></li>)}</ul>
-          <h3>For AI assistants</h3>
-          <ul><li><button type="button" data-peek="skill">SKILL.md</button></li></ul>
-        </nav>
-        <div class="peek-pane">
-          {stages.map((s) => (
-            <article class="peek-issue" data-peek={`cl-${s.key}`} hidden>
-              <p class="peek-kind">Checklist issue, as GitHub shows it</p>
-              <h3 class="peek-title">Checklist: {s.stage}</h3>
-              <p class="peek-when">{s.opens}</p>
-              {s.sections.map((sec) => (
-                <>
-                  <h4>{sec.name}</h4>
-                  <ul class="peek-boxes">
-                    {sec.boxes.map((b) => (
-                      <li>
-                        <span class="peek-box" aria-hidden="true"></span>
-                        <span>{b.text.split('`').map((part, i) => (i % 2 ? <code>{part}</code> : part))}{box(b) && <em> ({box(b)})</em>}{b.auto && <span class="tag">launchR ticks this</span>}{b.cran && <span class="tag">CRAN only</span>}{b.needs && <span class="tag">{b.needs}</span>}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </>
-              ))}
-              <p class="peek-foot">The date launchR last checked the list goes here.</p>
-            </article>
-          ))}
-          {forms.map((f) => (
-            <article class="peek-form" data-peek={`form-${f.key}`} hidden>
-              <p class="peek-kind">Issue form, as GitHub shows it. It sets the label <code>{f.label}</code>.</p>
-              <h3 class="peek-title">{f.name}</h3>
-              <p class="peek-when">{f.description}</p>
-              {f.body.map((part) => part.type === 'markdown' ? (
-                <div class="peek-md">{part.value.split('\n').map((line) => <p>{line}</p>)}</div>
-              ) : (
-                <div class="peek-field">
-                  <p class="peek-label">{part.label}{part.required && <span class="peek-req" aria-label="required"> *</span>}</p>
-                  {part.description && <p class="peek-help">{part.description}</p>}
-                  <div class={part.type === 'textarea' ? 'peek-input tall' : 'peek-input'} aria-hidden="true"></div>
-                </div>
-              ))}
-            </article>
-          ))}
-          <article class="peek-md-doc" data-peek="skill" hidden>
-            <p class="peek-kind">launchR's skill for AI agents, at <a href="/SKILL.md">/SKILL.md</a></p>
-            <Skill />
+  </dialog>
+  <dialog id="peek" class="peek" aria-labelledby="peekTitle">
+    <div class="peek-head">
+      <h2 id="peekTitle">Preview</h2>
+      <button type="button" class="close peek-close" id="peekClose" aria-label="Close the preview"><svg aria-hidden="true"><use href="#i-close" /></svg></button>
+    </div>
+    <div class="peek-grid">
+      <nav class="peek-list" aria-label="What to preview">
+        <h3>Checklists</h3>
+        <ul>{stages.map((s) => <li><button type="button" data-peek={`cl-${s.key}`}>{s.stage}</button></li>)}</ul>
+        <h3>Issue forms</h3>
+        <ul>{forms.map((f) => <li><button type="button" data-peek={`form-${f.key}`}>{f.title}</button></li>)}</ul>
+        <h3>For AI assistants</h3>
+        <ul><li><button type="button" data-peek="skill">SKILL.md</button></li></ul>
+      </nav>
+      <div class="peek-pane">
+        {stages.map((s) => (
+          <article class="peek-issue" data-peek={`cl-${s.key}`} hidden>
+            <p class="peek-kind">Checklist issue, as GitHub shows it</p>
+            <h3 class="peek-title">Checklist: {s.stage}</h3>
+            <p class="peek-when">{s.opens}</p>
+            {s.sections.map((sec) => (
+              <>
+                <h4>{sec.name}</h4>
+                <ul class="peek-boxes">
+                  {sec.boxes.map((b) => (
+                    <li>
+                      <span class="peek-box" aria-hidden="true"></span>
+                      <span>{b.text.split('`').map((part, i) => (i % 2 ? <code>{part}</code> : part))}{box(b) && <em> ({box(b)})</em>}{b.auto && <span class="tag">launchR ticks this</span>}{b.cran && <span class="tag">CRAN only</span>}{b.needs && <span class="tag">{b.needs}</span>}</span>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            ))}
+            <p class="peek-foot">The date launchR last checked the list goes here.</p>
           </article>
-        </div>
+        ))}
+        {forms.map((f) => (
+          <article class="peek-form" data-peek={`form-${f.key}`} hidden>
+            <p class="peek-kind">Issue form, as GitHub shows it. It sets the label <code>{f.label}</code>.</p>
+            <h3 class="peek-title">{f.name}</h3>
+            <p class="peek-when">{f.description}</p>
+            {f.body.map((part) => part.type === 'markdown' ? (
+              <div class="peek-md">{part.value.split('\n').map((line) => <p>{line}</p>)}</div>
+            ) : (
+              <div class="peek-field">
+                <p class="peek-label">{part.label}{part.required && <span class="peek-req" aria-label="required"> *</span>}</p>
+                {part.description && <p class="peek-help">{part.description}</p>}
+                <div class={part.type === 'textarea' ? 'peek-input tall' : 'peek-input'} aria-hidden="true"></div>
+              </div>
+            ))}
+          </article>
+        ))}
+        <article class="peek-md-doc" data-peek="skill" hidden>
+          <p class="peek-kind">launchR's skill for AI agents, at <a href="/SKILL.md">/SKILL.md</a></p>
+          <Skill />
+        </article>
       </div>
-    </dialog>
+    </div>
   </dialog>

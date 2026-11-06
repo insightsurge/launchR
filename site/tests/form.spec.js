@@ -583,3 +583,24 @@ test('the oldest R takes one digit on each side of the dot, and puts the dot in 
     await expect(box).toHaveValue(shown);
   }
 });
+
+test("the landing page's SKILL.md link opens the preview window, and the address still serves the file", async ({ page }) => {
+  await page.goto('/');
+  const reject = page.locator('#cookieNo');
+  if (await reject.isVisible()) await reject.click();
+  await page.locator('a[data-open="skill"]').click();
+  await expect(page.locator('#peek')).toBeVisible();
+  await expect(page.locator('#peek article:visible h1')).toHaveText('Working on a launchR package');
+  await expect(page).toHaveURL(/\/$/);
+  const file = await page.request.get('/SKILL.md');
+  expect(file.ok()).toBe(true);
+});
+
+test('the first screen fits a 1440 by 900 window, with the sign-up hint in the GitHub name tip', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await openForm(page);
+  const box = await page.locator('#download').boundingBox();
+  expect(box.y + box.height).toBeLessThanOrEqual(900);
+  await expect(page.locator('#owner-note')).toHaveCount(0);
+  await expect(page.locator('#tip-owner')).toContainText('Sign up free at github.com/signup');
+});
