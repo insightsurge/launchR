@@ -994,3 +994,20 @@ dialog#setup { scrollbar-gutter: stable; }
 .shield:has(input:disabled:not(:checked)) > span { opacity: 1; }
 .shield:has(input:disabled:not(:checked)) > span > b, .shield:has(input:disabled:not(:checked)) > span > i { opacity: 0.55; }
 #modifyView .shield-why [role='tooltip'] { left: 50%; transform: translateX(-50%); width: max-content; max-width: 240px; }
+
+/* phones: the first screen's tips open as a sheet at the bottom, as in the steps, so nothing runs off the side */
+@media (max-width: 860px) {
+  #form .tip [role='tooltip'], #nextView .tip [role='tooltip'] { position: fixed; left: 16px; right: 16px; bottom: 16px; width: auto; max-width: none; transform: none; }
+  /* every control a thumb can reach is at least 44px: the target grows, the drawing stays */
+  .cell, .sw, .peek-link, .shield, .field-note a, .reset, .back { position: relative; }
+  .cell::after, .sw::after, .peek-link::after, .shield::after, .field-note a::after {
+    content: ''; position: absolute; left: 50%; top: 50%; width: max(100%, 44px); height: max(100%, 44px); transform: translate(-50%, -50%);
+  }
+  .peek-link, .field-note a { display: inline-block; }
+}
+/* paper theme: soft text stays readable at small sizes */
+[data-palette='paper'] #setup ::placeholder { opacity: 1; }
+#setup .reset:disabled { opacity: 1; color: var(--soft); }
+#setup .pick .soon, #setup .pick label.soon { opacity: 1; color: var(--soft); }
+#setup .pick .opt:has(.soon) { opacity: 1; }
+[data-palette='paper'] .stepbar button[aria-current='step'] { color: color-mix(in srgb, var(--accent) 80%, var(--ink)); }

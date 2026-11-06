@@ -158,7 +158,7 @@ test('Customise: the AI switch adds AGENTS.md, its rules files, CLAUDE.md and th
   await customise(page);
   await step(page, 'Extras');
   await page.locator('label.sw', { hasText: 'Instructions for AI assistants' }).click();
-  await expect(page.locator('#sumMore')).toContainText('AI instructions');
+  await expect(page.locator('#sumMore')).toContainText('instructions for AI assistants');
   const { files } = await download(page, '#modDownload');
   expect(files['tablePkg/AGENTS.md']).toContain('.agents/rules/');
   for (const rule of ['checks', 'docs', 'git', 'js-css', 'r-code', 'tests']) expect(`tablePkg/.agents/rules/${rule}.md` in files, rule).toBe(true);
@@ -171,7 +171,7 @@ test('Customise: the CI report comment, licence, badges, issue forms, labels and
   await fillForm(page);
   await page.locator('input[name=plan][value=d]').check();
   await customise(page);
-  await page.locator('label.pill', { hasText: 'CI report comment' }).click();
+  await page.locator('label.pill', { hasText: 'ci-report' }).click();
   await step(page, 'Issues');
   // A form's label is on its card while the form is on; without the form it joins the other labels.
   await expect(page.locator('[data-label="idea"]')).toHaveCount(0);
@@ -179,13 +179,13 @@ test('Customise: the CI report comment, licence, badges, issue forms, labels and
   // Its label joins the other labels, last and unticked.
   await expect(page.locator('[data-label="idea"]')).not.toBeChecked();
   await expect(page.locator('#bodyGit .ticks').first().locator('label.pill').last()).toContainText('idea');
-  await expect(page.locator('#sumGit')).toHaveText('4 of 5 issue forms, 11 of 12 labels, 1 checklist');
+  await expect(page.locator('#sumGit')).toHaveText('4 of 5 issue forms, 11 of 12 labels and 1 checklist go to GitHub.');
   await expect(page.locator('[data-stage="qc"]')).toBeChecked();
   await step(page, 'README');
-  await expect(page.locator('#sumSite')).toHaveText('No badges, website off');
+  await expect(page.locator('#sumSite')).toHaveText('No badges in the README, and no website.');
   await page.locator('label.shield[title="Lifecycle"]').click();
   await step(page, 'Extras');
-  await expect(page.locator('#sumMore')).toHaveText('Proprietary licence');
+  await expect(page.locator('#sumMore')).toHaveText('Proprietary licence.');
   const { files } = await download(page, '#modDownload');
   expect(files['tablePkg/.github/workflows/lint.yaml']).toContain('ci-report: false');
   expect(files['tablePkg/LICENSE']).toContain('All rights reserved');
