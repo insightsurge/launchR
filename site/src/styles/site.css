@@ -1008,3 +1008,34 @@ dialog#setup { scrollbar-gutter: stable; }
 #setup .reset#modReset { text-decoration: underline; text-underline-offset: 3px; }
 /* ci-report sits with the checks but apart from them: it reports on them */
 .tick-divider { align-self: center; width: 1px; height: 24px; margin: 0 4px; background: var(--line); }
+
+/* the preview window's list: group names are quiet labels with a line above; the entries sit in under them */
+.peek-list h3 { margin: 16px 0 6px; padding-top: 12px; border-top: 1px solid var(--line); font-size: 12px; letter-spacing: 0.04em; text-transform: none; font-weight: 600; color: var(--soft); }
+.peek-list h3:first-child { margin-top: 0; padding-top: 0; border-top: 0; }
+.peek-list ul { margin-left: 4px; padding-left: 8px; border-left: 1px solid var(--line); display: grid; gap: 2px; }
+.peek-list button { font-size: 14.5px; color: var(--ink); }
+.peek-list button[aria-current='true'] { font-weight: 500; }
+@media (max-width: 860px) { .peek-list ul { margin-left: 0; padding-left: 0; border-left: 0; } }
+/* Email and GitHub name side by side */
+.field.pair .field-head { margin-bottom: 8px; }
+.field.pair > div > label { margin-bottom: 0; }
+/* the first screen fits a laptop screen: tighter rhythm, and the "what is missing" line beside the button */
+@media (min-width: 861px) {
+  .setup-inner { padding-top: 22px; }
+  #form .sub { margin: 4px 0 16px; }
+  #setup #form .field { margin-bottom: 14px; }
+  #setup #form .field-head, #setup #form .field.two > div > label { margin-bottom: 6px; }
+  #form input[type='text'], #form input[type='email'], #form textarea { padding-top: 9px; padding-bottom: 9px; }
+  #form .how-row { margin: 14px 0 16px; }
+  #form .plan { padding-top: 10px; padding-bottom: 10px; }
+  #form .actions { margin-top: 14px; flex-wrap: nowrap; }
+  #form #missing { margin: -44px 0 0; max-width: calc(100% - 260px); min-height: 44px; display: flex; align-items: center; text-align: left; }
+}
+/* the preview card sits level with the middle of the form beside it */
+@media (min-width: 861px) { #setup .setup-grid > .preview { align-self: center; } }
+
+/* the step bar is the dialog's progress line: one centred row above the form and the preview card */
+.setup-grid > .stepbar { grid-column: 1 / -1; justify-self: center; margin: 0 0 28px; }
+.stepbar ol { justify-content: center; }
+@media (max-width: 860px) { .setup-grid > .stepbar { margin-bottom: 18px; } }
+#setup .setup-grid { row-gap: 0; }

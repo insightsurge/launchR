@@ -659,9 +659,10 @@ function showPeek(target) {
   });
   $('#peek .peek-pane').scrollTop = 0;
 }
-dialog.addEventListener('click', (e) => {
-  const link = e.target.closest('.peek-link');
-  if (link) { showPeek(link.dataset.open); peekWin.showModal(); $(`#peek button[data-peek="${link.dataset.open}"]`)?.focus(); return; }
+document.addEventListener('click', (e) => {
+  /* a Preview link in the form, or the landing page's SKILL.md link (its address stays for agents and without script) */
+  const link = e.target.closest('.peek-link, a[data-open]');
+  if (link) { e.preventDefault(); showPeek(link.dataset.open); peekWin.showModal(); $(`#peek button[data-peek="${link.dataset.open}"]`)?.focus(); return; }
   const item = e.target.closest('#peek button[data-peek]');
   if (item) showPeek(item.dataset.peek);
 });
