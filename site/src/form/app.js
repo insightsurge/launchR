@@ -72,9 +72,10 @@ function modifyExtras() {
 
 /* the README badge every package made here carries: a small credit that links to launchR */
 const ALWAYS_BADGE = 'launchr';
-/* the checklists a package can have on its plan: QC only while private, the CRAN ones only for a package going to CRAN */
+/* the checklists a package can have on its plan: QC and Before public only while private, the CRAN ones only for a
+   package going to CRAN (cli/R/github.R open_stages never opens them otherwise) */
 const CRAN_STAGES = ['before-cran', 'after-acceptance', 'next-release'];
-const stageOffered = (row) => (row.key === 'qc' ? !isPublic() : CRAN_STAGES.includes(row.key) ? release() === 'cran' : true);
+const stageOffered = (row) => (['qc', 'before-public'].includes(row.key) ? !isPublic() : CRAN_STAGES.includes(row.key) ? release() === 'cran' : true);
 const chosenStages = () => lists.stages.filter((row) => S.checklists[row.key] && stageOffered(row));
 /* the checklists Set up this repository opens on its first run, as cli/R/github.R open_stages does for a new
    repository: the others open when their stage arrives */
@@ -134,13 +135,13 @@ function paint() {
   $('#bodyGit').innerHTML = `
     ${sw('github', 'Issue forms, labels and checklists', 'The issue forms and labels you tick below, a pull request template, and the stage checklists. The Set up this repository button creates the labels on GitHub, next to GitHub\'s own (it can remove those).', S.github)}
     ${S.github ? gitChoices() : ''}`;
-  const rules = ['r-code', 'tests', 'docs', 'checks', 'git', ...(S.frontend ? ['js-css'] : [])];
+  const rules = lists.files.filter((row) => row.path.startsWith('.agents/rules/')).map((row) => row.path.replace(/^.*\/|\.md$/g, ''));
   $('#bodyMore').innerHTML = `${head3('Licence', [['MIT', 'Others may use, change and share the code, as long as they keep the copyright notice. CRAN accepts it.'], ['Proprietary', 'All rights reserved: for a package used only inside the organisation that owns it. CRAN does not accept it.']])}
     <div class="pick">${[['mit', 'MIT'], ['proprietary', 'Proprietary']].map(([k, t]) => `<div class="opt"><label><input type="radio" name="licence" value="${k}"${S.licence === k ? ' checked' : ''} /><b>${t}</b></label></div>`).join('')}</div>
     ${S.licence === 'proprietary' && release() === 'cran' ? '<p class="fieldnote">CRAN only accepts open-source licences, and R CMD check as CRAN gives a NOTE for this one, so the check fails. Choose MIT, or the plan Private for good.</p>' : ''}
     ${sw('frontend', 'My package ships its own JS or CSS', 'Adds browser tests and the style checks for them.', S.frontend)}
     <div class="ai-row">${sw('ai', 'Instructions for AI assistants', 'AGENTS.md and rules files in .agents/rules/ (R code, tests, docs, checks, JS and CSS, git), the same for every package, read by Codex, Gemini, Copilot and others, and a CLAUDE.md that loads AGENTS.md for Claude. Also an issue form for changing them.', S.ai)}${peekLink('skill', 'Preview launchR\'s guide for AI agents')}</div>
-    <p class="sw-note">You get <code>AGENTS.md</code>, a <code>CLAUDE.md</code> that loads it, and rules in <code>.agents/rules/</code> (${rules.join(', ')}).</p>
+    ${S.ai ? `<p class="sw-note">You get <code>AGENTS.md</code>, a <code>CLAUDE.md</code> that loads it, and rules in <code>.agents/rules/</code> (${rules.join(', ')}).</p>` : ''}
     <div class="opt soonline"><span>Skills and agents for AI assistants</span><span class="tag">Coming soon</span></div>`;
   summary();
 }
@@ -179,7 +180,7 @@ function gitChoices() {
     <div class="ticks">${free.map((row) => `<label class="pill" title="${esc(row.description)}"><input type="checkbox" data-label="${esc(row.name)}"${S.labels[row.name] ? ' checked' : ''} /><span><svg aria-hidden="true"><use href="#i-tick" /></svg><i class="dot" style="--lc:${colour(row.name)}"></i>${esc(row.name)}</span></label>`).join('')}</div>
     <div class="git-head">${head3('Checklists', stages.map((row) => [row.stage, row.opens]))}${peekLink(`cl-${(chosenStages()[0] ?? stages[0] ?? lists.stages[0]).key}`, 'Preview the checklists')}</div>
     <div class="ticks">${stages.map((row) => pill(`data-stage="${row.key}"`, row.stage, S.checklists[row.key])).join('')}</div>
-    ${notOffered.length ? `<p class="sw-note">${notOffered.map((row) => row.key === 'qc' ? 'QC before release is for a private package.' : '').filter(Boolean).join(' ')}${notOffered.some((row) => CRAN_STAGES.includes(row.key)) ? `${notOffered.some((row) => row.key === 'qc') ? ' ' : ''}Before CRAN, After acceptance and Next release are for a package going to CRAN.` : ''}</p>` : ''}`;
+    ${notOffered.length ? `<p class="sw-note">${[isPublic() && 'Before public and QC before release are for a private package.', release() !== 'cran' && 'Before CRAN, After acceptance and Next release are for a package going to CRAN.'].filter(Boolean).join(' ')}</p>` : ''}`;
 }
 
 function summary() {
@@ -494,7 +495,7 @@ async function download() {
 $('#download').addEventListener('click', download);
 $('#modDownload').addEventListener('click', download);
 $('#exDownload').addEventListener('click', download);
-$('#nextChange').addEventListener('click', () => (mode === 'existing' ? view('existing', $('#exDownload')) : view('main', $('#modify'))));
+$('#nextChange').addEventListener('click', () => (mode === 'existing' ? view('existing', $('#exDownload')) : view('main', custom ? $('#modify') : $('#download'))));
 $('#nextDone').addEventListener('click', () => $('#close').click());
 
 /* someone with a package already: only the files they choose */
@@ -537,7 +538,14 @@ async function goExisting() {
 }
 $('#toExisting').addEventListener('click', goExisting);
 $('#existingStart').addEventListener('click', goExisting);
-$('#exBack').addEventListener('click', () => { mode = 'new'; S = recommended(); paint(); view('main', $('#pkg')); });
+$('#exBack').addEventListener('click', () => {
+  mode = 'new';
+  $('#planNote').textContent = changed ? 'Your own settings were reset to the plan\'s.' : '';
+  S = recommended();
+  changed = false;
+  paint();
+  view('main', $('#pkg'));
+});
 
 /* the page after the download */
 const copy = (text, block) => `<div class="cmd${block ? ' block' : ''}"><code>${esc(text)}</code><button type="button" class="copy" data-copy="${esc(text)}">Copy</button></div>`;
@@ -572,7 +580,7 @@ function existingSteps() {
   $('#stepList').innerHTML = list.join('');
   $('#nextAfter').innerHTML = after([
     add.ci && ['Run the checks on your computer', `Before a pull request, follow <em>Run the checks on your computer</em> in ${code('.github/workflows/README.md')}.`],
-    ['Later', `${codecov()}To add something later, come back and choose only that.`],
+    ['Later', `${add.ci ? codecov() : ''}To add something later, come back and choose only that.`],
   ]);
 }
 

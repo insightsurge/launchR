@@ -412,7 +412,7 @@ test('Customise: the checklists chosen reach DESCRIPTION, the preview beside the
   await step(page, 'Issues');
   // A public plan isn't offered the QC checklist, and says why.
   await expect(page.locator('[data-stage="qc"]')).toHaveCount(0);
-  await expect(page.locator('#bodyGit')).toContainText('QC before release is for a private package.');
+  await expect(page.locator('#bodyGit')).toContainText('Before public and QC before release are for a private package.');
   await page.locator('label.pill', { hasText: 'After acceptance' }).click();
   await expect(page.locator('#pvLists li')).toHaveText(['After public', 'Before CRAN', 'Next release']);
   const { files } = await download(page, '#modDownload');
@@ -476,4 +476,76 @@ test('an existing package goes through Checks and Website only', async ({ page }
   await page.locator('#modBack').click();
   await page.locator('#modBack').click();
   await expect(page.locator('#existingView')).toBeVisible();
+});
+
+test('Customise: each plan is offered only the checklists it can open', async ({ page }) => {
+  await openForm(page);
+  await fillForm(page);
+  const offered = async () => page.locator('#bodyGit [data-stage]').evaluateAll((boxes) => boxes.map((box) => box.dataset.stage));
+  await page.locator('input[name=plan][value=c]').check();
+  await customise(page);
+  await step(page, 'Issues');
+  expect(await offered()).toEqual(['before-public', 'after-public', 'before-cran', 'after-acceptance', 'next-release', 'qc']);
+  await step(page, 'About');
+  await page.locator('input[name=plan][value=a]').check();
+  await step(page, 'Issues');
+  expect(await offered()).toEqual(['after-public', 'before-cran', 'after-acceptance', 'next-release']);
+  await expect(page.locator('#bodyGit')).toContainText('Before public and QC before release are for a private package.');
+  await step(page, 'About');
+  await page.locator('input[name=plan][value=d]').check();
+  await step(page, 'Issues');
+  expect(await offered()).toEqual(['before-public', 'after-public', 'qc']);
+  await expect(page.locator('#bodyGit')).toContainText('Before CRAN, After acceptance and Next release are for a package going to CRAN.');
+  // Plan d without its QC checklist has none, and the preview says so.
+  await page.locator('label.pill', { hasText: 'QC before release' }).click();
+  await expect(page.locator('#pvLists li')).toHaveText(['None']);
+});
+
+test('Customise: the AI note shows with the switch, naming every rules file the zip gets', async ({ page }) => {
+  await openForm(page);
+  await fillForm(page);
+  await customise(page);
+  await step(page, 'Extras');
+  await expect(page.locator('#bodyMore')).not.toContainText('You get AGENTS.md');
+  await page.locator('label.sw', { hasText: 'Instructions for AI assistants' }).click();
+  await expect(page.locator('#bodyMore')).toContainText('You get AGENTS.md, a CLAUDE.md that loads it, and rules in .agents/rules/ (checks, docs, git, js-css, r-code, tests).');
+});
+
+test('after Change something, the keyboard lands on the button that is there', async ({ page }) => {
+  await openForm(page);
+  await fillForm(page);
+  await download(page, '#download');
+  await page.locator('#nextChange').click();
+  await expect(page.locator('#download')).toBeFocused();
+});
+
+test('an existing package goes through its steps to a zip', async ({ page }) => {
+  await openExisting(page);
+  await page.locator('#exModify').click();
+  await page.locator('#stepNext').click();
+  const { name } = await download(page, '#modDownload');
+  expect(name).toBe('launchR-files.zip');
+  await expect(page.locator('#nextView')).toBeVisible();
+});
+
+test('an existing package with only a website is not pointed to the workflows README', async ({ page }) => {
+  await openExisting(page);
+  await page.locator('#exRows label.pill', { hasText: 'Automatic checks' }).click();
+  await page.locator('#exRows label.pill', { hasText: 'Website' }).click();
+  const { files } = await download(page, '#exDownload');
+  expect('.github/workflows/README.md' in files).toBe(false);
+  await expect(page.locator('#nextAfter')).not.toContainText('Codecov');
+});
+
+test('on a phone the preview window fills the screen', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await openForm(page);
+  await fillForm(page);
+  await customise(page);
+  await step(page, 'Issues');
+  await page.getByRole('button', { name: 'Preview the issue forms' }).click();
+  const box = await page.locator('#peek').boundingBox();
+  expect(box.width).toBeGreaterThanOrEqual(389);
+  expect(box.height).toBeGreaterThanOrEqual(843);
+  await expect(page.locator('#peek article:visible .peek-title')).toHaveText('Bug report');
 });

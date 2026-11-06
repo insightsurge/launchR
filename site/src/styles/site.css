@@ -485,16 +485,6 @@ p { text-wrap: pretty; }
 .back { display: inline-flex; align-items: center; gap: 4px; min-height: 36px; margin-bottom: 6px; }
 .back svg { width: 15px; height: 15px; }
 .back:hover, .reset:hover { text-decoration: underline; text-underline-offset: 3px; }
-.mod { border-top: 1px solid var(--line); }
-.mod:last-of-type { border-bottom: 1px solid var(--line); }
-.mod summary { display: flex; align-items: baseline; gap: 14px; padding: 14px 0; cursor: pointer; list-style: none; border-radius: 6px; }
-.mod summary::-webkit-details-marker { display: none; }
-.mod summary::after { content: ''; flex: none; align-self: center; width: 8px; height: 8px; margin: 0 4px 0 auto; border-right: 1.6px solid var(--soft); border-bottom: 1.6px solid var(--soft); transform: rotate(45deg); transition: transform 180ms; order: 3; }
-.mod[open] summary::after { transform: rotate(-135deg); }
-.mod summary b { font-weight: 500; font-size: 16px; }
-.mod summary span { color: var(--soft); font-size: 14.5px; }
-.mod summary:hover b { color: var(--accent); }
-.mod summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .mod-body { padding: 0 0 18px; }
 .mod-body h4 { margin: 18px 0 8px; font-size: 14.5px; font-weight: 500; }
 .mod-body h4:first-child { margin-top: 2px; }
@@ -560,8 +550,6 @@ select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
   #setup[data-view='modify'] .setup-grid { grid-template-columns: minmax(0, 1fr); }
   #setup[data-view='modify'] .preview { display: none; }
   .pick { grid-template-columns: minmax(0, 1fr); }
-  .mod summary { flex-wrap: wrap; gap: 2px 12px; padding: 13px 0; min-height: 44px; }
-  .mod summary span { order: 4; width: 100%; font-size: 13.5px; }
   .mod-actions { position: sticky; bottom: 0; margin: 14px calc(var(--gut) * -1) -56px; padding: 12px var(--gut) calc(12px + env(safe-area-inset-bottom)); background: var(--bg); border-top: 1px solid var(--line); }
   .mod-actions .primary { width: 100%; }
 }
@@ -600,7 +588,6 @@ input.short.bad { border-color: var(--no); }
 }
 
 /* The settings steps: headings a step up, their contents set in, and what can't be chosen yet greyed */
-.mod summary b { font-size: 18px; }
 .mod-body { padding-left: 20px; }
 .sw:has(input:disabled), .pick label:has(input:disabled) { opacity: 0.5; cursor: not-allowed; }
 .sw:has(input:disabled) input { cursor: not-allowed; }
@@ -808,7 +795,6 @@ fieldset.plans.framed legend { padding: 0 6px; margin-left: -6px; color: var(--a
 .primary[aria-disabled='true'] { opacity: 0.55; box-shadow: none; }
 #missing { color: var(--soft); }
 #modTitle .for { color: var(--soft); font-weight: 400; font-size: 0.62em; }
-#modifyView .mod { border: 0; }
 #modifyView .mod[hidden] { display: none; }
 .step-sum { margin: -14px 0 14px; font-size: 14.5px; color: var(--soft); }
 .step-sum:empty { display: none; }

@@ -79,7 +79,7 @@ components:
 
 A package is built from small, honest parts, and the page shows them. Hexagons made of dots start as a honeycomb with gaps, grow into a file tree, become checks and paths, and close into one package. The scene carries the story, so the words beside it stay short and calm.
 
-The form is a workbench: plain, ordered and quiet. The first screen asks four things, and everything else waits under Modify, in closed groups with a one-line summary. Explanations sit behind an info mark, not on the page.
+The form is a workbench: plain, ordered and quiet. The first screen asks four things and a plan, and everything else waits behind one switch, Customise every setting, in four more steps, each with a one-line summary. Explanations sit behind an info mark, not on the page.
 
 **Key Characteristics:**
 - One typeface, two themes, one accent per theme
@@ -115,7 +115,7 @@ Warm neutrals with a single burnt accent, in a dark Ember and a light Paper them
 
 ### Hierarchy
 - **Display:** the page headings.
-- **Group heading:** the five Modify groups.
+- **Step heading:** the four settings steps (Checks on GitHub, Issues and checklists, README and website, Extras).
 - **Subsection and field label:** headings inside a group, and labels above inputs.
 - **Option:** pills, switches, rows and inputs.
 - **Note:** field errors and small notes.
@@ -126,7 +126,7 @@ Warm neutrals with a single burnt accent, in a dark Ember and a light Paper them
 
 ## Layout
 
-Seven scroll-snapped screens, with the picture and text side by side on a laptop and stacked below 860px, where a screen taller than the phone holds the picture until its text has passed. The form is a full-screen dialog that grows from the control that opened it. It widens for Modify, and narrows to one column for the next steps and for existing packages. Inside a group, children sit 14px apart. A label sits beside its control, never across the page from it.
+Seven scroll-snapped screens, with the picture and text side by side on a laptop and stacked below 860px, where a screen taller than the phone holds the picture until its text has passed. The form is a full-screen dialog that grows from the control that opened it. It widens for the settings steps, and narrows to one column for the next steps and for existing packages. Inside a group, children sit 14px apart. A label sits beside its control, never across the page from it.
 
 ## Elevation & Depth
 
