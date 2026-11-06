@@ -178,6 +178,23 @@ test('Modify: the CI report comment, licence, badges, issue forms, labels and QC
   expect(files['tablePkg/README.md']).toContain('lifecycle-experimental');
 });
 
+test('the plan preview lists the QC checklist while it is on', async ({ page }) => {
+  await openForm(page);
+  await fillForm(page);
+  await page.locator('input[name=plan][value=d]').check();
+  await expect(page.locator('#pvLists')).toContainText('QC before release');
+  await expect(page.locator('#pvLists')).not.toContainText('Before public');
+  await page.locator('#modify').click();
+  await page.locator('#modifyView summary', { hasText: 'GitHub setup' }).click();
+  await page.locator('label.sw', { hasText: 'QC checklist' }).click();
+  await expect(page.locator('#pvLists')).not.toContainText('QC before release');
+  await expect(page.locator('#pvLists')).toContainText('Before public');
+  await page.locator('#modBack').click();
+  await page.locator('input[name=plan][value=a]').check();
+  await expect(page.locator('#pvLists')).not.toContainText('QC before release');
+  await expect(page.locator('#pvLists')).toContainText('After public');
+});
+
 test('Modify: the navbar choices reach _pkgdown.yml', async ({ page }) => {
   await openForm(page);
   await fillForm(page);
