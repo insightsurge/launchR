@@ -982,3 +982,15 @@ dialog#setup { scrollbar-gutter: stable; }
   /* phones zoom into a field typed in below 16px */
   #setup input[type='text'], #setup input[type='email'], #setup textarea, #setup select, #setup #modifyView input[type='text'], #setup #modifyView select { font-size: 16px; }
 }
+/* the oldest R sits centred in its box */
+.affix { justify-content: center; padding: 0 8px; }
+#modifyView .affix input.short[type='text'], .affix input.short[type='text'] { flex: none; width: 3ch; padding: 7px 0; text-align: right; }
+/* issue form cards: no fill until chosen, like the pills */
+.fcard > span { background: transparent; }
+/* why a badge can't be chosen yet: a (!) inside the badge */
+.shield > span { position: relative; }
+.shield-why { align-self: center; margin: 0 2px 0 6px; color: var(--no); cursor: help; }
+.shield-why em { display: grid; place-items: center; width: 16px; height: 16px; border: 1.5px solid currentColor; border-radius: 50%; font: 700 11px/1 var(--font); font-style: normal; }
+.shield:has(input:disabled:not(:checked)) > span { opacity: 1; }
+.shield:has(input:disabled:not(:checked)) > span > b, .shield:has(input:disabled:not(:checked)) > span > i { opacity: 0.55; }
+#modifyView .shield-why [role='tooltip'] { left: 50%; transform: translateX(-50%); width: max-content; max-width: 240px; }

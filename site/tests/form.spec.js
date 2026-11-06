@@ -171,7 +171,7 @@ test('Customise: the CI report comment, licence, badges, issue forms, labels and
   await fillForm(page);
   await page.locator('input[name=plan][value=d]').check();
   await customise(page);
-  await page.locator('label.sw', { hasText: 'CI report comment' }).click();
+  await page.locator('label.pill', { hasText: 'CI report comment' }).click();
   await step(page, 'Issues');
   // A form's label is on its card while the form is on; without the form it joins the other labels.
   await expect(page.locator('[data-label="idea"]')).toHaveCount(0);
@@ -440,9 +440,9 @@ test('Customise: the launchR credit is not offered but every README gets it, and
   await customise(page);
   await step(page, 'README');
   await expect(page.locator('[data-badge="launchr"]')).toHaveCount(0);
-  await expect(page.locator('.shield-opt', { has: page.locator('[data-badge="cran"]') })).toContainText('For a package going to CRAN.');
+  await expect(page.locator('.shield-opt', { has: page.locator('[data-badge="cran"]') }).locator('.shield-why')).toHaveAttribute('aria-label', 'For a package going to CRAN.');
   // One tooltip on the heading explains every badge; the shields carry none.
-  await expect(page.locator('.shield-opt .tip')).toHaveCount(0);
+  await expect(page.locator('.shield-opt .tip:not(.shield-why)')).toHaveCount(0);
   await expect(page.locator('#bodySite h4 .tip')).toContainText('CRAN downloads');
   const { files } = await download(page, '#modDownload');
   expect(files['tablePkg/README.md']).toContain('img.shields.io/badge/set%20up%20with-launchR');

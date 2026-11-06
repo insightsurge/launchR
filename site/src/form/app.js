@@ -113,9 +113,9 @@ function paint() {
   const weekly = WEEKLY.some((k) => S.checks[k]);
   const extra = S.checks.full_tests || S.checks.r_cmd_check_extended;
   $('#bodyCi').innerHTML = `
-    ${head3('Checks to run', CHECKS.map(([, n, w]) => [n, w]))}
+    ${head3('Checks to run', [...CHECKS.map(([, n, w]) => [n, w]), ...(REPORTING.some((k) => S.checks[k]) ? [['CI report comment', 'One comment on each pull request with the results of the checks you chose, updated as each one finishes: failures with links to their logs, test counts, coverage and its change, style findings. Off leaves the comment out; each run still shows its results on its own page under Actions. You can change it later: ci-report in each file in .github/workflows/.']] : [])])}
     ${nest(`<div class="ticks">${CHECKS.map(([k, name]) => pill(`data-check="${k}"`, `<code>${name}</code>`, S.checks[k])).join('')}</div>`)}
-    ${REPORTING.some((k) => S.checks[k]) ? nest(sw('ciReport', 'CI report comment', 'One comment on each pull request with the results of the checks you chose, updated as each one finishes: failures with links to their logs, test counts, coverage and its change, style findings. Off leaves the comment out; each run still shows its results on its own page under Actions. You can change it later: ci-report in each file in .github/workflows/.', S.ciReport)) : ''}
+    ${REPORTING.some((k) => S.checks[k]) ? nest(`<div class="ticks">${pill('id="ciReport"', 'CI report comment', S.ciReport)}</div>`) : ''}
     ${head3('R CMD check: R versions × systems', [['release', 'The current R.'], ['oldrel-1', 'The R release before it. Linux only.'], ['devel', 'The next R, not released yet: it shows early what will break. Linux only.'], ['Oldest R your package supports', 'As x.y from 4.1 up, such as 4.3. DESCRIPTION gets 4.3.0, as R CMD check asks, and Linux checks the newest 4.3. 4.1 is the default.'], ['Systems', 'launchR picks the system version: Ubuntu 26.04, and the latest Windows and macOS on GitHub.'], ['Cost', 'Free on a public repository. A private one gets 2,000 free minutes a month on GitHub\'s free plan, and Mac minutes count ten times, Windows twice.']])}
     <div class="nest"><div class="line"><label for="minR">Oldest R your package supports</label><span class="when affix"><input id="minR" class="short" type="text" inputmode="decimal" autocomplete="off" maxlength="3" size="3" placeholder="4.1" aria-describedby="minRZero" value="${esc(S.minR)}" /><span class="unit" id="minRZero">.0</span></span></div>
     <p class="fieldnote" id="minRNote" role="status"></p>
@@ -157,7 +157,7 @@ function shield(row) {
   const [left, right, colour] = SHIELDS[row.key] ?? [row.label, '', '#9f9f9f'];
   const why = badgeWhy(row);
   const on = S.badges[row.key] && !why;
-  return `<div class="opt shield-opt"><label class="shield" title="${esc(row.label)}"><input type="checkbox" data-badge="${row.key}" aria-label="${esc(row.label)}"${on ? ' checked' : ''}${why ? ' disabled' : ''} /><span><b>${esc(left)}</b><i style="--sc:${colour}">${esc(right)}</i></span></label>${why ? `<span class="shield-note">${esc(why)}</span>` : ''}</div>`;
+  return `<div class="opt shield-opt"><label class="shield" title="${esc(row.label)}"><input type="checkbox" data-badge="${row.key}" aria-label="${esc(row.label)}"${on ? ' checked' : ''}${why ? ' disabled' : ''} /><span><b>${esc(left)}</b><i style="--sc:${colour}">${esc(right)}</i>${why ? `<span class="tip shield-why" tabindex="0" role="note" aria-label="${esc(why)}"><em aria-hidden="true">!</em><span role="tooltip" aria-hidden="true">${esc(why)}</span></span>` : ''}</span></label></div>`;
 }
 
 const peekLink = (target, label) => `<button type="button" class="peek-link" data-open="${target}" aria-label="${esc(label)}">Preview</button>`;
