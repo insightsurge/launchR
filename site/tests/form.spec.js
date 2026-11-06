@@ -415,8 +415,8 @@ test('Customise: the checklists chosen reach DESCRIPTION, the preview beside the
   const { files } = await download(page, '#modDownload');
   expect(files['tablePkg/DESCRIPTION']).toContain('Config/launchR/checklists: After public, Before CRAN, Next release');
   const after = page.locator('#nextAfter');
-  await expect(after).toContainText('After public and Before CRAN open in your repository\'s issues now');
-  await expect(after).toContainText('Next release opens when its stage arrives.');
+  await expect(after).toContainText('After public and Before CRAN open in your repository\'s issues on the first run of Set up this repository.');
+  await expect(after).toContainText('Next release opens on a later run, once its stage arrives.');
   await expect(after.locator('li')).toHaveCount(4);
 });
 
@@ -426,7 +426,7 @@ test('Customise: plan d starts with the QC checklist, opened first after the dow
   await page.locator('input[name=plan][value=d]').check();
   await expect(page.locator('#pvLists li')).toHaveText(['QC before release']);
   await download(page, '#download');
-  await expect(page.locator('#nextAfter')).toContainText('QC before release opens in your repository\'s issues now');
+  await expect(page.locator('#nextAfter')).toContainText('QC before release opens in your repository\'s issues on the first run of Set up this repository.');
 });
 
 test('Customise: the launchR credit is not offered but every README gets it, and a badge that needs something says what', async ({ page }) => {
@@ -506,7 +506,7 @@ test('Customise: one tooltip explains the AI files, naming every rules file the 
   await customise(page);
   await step(page, 'Extras');
   const tip = page.locator('.opt', { has: page.locator('#ai') }).locator('.tip');
-  await expect(tip).toHaveAttribute('aria-label', /\.agents\/rules\/: Rules files: checks, docs, git, js-css, r-code, tests\./);
+  await expect(tip).toHaveAttribute('aria-label', /\.agents\/rules\/: One rules file each for checks, docs, git, js-css, r-code, tests\./);
   await expect(tip).toHaveAttribute('aria-label', /SKILL\.md: launchR's skill/);
   await expect(page.locator('#bodyMore .sw-note')).toHaveCount(0);
 });

@@ -61,7 +61,7 @@ const box = (b) => [b.where && b.pick ? `${b.where}: ${b.pick}` : b.where || b.p
               <label><input type="radio" name="how" value="plan" checked /><span>Use a plan</span></label>
               <label><input type="radio" name="how" value="custom" id="custom" /><span>Customise a plan</span></label>
             </fieldset>
-            <span class="tip" tabindex="0" role="note" aria-label="Use a plan: download it as it is. Customise a plan: start from one and go through four more steps: checks, issues and checklists, README and website, and extras."><svg aria-hidden="true"><use href="#i-info" /></svg><span role="tooltip" aria-hidden="true">Use a plan: download it as it is. Customise a plan: start from one and go through four more steps: checks, issues and checklists, README and website, and extras.</span></span>
+            <span class="tip" tabindex="0" role="note" aria-label="Use a plan: download it as it is. Customise a plan: start from one and change anything in four more steps."><svg aria-hidden="true"><use href="#i-info" /></svg><span role="tooltip" aria-hidden="true">Use a plan: download it as it is. Customise a plan: start from one and go through four more steps: checks, issues and checklists, README and website, and extras.</span></span>
           </div>
           <fieldset class="plans" id="plans">
             <legend id="planLegend" class="sr">What is the plan for this package?</legend>
@@ -173,12 +173,12 @@ const box = (b) => [b.where && b.pick ? `${b.where}: ${b.pick}` : b.where || b.p
                   </ul>
                 </>
               ))}
-              <p class="peek-foot">Last checked by launchR on the date of the last run.</p>
+              <p class="peek-foot">The date launchR last checked the list goes here.</p>
             </article>
           ))}
           {forms.map((f) => (
             <article class="peek-form" data-peek={`form-${f.key}`} hidden>
-              <p class="peek-kind">Issue form, as GitHub shows it · sets the label <code>{f.label}</code></p>
+              <p class="peek-kind">Issue form, as GitHub shows it. It sets the label <code>{f.label}</code>.</p>
               <h3 class="peek-title">{f.name}</h3>
               <p class="peek-when">{f.description}</p>
               {f.body.map((part) => part.type === 'markdown' ? (
@@ -193,7 +193,7 @@ const box = (b) => [b.where && b.pick ? `${b.where}: ${b.pick}` : b.where || b.p
             </article>
           ))}
           <article class="peek-md-doc" data-peek="skill" hidden>
-            <p class="peek-kind">launchR's guide for AI agents, at <a href="/SKILL.md">/SKILL.md</a></p>
+            <p class="peek-kind">launchR's skill for AI agents, at <a href="/SKILL.md">/SKILL.md</a></p>
             <Skill />
           </article>
         </div>
