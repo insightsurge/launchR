@@ -49,11 +49,11 @@ async function download(page, button) {
   return { name: file.suggestedFilename(), files };
 }
 
-// Customise a plan, then Next: the first settings step, Checks on GitHub.
+// Customise a plan, then Next: the first settings step, CI checks on GitHub.
 async function customise(page) {
   if (!(await page.locator('#custom').isChecked())) await page.locator('#how label', { hasText: 'Customise a plan' }).click();
   await page.locator('#modify').click();
-  await expect(page.locator('#stepTitle')).toHaveText('Checks on GitHub');
+  await expect(page.locator('#stepTitle')).toHaveText('CI checks on GitHub');
 }
 const step = (page, name) => page.locator('#stepBar button', { hasText: name }).click();
 
@@ -179,7 +179,7 @@ test('Customise: the CI report comment, licence, badges, issue forms, labels and
   // Its label joins the other labels, last and unticked.
   await expect(page.locator('[data-label="idea"]')).not.toBeChecked();
   await expect(page.locator('#bodyGit .ticks').first().locator('label.pill').last()).toContainText('idea');
-  await expect(page.locator('#sumGit')).toHaveText('4 of 5 issue forms, 10 of 11 labels, 1 checklist');
+  await expect(page.locator('#sumGit')).toHaveText('4 of 5 issue forms, 11 of 12 labels, 1 checklist');
   await expect(page.locator('[data-stage="qc"]')).toBeChecked();
   await step(page, 'README');
   await expect(page.locator('#sumSite')).toHaveText('No badges, website off');
@@ -385,7 +385,7 @@ test('Use a plan downloads at once; Customise a plan turns Download into Next an
   await page.locator('#how label', { hasText: 'Customise a plan' }).click();
   await expect(page.locator('#planLegend')).toHaveText('Start from this plan');
   await expect(page.locator('#download')).toBeHidden();
-  await expect(page.locator('#stepBar button')).toHaveText([/^1\s*About$/, /^2\s*Checks$/, /^3\s*Issues$/, /^4\s*README$/, /^5\s*Extras$/], { useInnerText: true });
+  await expect(page.locator('#stepBar button')).toHaveText([/^1\s*About$/, /^2\s*CI checks$/, /^3\s*Issues$/, /^4\s*README$/, /^5\s*Extras$/], { useInnerText: true });
   await page.locator('#modify').click();
   for (const [name, title] of [['Issues', 'Issues and checklists'], ['README', 'README and website'], ['Extras', 'Extras']]) {
     await page.locator('#stepNext').click();
@@ -472,7 +472,7 @@ test('the preview window shows the checklists, the issue forms and the guide for
 test('an existing package goes through Checks and Website only', async ({ page }) => {
   await openExisting(page);
   await page.locator('#exModify').click();
-  await expect(page.locator('#stepBar button:visible')).toHaveText([/^1\s*Checks$/, /^2\s*Website$/], { useInnerText: true });
+  await expect(page.locator('#stepBar button:visible')).toHaveText([/^1\s*CI checks$/, /^2\s*Website$/], { useInnerText: true });
   await page.locator('#stepNext').click();
   await expect(page.locator('#stepTitle')).toHaveText('Website');
   await expect(page.locator('.shields')).toBeHidden();
@@ -504,14 +504,35 @@ test('Customise: each plan is offered only the checklists it can open', async ({
   await expect(page.locator('#pvLists li')).toHaveText(['None']);
 });
 
-test('Customise: the AI note shows with the switch, naming every rules file the zip gets', async ({ page }) => {
+test('Customise: one tooltip explains the AI files, naming every rules file the zip gets', async ({ page }) => {
   await openForm(page);
   await fillForm(page);
   await customise(page);
   await step(page, 'Extras');
-  await expect(page.locator('#bodyMore')).not.toContainText('You get AGENTS.md');
-  await page.locator('label.sw', { hasText: 'Instructions for AI assistants' }).click();
-  await expect(page.locator('#bodyMore')).toContainText('You get AGENTS.md, a CLAUDE.md that loads it, and rules in .agents/rules/ (checks, docs, git, js-css, r-code, tests).');
+  const tip = page.locator('.opt', { has: page.locator('#ai') }).locator('.tip');
+  await expect(tip).toHaveAttribute('aria-label', /\.agents\/rules\/: Rules files: checks, docs, git, js-css, r-code, tests\./);
+  await expect(tip).toHaveAttribute('aria-label', /SKILL\.md: launchR's skill/);
+  await expect(page.locator('#bodyMore .sw-note')).toHaveCount(0);
+});
+
+test('Customise: New feature sets its own label, a shared label says which form still sets it, and the oldest R is filled in', async ({ page }) => {
+  await openForm(page);
+  await fillForm(page);
+  await customise(page);
+  await expect(page.locator('#minR')).toHaveValue('4.1');
+  await expect(page.locator('#bodyCi h4', { hasText: 'R CMD check: R versions × systems' })).toBeVisible();
+  await step(page, 'Issues');
+  await expect(page.locator('label.fcard', { hasText: 'New feature' })).toContainText('feature');
+  await page.locator('label.fcard', { hasText: 'Bug report' }).click();
+  await expect(page.locator('label.fcard', { hasText: 'Bug report' })).toContainText('not added');
+  await step(page, 'README');
+  await page.locator('label.sw', { hasText: 'Add a website' }).click();
+  await expect(page.locator('#bodySite h4', { hasText: 'Navbar: right' }).locator('.tip')).toHaveAttribute('aria-label', /_pkgdown\.yml: /);
+  // Every toggle shows its choice by its outline and fill, never by a tick.
+  await expect(page.locator('#modifyView .pill svg:visible, #modifyView .fcard svg:visible')).toHaveCount(0);
+  const { files } = await download(page, '#modDownload');
+  expect(files['tablePkg/.github/ISSUE_TEMPLATE/02-feature.yml']).toContain('labels: [feature]');
+  expect(files['tablePkg/DESCRIPTION']).toContain('R (>= 4.1.0)');
 });
 
 test('after Change something, the keyboard lands on the button that is there', async ({ page }) => {

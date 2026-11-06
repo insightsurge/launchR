@@ -29,7 +29,7 @@ CI runs on every pull request, so you do not need anything else installed. How C
 3. **Commit with Conventional Commits**, short: `feat:`, `fix:`, `docs:`, `chore:`, `test:`, `ci:`, `refactor:`.
 4. **Open a pull request** using the template. Keep the sections that apply, put repeatable checks in its table and
    one-off observations in Notes.
-5. **Suggest a label** in the pull request: one of `enhancement`, `bug`, `documentation` or `chore`. The maintainer
+5. **Suggest a label** in the pull request: one of `feature`, `enhancement`, `bug`, `documentation` or `chore`. The maintainer
    applies it; the release notes are built from it.
 6. **The maintainer merges** once CI is green. Pull requests are squash-merged, so the pull request title becomes the
    commit message on `main`: keep it a Conventional Commit.

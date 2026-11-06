@@ -54,7 +54,7 @@ Each plan sets defaults. On the site, pick a plan and download, or choose Custom
 - The licence: MIT, or proprietary (all rights reserved). Proprietary is the default only for a private package that won't go to CRAN.
 - README badges: R-CMD-check, Lifecycle, Codecov, CRAN version, CRAN downloads, R-universe and "Set up with launchR". R-CMD-check and Lifecycle are on by default for public packages, and the "Set up with launchR" credit for every package. On the site the credit is always on; the command line can leave it out with `--badges`.
 - The website's navbar items.
-- Which issue forms and labels (five forms and eleven labels by default, each chosen one by one), and which stage checklists the package gets (a plan starts with its own; a QC checklist is offered for private packages and on by default for a private package that won't go to CRAN).
+- Which issue forms and labels (five forms and twelve labels by default, each chosen one by one), and which stage checklists the package gets (a plan starts with its own; a QC checklist is offered for private packages and on by default for a private package that won't go to CRAN).
 
 ## Existing packages
 

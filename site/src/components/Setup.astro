@@ -16,7 +16,7 @@ const box = (b) => [b.where && b.pick ? `${b.where}: ${b.pick}` : b.where || b.p
         <nav class="stepbar off" id="stepBar" aria-label="Steps">
           <ol>
             <li><button type="button" data-step="1"><i>1</i><span>About</span></button></li>
-            <li><button type="button" data-step="2"><i>2</i><span>Checks</span></button></li>
+            <li><button type="button" data-step="2"><i>2</i><span>CI checks</span></button></li>
             <li class="new-only"><button type="button" data-step="3"><i>3</i><span>Issues</span></button></li>
             <li><button type="button" data-step="4"><i>4</i><span><span class="new-only">README</span><span class="ex-only">Website</span></span></button></li>
             <li class="new-only"><button type="button" data-step="5"><i>5</i><span>Extras</span></button></li>
@@ -79,9 +79,9 @@ const box = (b) => [b.where && b.pick ? `${b.where}: ${b.pick}` : b.where || b.p
           <p class="note" id="planNote" role="status"></p>
                   </form>
         <section id="modifyView" aria-labelledby="modTitle" hidden>
-          <h2 id="modTitle" tabindex="-1"><span id="stepTitle">Checks on GitHub</span> <span class="for">for <span id="modPkg">fooBarPkg</span></span></h2>
+          <h2 id="modTitle" tabindex="-1"><span id="stepTitle">CI checks on GitHub</span> <span class="for">for <span id="modPkg">fooBarPkg</span></span></h2>
           <p class="sub">Already set up for your plan. Change only what you want. <button type="button" class="reset" id="modReset" disabled>Back to recommended</button></p>
-          <section class="mod" data-step="2" aria-label="Checks on GitHub"><p class="step-sum" id="sumCi"></p><div class="mod-body" id="bodyCi"></div></section>
+          <section class="mod" data-step="2" aria-label="CI checks on GitHub"><p class="step-sum" id="sumCi"></p><div class="mod-body" id="bodyCi"></div></section>
           <section class="mod new-only" data-step="3" aria-label="Issues and checklists"><p class="step-sum" id="sumGit"></p><div class="mod-body" id="bodyGit"></div></section>
           <section class="mod" data-step="4" aria-label="README and website"><p class="step-sum" id="sumSite"></p><div class="mod-body" id="bodySite"></div></section>
           <section class="mod new-only" data-step="5" aria-label="Extras"><p class="step-sum" id="sumMore"></p><div class="mod-body" id="bodyMore"></div></section>

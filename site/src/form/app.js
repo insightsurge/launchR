@@ -52,7 +52,7 @@ function recommended() {
   return {
     checks: Object.fromEntries(Object.entries(defaultChoices(lists, 'starter', plan()).checks).map(([key, check]) => [key, check.on])),
     matrix: Object.fromEntries(SYSTEMS.flatMap(([s]) => RS.map(([r]) => [`${s}/${r}`, start.includes(`${s}/${r}`)]))),
-    minR: '', samePlatforms: false, ...weeklyTime(), website: false, github: true, frontend: false, ai: false,
+    minR: lists.settings.min_r, samePlatforms: false, ...weeklyTime(), website: false, github: true, frontend: false, ai: false,
     ...modifyExtras(),
   };
 }
@@ -100,10 +100,12 @@ function badgeWhy(row) {
 }
 
 const help = (text, warn) => `<span class="tip${warn ? ' warn' : ''}" tabindex="0" role="note" aria-label="${esc(text)}"><svg aria-hidden="true"><use href="#i-info" /></svg><span role="tooltip" aria-hidden="true">${esc(text)}</span></span>`;
-const bullets = (list) => `<span class="tip wide-tip" tabindex="0" role="note" aria-label="${esc(list.map(([k, w]) => `${k}: ${w}`).join(' '))}"><svg aria-hidden="true"><use href="#i-info" /></svg><span role="tooltip" aria-hidden="true"><ul>${list.map(([k, w]) => `<li><b>${esc(k)}</b> ${esc(w)}</li>`).join('')}</ul></span></span>`;
+const bullets = (list) => `<span class="tip wide-tip" tabindex="0" role="note" aria-label="${esc(list.map(([k, w]) => `${k}: ${w}`).join(' '))}"><svg aria-hidden="true"><use href="#i-info" /></svg><span role="tooltip" aria-hidden="true"><ul>${list.map(([k, w]) => `<li><b>${esc(k)}:</b> ${esc(w)}</li>`).join('')}</ul></span></span>`;
 const sw = (id, text, why, on, soon) => `<div class="opt"><label class="sw"><input type="checkbox" id="${id}"${on ? ' checked' : ''}${soon ? ' disabled' : ''} /><i aria-hidden="true"></i><b>${text}</b></label>${soon ? '<span class="tag">Coming soon</span>' : ''}${help(why)}</div>`;
-const pill = (attrs, text, on) => `<label class="pill"><input type="checkbox" ${attrs}${on ? ' checked' : ''} /><span><svg aria-hidden="true"><use href="#i-tick" /></svg>${text}</span></label>`;
+const swList = (id, text, list, on) => `<div class="opt"><label class="sw"><input type="checkbox" id="${id}"${on ? ' checked' : ''} /><i aria-hidden="true"></i><b>${text}</b></label>${bullets(list)}</div>`;
+const pill = (attrs, text, on) => `<label class="pill"><input type="checkbox" ${attrs}${on ? ' checked' : ''} /><span>${text}</span></label>`;
 const tick = (attrs, text, on, why, off) => `<div class="opt"><label class="pill"><input type="checkbox" ${attrs}${on ? ' checked' : ''}${off ? ' disabled' : ''} /><span><svg aria-hidden="true"><use href="#i-tick" /></svg>${text}</span></label>${why ? help(why) : ''}</div>`;
+const nest = (html) => `<div class="nest">${html}</div>`;
 const head3 = (text, why) => `<h4>${text}${Array.isArray(why) ? bullets(why) : why ? help(why) : ''}</h4>`;
 
 function paint() {
@@ -112,36 +114,35 @@ function paint() {
   const extra = S.checks.full_tests || S.checks.r_cmd_check_extended;
   $('#bodyCi').innerHTML = `
     ${head3('Checks to run', CHECKS.map(([, n, w]) => [n, w]))}
-    <div class="ticks">${CHECKS.map(([k, name]) => pill(`data-check="${k}"`, `<code>${name}</code>`, S.checks[k])).join('')}</div>
+    ${nest(`<div class="ticks">${CHECKS.map(([k, name]) => pill(`data-check="${k}"`, `<code>${name}</code>`, S.checks[k])).join('')}</div>`)}
     ${REPORTING.some((k) => S.checks[k]) ? sw('ciReport', 'CI report comment', 'One comment on each pull request with the results of the checks you chose, updated as each one finishes: failures with links to their logs, test counts, coverage and its change, style findings. Off leaves the comment out; each run still shows its results on its own page under Actions. You can change it later: ci-report in each file in .github/workflows/.', S.ciReport) : ''}
-    ${head3('R versions to check, by system', [['release', 'The current R.'], ['oldrel-1', 'The R release before it. Linux only.'], ['devel', 'The next R, not released yet: it shows early what will break. Linux only.'], ['Minimum R version', 'The oldest R your package supports, as x.y from 4.1 up, such as 4.3. DESCRIPTION gets 4.3.0, as R CMD check asks, and Linux checks the newest 4.3. Leave it empty if you do not know yet.'], ['Systems', 'launchR picks the system version: Ubuntu 26.04, and the latest Windows and macOS on GitHub.'], ['Cost', 'Free on a public repository. A private one gets 2,000 free minutes a month on GitHub\'s free plan, and Mac minutes count ten times, Windows twice.']])}
-    <div class="line"><label for="minR">Minimum R version</label><span class="when"><input id="minR" class="short" type="text" inputmode="decimal" autocomplete="off" maxlength="3" placeholder="4.1" aria-describedby="minRZero" value="${esc(S.minR)}" /><span class="unit" id="minRZero">.0</span></span></div>
+    ${head3('R CMD check: R versions × systems', [['release', 'The current R.'], ['oldrel-1', 'The R release before it. Linux only.'], ['devel', 'The next R, not released yet: it shows early what will break. Linux only.'], ['Oldest R your package supports', 'As x.y from 4.1 up, such as 4.3. DESCRIPTION gets 4.3.0, as R CMD check asks, and Linux checks the newest 4.3. 4.1 is the default.'], ['Systems', 'launchR picks the system version: Ubuntu 26.04, and the latest Windows and macOS on GitHub.'], ['Cost', 'Free on a public repository. A private one gets 2,000 free minutes a month on GitHub\'s free plan, and Mac minutes count ten times, Windows twice.']])}
+    <div class="nest"><div class="line"><label for="minR">Oldest R your package supports</label><span class="when"><input id="minR" class="short" type="text" inputmode="decimal" autocomplete="off" maxlength="3" placeholder="4.1" aria-describedby="minRZero" value="${esc(S.minR)}" /><span class="unit" id="minRZero">.0</span></span></div>
     <p class="fieldnote" id="minRNote" role="status"></p>
-    <table class="rmatrix"><thead><tr><td></td>${RS.map(([, x]) => `<th scope="col"><code>${x}</code></th>`).join('')}</tr></thead><tbody>${SYSTEMS.map(([k, t]) => `<tr><th scope="row">${t}</th>${RS.map(([v, x]) => (k === 'ubuntu' || v === 'release' ? `<td><label class="cell"><input type="checkbox" data-matrix="${k}/${v}" aria-label="${t}, ${x}"${S.matrix[`${k}/${v}`] ? ' checked' : ''} /><span><svg aria-hidden="true"><use href="#i-tick" /></svg></span></label></td>` : '<td class="none"></td>')).join('')}</tr>`).join('')}</tbody></table>
+    <table class="rmatrix"><thead><tr><td></td>${RS.map(([, x]) => `<th scope="col"><code>${x}</code></th>`).join('')}</tr></thead><tbody>${SYSTEMS.map(([k, t]) => `<tr><th scope="row">${t}</th>${RS.map(([v, x]) => (k === 'ubuntu' || v === 'release' ? `<td><label class="cell"><input type="checkbox" data-matrix="${k}/${v}" aria-label="${t}, ${x}"${S.matrix[`${k}/${v}`] ? ' checked' : ''} /><span><svg aria-hidden="true"><use href="#i-tick" /></svg></span></label></td>` : '<td class="none"></td>')).join('')}</tr>`).join('')}</tbody></table></div>
     ${extra ? sw('samePlatforms', 'Use the same systems for browser and extended tests', 'Runs full-tests and r-cmd-check-extended on the systems and R versions above, as R CMD check does. Off keeps their recommended ones.', S.samePlatforms) : ''}
     ${weekly ? `<div class="line"><label for="day">Weekly checks run on</label>${help('The weekly run of r-cmd-check, full-tests and r-cmd-check-extended, whichever are on. Why weekly: R and the packages yours uses keep changing, so it shows a break even when you changed nothing. It shows here when any of them is on, and the workflows README lists the time. Time is in 24-hour UTC, which is what GitHub uses. It may run some minutes late when GitHub is busy.')}<span class="when"><select id="day">${[...DAYS.slice(1), DAYS[0]].map((d) => `<option${d === S.day ? ' selected' : ''}>${d}</option>`).join('')}</select><label class="sr" for="time">Time in 24-hour UTC</label><input id="time" class="short" type="text" inputmode="numeric" autocomplete="off" maxlength="5" value="${esc(S.time)}" /><span class="unit">UTC</span></span></div><p class="fieldnote" id="timeNote" role="status"></p>` : ''}
     ${head3('How the checks reach your package')}
-    <div class="pick">
+    <div class="pick nest">
       <div class="opt"><label><input type="radio" name="delivery" checked /><b>Shared</b></label>${help('Your files call the checks kept in launchR, so you get fixes and updates by themselves.')}</div>
       <div class="opt"><label class="soon"><input type="radio" name="delivery" disabled /><b>Snapshot</b></label><span class="tag">Coming soon</span>${help("The checks are copied into your repository and frozen, so nothing changes under a validated process. When a new launchR version is released, you won't get any updates, security fixes included.")}</div>
     </div>`;
   const pagesNote = isPublic() ? '' : `<p class="fieldnote" id="pagesNote">On GitHub's free plan a private repository can't publish a website. The site is still built and checked on every push, and goes online once the repository is public or on a paid plan.</p>`;
-  const nav = (side, title) => `${head3(title, lists.navbar.filter((row) => row.side === side).map((row) => [row.label, row.help]))}<div class="ticks">${lists.navbar.filter((row) => row.side === side).map((row) => pill(`data-nav="${row.key}"`, row.label, S.navbar[row.key])).join('')}</div>`;
+  const nav = (side, title) => `${head3(title, [...lists.navbar.filter((row) => row.side === side).map((row) => [row.label, row.help]), ...(side === 'right' ? [['_pkgdown.yml', 'Your choices are saved there, under navbar: structure. Change them there any time.']] : [])])}${nest(`<div class="ticks">${lists.navbar.filter((row) => row.side === side).map((row) => pill(`data-nav="${row.key}"`, row.label, S.navbar[row.key])).join('')}</div>`)}`;
   const shown = lists.badges.filter((row) => row.key !== ALWAYS_BADGE);
   $('#bodySite').innerHTML = `<div class="new-only">${head3('README badges', [['README badges', 'Small images at the top of the README, also shown on the website\'s home page. They sit between the badges: start and end lines, where you can add or remove one later.'], ...shown.map((row) => [row.label, row.help])])}
-    <div class="shields">${shown.map(shield).join('')}</div></div>
+    ${nest(`<div class="shields">${shown.map(shield).join('')}</div>`)}</div>
     ${sw('website', 'Add a website', 'A pkgdown site published to GitHub Pages. Its address comes from your GitHub name. A private repository needs a paid GitHub plan for this.', S.website)}${pagesNote}
-    ${S.website ? `${nav('left', 'Navbar, left')}${nav('right', 'Navbar, right')}<p class="fieldnote">Saved in _pkgdown.yml, under navbar: structure. Change it there any time.</p>` : ''}
+    ${S.website ? `${nav('left', 'Navbar: left')}${nav('right', 'Navbar: right')}` : ''}
     <div class="opt soonline"><span>Theme colours</span><span class="tag">Coming soon</span></div>`;
   $('#bodyGit').innerHTML = `
     ${sw('github', 'Issue forms, labels and checklists', 'The issue forms and labels you tick below, a pull request template, and the stage checklists. The Set up this repository button creates the labels on GitHub, next to GitHub\'s own (it can remove those).', S.github)}
     ${S.github ? gitChoices() : ''}`;
   const rules = lists.files.filter((row) => row.path.startsWith('.agents/rules/')).map((row) => row.path.replace(/^.*\/|\.md$/g, ''));
   $('#bodyMore').innerHTML = `${head3('Licence', [['MIT', 'Others may use, change and share the code, as long as they keep the copyright notice. CRAN accepts it.'], ['Proprietary', 'All rights reserved: for a package used only inside the organisation that owns it. CRAN does not accept it.']])}
-    <div class="pick">${[['mit', 'MIT'], ['proprietary', 'Proprietary']].map(([k, t]) => `<div class="opt"><label><input type="radio" name="licence" value="${k}"${S.licence === k ? ' checked' : ''} /><b>${t}</b></label>${k === 'proprietary' && release() === 'cran' ? help('CRAN only accepts open-source licences, and R CMD check as CRAN gives a NOTE for this one, so the check fails. Choose MIT, or the plan Private for good.', S.licence === k) : ''}</div>`).join('')}</div>
-    ${sw('frontend', 'My package ships its own JS or CSS', 'Adds browser tests and the style checks for them.', S.frontend)}
-    <div class="ai-row">${sw('ai', 'Instructions for AI assistants', 'AGENTS.md and rules files in .agents/rules/ (R code, tests, docs, checks, JS and CSS, git), the same for every package, read by Codex, Gemini, Copilot and others, and a CLAUDE.md that loads AGENTS.md for Claude. Also an issue form for changing them.', S.ai)}${peekLink('skill', 'Preview launchR\'s skill for AI agents')}</div>
-    ${S.ai ? `<p class="sw-note">You get <code>AGENTS.md</code>, a <code>CLAUDE.md</code> that loads it, and rules in <code>.agents/rules/</code> (${rules.join(', ')}). <code>AGENTS.md</code> points your assistant to launchR's skill, <code>SKILL.md</code>: how the checks, the CI report and upgrades work.</p>` : ''}`;
+    <div class="pick nest">${[['mit', 'MIT'], ['proprietary', 'Proprietary']].map(([k, t]) => `<div class="opt"><label><input type="radio" name="licence" value="${k}"${S.licence === k ? ' checked' : ''} /><b>${t}</b></label>${k === 'proprietary' && release() === 'cran' ? help('CRAN only accepts open-source licences, and R CMD check as CRAN gives a NOTE for this one, so the check fails. Choose MIT, or the plan Private for good.', S.licence === k) : ''}</div>`).join('')}</div>
+    ${swList('frontend', 'My package ships its own JS or CSS', [['Browser tests', 'tests/testthat/test-demo-browser.R drives Chrome through chromote (added to Suggests). To run them on your computer, install Google Chrome.'], ['Style checks', 'Biome formats and lints the JS and CSS in inst/, with its settings in biome.json. To run them on your computer, install Biome: biomejs.dev.'], ['Starter files', 'A demo page, JS and CSS in inst/www/, to replace with your own.']], S.frontend)}
+    <div class="ai-row">${swList('ai', 'Instructions for AI assistants', [['AGENTS.md', 'The instructions, the same for every package, read by Codex, Gemini, Copilot and others.'], ['CLAUDE.md', 'Loads AGENTS.md for Claude.'], ['.agents/rules/', `Rules files: ${rules.join(', ')}.`], ['SKILL.md', 'launchR\'s skill, which AGENTS.md points to: how the checks, the CI report and upgrades work.'], ['Issue form', 'AI instructions change, for changing them.']], S.ai)}${peekLink('skill', 'Preview launchR\'s skill for AI agents')}</div>`;
   summary();
 }
 
@@ -175,13 +176,13 @@ function gitChoices() {
   const stages = lists.stages.filter(stageOffered);
   const notOffered = lists.stages.filter((row) => !stageOffered(row));
   return `<div class="git-head">${head3('Issue forms', 'The forms people fill in when they open an issue on GitHub. Each sets its label. Files in .github/ISSUE_TEMPLATE/.')}${peekLink(`form-${forms[0].key}`, 'Preview the issue forms')}</div>
-    <div class="fcards">${forms.map((row) => `<label class="fcard"><input type="checkbox" data-form="${row.key}"${S.forms[row.key] ? ' checked' : ''} /><span><b><svg aria-hidden="true"><use href="#i-tick" /></svg>${esc(row.title)}</b><small>${esc(row.help)}</small><span class="fcard-label">${chip(row.label)}<span class="auto"><svg aria-hidden="true"><use href="#i-lock" /></svg>${S.forms[row.key] ? 'auto-applied' : 'not added'}</span></span></span></label>`).join('')}</div>
-    ${kept.map((row) => `<p class="kept-line">${chip(row.name)}<span class="auto"><svg aria-hidden="true"><use href="#i-lock" /></svg>always created</span> ${esc(row.description)}. ${esc(row.kept)}</p>`).join('')}
+    <div class="fcards nest">${forms.map((row) => `<label class="fcard"><input type="checkbox" data-form="${row.key}"${S.forms[row.key] ? ' checked' : ''} /><span><b>${esc(row.title)}</b><small>${esc(row.help)}</small><span class="fcard-label">${chip(row.label)}<span class="auto"><svg aria-hidden="true"><use href="#i-lock" /></svg>${S.forms[row.key] ? 'auto-applied' : (() => { const other = forms.find((f) => f !== row && f.label === row.label && S.forms[f.key]); return other ? `still set by ${esc(other.title)}` : 'not added'; })()}</span></span></span></label>`).join('')}</div>
+    ${kept.map((row) => `<p class="kept-line nest">${chip(row.name)}<span class="auto"><svg aria-hidden="true"><use href="#i-lock" /></svg>always created</span> ${esc(row.description)}. ${esc(row.kept)}</p>`).join('')}
     ${head3('Labels', [['Labels', 'Created on GitHub by the Set up this repository button. A form\'s label stays on while the form is on, and so does a label the button itself uses.'], ...lists.labels.map((row) => [row.name, `${row.description}${locked.has(row.name) ? (row.kept ? '. Always created.' : '. Set by an issue form you chose.') : '.'}`])])}
-    <div class="ticks">${free.map((row) => `<label class="pill" title="${esc(row.description)}"><input type="checkbox" data-label="${esc(row.name)}"${S.labels[row.name] ? ' checked' : ''} /><span><svg aria-hidden="true"><use href="#i-tick" /></svg><i class="dot" style="--lc:${colour(row.name)}"></i>${esc(row.name)}</span></label>`).join('')}</div>
+    <div class="ticks nest">${free.map((row) => `<label class="pill" title="${esc(row.description)}"><input type="checkbox" data-label="${esc(row.name)}"${S.labels[row.name] ? ' checked' : ''} /><span><i class="dot" style="--lc:${colour(row.name)}"></i>${esc(row.name)}</span></label>`).join('')}</div>
     <div class="git-head">${head3('Checklists', stages.map((row) => [row.stage, row.opens]))}${peekLink(`cl-${(chosenStages()[0] ?? stages[0] ?? lists.stages[0]).key}`, 'Preview the checklists')}</div>
-    <div class="ticks">${stages.map((row) => pill(`data-stage="${row.key}"`, row.stage, S.checklists[row.key])).join('')}</div>
-    ${notOffered.length ? `<p class="sw-note">${[isPublic() && 'Before public and QC before release are for a private package.', release() !== 'cran' && 'Before CRAN, After acceptance and Next release are for a package going to CRAN.'].filter(Boolean).join(' ')}</p>` : ''}`;
+    <div class="ticks nest">${stages.map((row) => pill(`data-stage="${row.key}"`, row.stage, S.checklists[row.key])).join('')}</div>
+    ${notOffered.length ? `<p class="sw-note nest">${[isPublic() && 'Before public and QC before release are for a private package.', release() !== 'cran' && 'Before CRAN, After acceptance and Next release are for a package going to CRAN.'].filter(Boolean).join(' ')}</p>` : ''}`;
 }
 
 function summary() {
@@ -264,7 +265,7 @@ function timeProblem() {
 
 /* the steps: About (the questions and the plan), then the four groups of settings. A package that exists already gets
    Checks and Website only. */
-const STEP_TITLES = { 2: 'Checks on GitHub', 3: 'Issues and checklists', 4: 'README and website', 5: 'Extras' };
+const STEP_TITLES = { 2: 'CI checks on GitHub', 3: 'Issues and checklists', 4: 'README and website', 5: 'Extras' };
 const stepList = () => (mode === 'new' ? [1, 2, 3, 4, 5] : [2, 4]);
 
 function view(name, focus) {
@@ -590,7 +591,7 @@ function existingSteps() {
   if (add.github) list.push(step(setupButton, '', setupMore));
   $('#stepList').innerHTML = list.join('');
   $('#nextAfter').innerHTML = after([
-    add.ci && ['Run the checks on your computer', `Before a pull request, follow <em>Run the checks on your computer</em> in ${code('.github/workflows/README.md')}.`],
+    add.ci && ['Run the checks on your computer', `Before a pull request, follow <em>Run the checks on your computer</em> in ${code('.github/workflows/README.md')}.${S.checks.lint ? ` The style step needs <a href="https://posit-dev.github.io/air/" target="_blank" rel="noopener">Air</a>${S.frontend && mode === 'new' ? ', and <a href="https://biomejs.dev" target="_blank" rel="noopener">Biome</a> for the JS and CSS' : ''}: install ${S.frontend && mode === 'new' ? 'them' : 'it'} once.` : ''}${S.frontend && mode === 'new' ? ' The browser tests need Google Chrome.' : ''}`],
     ['Later', `${add.ci ? codecov() : ''}To add something later, come back and choose only that.`],
   ]);
 }
@@ -639,7 +640,7 @@ function steps() {
   $('#nextAfter').innerHTML = after([
     S.github && (now.length || later.length) && ['Your checklists', `${now.length ? `${listWords(now)} ${now.length === 1 ? 'opens' : 'open'} in your repository's issues now; work through ${now.length === 1 ? 'it' : 'them'} as you reach that stage.` : ''}${later.length ? ` ${listWords(later)} ${later.length === 1 ? 'opens' : 'open'} when ${later.length === 1 ? 'its' : 'their'} stage arrives.` : ''}`],
     S.github && ['Keep them up to date', `Your checklists list a few repository settings to change by hand. Run <em>Set up this repository</em> on GitHub again at any time: it ticks the boxes it can check and opens checklists as their stage arrives. Optional: with ${gh} installed and signed in, ${code(setup)} in the R console does the same from your computer.`],
-    running.length && ['Run the checks on your computer', `Before a pull request, follow <em>Run the checks on your computer</em> in ${code('.github/workflows/README.md')}.`],
+    running.length && ['Run the checks on your computer', `Before a pull request, follow <em>Run the checks on your computer</em> in ${code('.github/workflows/README.md')}.${S.checks.lint ? ` The style step needs <a href="https://posit-dev.github.io/air/" target="_blank" rel="noopener">Air</a>${S.frontend && mode === 'new' ? ', and <a href="https://biomejs.dev" target="_blank" rel="noopener">Biome</a> for the JS and CSS' : ''}: install ${S.frontend && mode === 'new' ? 'them' : 'it'} once.` : ''}${S.frontend && mode === 'new' ? ' The browser tests need Google Chrome.' : ''}`],
     ['Later', `${email}${codecov()}To add something later, such as a website, come back and choose only that.`],
   ]);
 }

@@ -936,3 +936,17 @@ dialog#setup { scrollbar-gutter: stable; }
 .how-row { display: flex; align-items: center; gap: 8px; margin: 18px 0 10px; }
 .how-row .routes { margin: 0; }
 .how-row + fieldset.plans { margin-top: 0; }
+
+/* one selected look for every choice that toggles: an accent border and a light accent fill, no tick */
+.pill input:checked + span, .fcard input:checked + span, .shield input:checked + span {
+  border-color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); box-shadow: none;
+}
+.pill svg, .fcard b svg, .shield > span > svg { display: none; }
+.shield > span { background: transparent; }
+/* what a heading holds sits in under it */
+#modifyView .nest { margin-left: 20px; }
+#modifyView .nest .nest { margin-left: 0; }
+@media (max-width: 860px) { #modifyView .nest { margin-left: 12px; } }
+/* the main buttons sit on the right; Back stays on the left */
+#form .actions { justify-content: flex-end; }
+#form #missing { text-align: right; }
