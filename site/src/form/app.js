@@ -160,9 +160,9 @@ function summary() {
   $('#planLine').textContent = `${on === 7 ? 'All seven' : WORDS[on]} ${on === 1 ? 'check' : 'checks'}, ${count ? `${count} ${count === 1 ? 'checklist' : 'checklists'}` : 'no checklists'}. ${$('#pvRelease').textContent.replace(/^None\. /, '')}`;
 }
 
-/* the plan preview (page.js writes its checklists per plan) adds QC before release while the QC checklist is on. A
-   private package that won't go public gets it in place of Before public, as cli/R/github.R opens them. It changes the
-   list only when it differs, so the list's observer settles. */
+/* the plan preview (page.js writes its checklists per plan) adds QC before release while the QC checklist is on.
+   Private for good starts with QC alone (lists/plans.tsv), so without it there is no checklist. It changes the list
+   only when it differs, so the list's observer settles. */
 function previewQc() {
   const ul = $('#pvLists');
   if (!ul || !lists) return;
@@ -172,10 +172,11 @@ function previewQc() {
   const before = [...ul.querySelectorAll('li')].find((x) => x.textContent === 'Before public');
   if (on && !li) {
     if (forGood) before?.remove();
+    ul.querySelector('li.none')?.remove();
     ul.insertAdjacentHTML('afterbegin', `<li class="qc">${esc(lists.settings.qc_stage)}</li>`);
   } else if (!on && li) {
     li.remove();
-    if (forGood && !before) ul.insertAdjacentHTML('afterbegin', '<li>Before public</li>');
+    if (!ul.querySelector('li')) ul.innerHTML = '<li class="none">None, no release features</li>';
   }
 }
 

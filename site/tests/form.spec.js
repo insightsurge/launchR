@@ -188,7 +188,8 @@ test('the plan preview lists the QC checklist while it is on', async ({ page }) 
   await page.locator('#modifyView summary', { hasText: 'GitHub setup' }).click();
   await page.locator('label.sw', { hasText: 'QC checklist' }).click();
   await expect(page.locator('#pvLists')).not.toContainText('QC before release');
-  await expect(page.locator('#pvLists')).toContainText('Before public');
+  // Private for good starts with the QC checklist alone, so without it there is none.
+  await expect(page.locator('#pvLists')).toHaveText('None, no release features');
   await page.locator('#modBack').click();
   await page.locator('input[name=plan][value=a]').check();
   await expect(page.locator('#pvLists')).not.toContainText('QC before release');
