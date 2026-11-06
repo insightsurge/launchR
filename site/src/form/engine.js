@@ -119,7 +119,7 @@ export function defaultChoices(lists, preset = lists.settings.preset, plan = lis
   };
 }
 
-// The Modify choices that follow from the plan: badges and the stage checklists depend on the plan; the licence is
+// The settings that follow from the plan: badges and the stage checklists depend on the plan; the licence is
 // proprietary only for a private package that won't go to CRAN, since R CMD check as CRAN gives a NOTE for any other
 // licence than an open-source one. cli/R/choices.R has the same.
 export function planExtras(lists, chosen) {
@@ -278,7 +278,7 @@ export function placeholderValues(choices, lists) {
     }
     values[`cron_${row.key}`] = check.cron;
     // The default oldest R (4.1) in a check's systems becomes the chosen one, and R CMD check runs on it on Linux, as
-    // the site's Modify page does. cli/R/build.R has the same.
+    // the site's settings steps do. cli/R/build.R has the same.
     const start = row[`platforms_${choices.visibility}`].replaceAll(`/${lists.settings.min_r}`, `/${minR}`);
     const oldest = row.key === 'r_cmd_check' && minR !== lists.settings.min_r && !start.includes(`ubuntu/${minR}`) ? `, ubuntu/${minR}` : '';
     values[`platforms_${row.key}`] = check.platforms ?? `${start}${oldest}`;

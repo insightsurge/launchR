@@ -473,7 +473,7 @@ p { text-wrap: pretty; }
   .nav-start { min-height: 44px; padding: 0 8px; margin-right: 0; }
 }
 
-/* the form's other two views: Modify, and what to do after the download */
+/* the form's other two views: the settings steps, and what to do after the download */
 .setup-grid { transition: width 420ms cubic-bezier(0.22, 1, 0.36, 1); }
 #setup[data-view='modify'] .setup-grid { width: min(1160px, 100%); grid-template-columns: minmax(0, 1.9fr) minmax(0, 0.7fr); }
 #setup[data-view='next'] .setup-grid { width: min(720px, 100%); grid-template-columns: minmax(0, 1fr); }
@@ -569,7 +569,7 @@ select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 @keyframes view-in { from { opacity: 0; transform: translateY(6px); } }
 @media (prefers-reduced-motion: reduce) { #form, #modifyView, #nextView { animation: none; } }
 
-/* Modify: every explanation sits behind a small info mark */
+/* The settings steps: every explanation sits behind a small info mark */
 .opt { display: inline-flex; align-items: center; gap: 7px; min-width: 0; }
 .opt .tag, h4 .tag { margin: 0; font-size: 12px; }
 .opt > .sw, .opt > label { margin: 0; }
@@ -599,7 +599,7 @@ input.short.bad { border-color: var(--no); }
   .line { flex-wrap: wrap; }
 }
 
-/* Modify: headings a step up, their contents set in, and what can't be chosen yet greyed */
+/* The settings steps: headings a step up, their contents set in, and what can't be chosen yet greyed */
 .mod summary b { font-size: 18px; }
 .mod-body { padding-left: 20px; }
 .sw:has(input:disabled), .pick label:has(input:disabled) { opacity: 0.5; cursor: not-allowed; }
@@ -613,7 +613,7 @@ input.short.bad { border-color: var(--no); }
   #modifyView .wide-tip [role='tooltip'] { position: fixed; top: auto; left: 16px; right: 16px; bottom: 84px; width: auto; max-width: none; }
 }
 
-/* Modify: tappable pills in place of checkboxes */
+/* The settings steps: tappable pills in place of checkboxes */
 #modifyView .ticks { display: flex; flex-wrap: wrap; gap: 8px; }
 .pill { position: relative; display: inline-flex; margin: 0; font-weight: 400; cursor: pointer; }
 .pill input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; }
@@ -656,7 +656,7 @@ input.short.bad { border-color: var(--no); }
 .cell input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
 .rmatrix .none::after { content: ''; display: inline-block; width: 12px; height: 1.5px; background: var(--line); vertical-align: middle; }
 
-/* Modify: one type scale and one rhythm.
+/* The settings steps: one type scale and one rhythm.
    Group 18/500. Subsection and field label 14.5/500. Option and input 14.5/400. Small note 13.5. Tag 12. */
 #modifyView .mod-body { display: grid; gap: 14px; padding: 2px 0 22px 20px; }
 #modifyView .mod-body > * { margin: 0; }
@@ -788,3 +788,143 @@ input { caret-color: var(--accent); }
 }
 @keyframes menu-in { from { opacity: 0; transform: translateY(-8px); } }
 @media (prefers-reduced-motion: reduce) { .menu:not([hidden]) { animation: none; } }
+
+/* the form in steps: a plan and Download, or Customise every setting and four more steps */
+.views { min-width: 0; }
+#setup:not([data-mode='existing']) .ex-only { display: none; }
+.stepbar { margin: 0 0 18px; }
+.stepbar ol { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.stepbar li[hidden] { display: none; }
+.stepbar button { display: inline-flex; align-items: center; gap: 7px; min-height: 36px; padding: 0 12px 0 6px; border: 1.5px solid var(--line); border-radius: 99px; background: none; color: var(--soft); font: inherit; font-size: 14px; cursor: pointer; }
+.stepbar button i { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid currentColor; font-style: normal; font-size: 12.5px; }
+.stepbar button:hover { border-color: var(--soft); color: var(--ink); }
+.stepbar button.done { color: var(--ink); }
+.stepbar button[aria-current='step'] { border-color: var(--accent); color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.stepbar button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.custom-opt { display: flex; margin-top: 16px; }
+.custom-opt .sw { margin: 0; align-items: center; }
+fieldset.plans.framed { padding: 12px; border: 1.5px dashed color-mix(in srgb, var(--accent) 60%, var(--line)); border-radius: 16px; }
+fieldset.plans.framed legend { padding: 0 6px; margin-left: -6px; color: var(--accent); }
+.primary[aria-disabled='true'] { opacity: 0.55; box-shadow: none; }
+#missing { color: var(--soft); }
+#modTitle .for { color: var(--soft); font-weight: 400; font-size: 0.62em; }
+#modifyView .mod { border: 0; }
+#modifyView .mod[hidden] { display: none; }
+.step-sum { margin: -14px 0 14px; font-size: 14.5px; color: var(--soft); }
+.step-sum:empty { display: none; }
+#modifyView .mod-body { padding-left: 0; }
+.mod-actions { justify-content: flex-start; }
+.mod-actions .quiet { margin-right: auto; }
+.sw-note { font-size: 13.5px; color: var(--soft); }
+.sw-note code { font-size: 12.5px; }
+.git-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+#modifyView .git-head h4 { margin: 0; }
+.peek-link { padding: 0; border: 0; background: none; font: inherit; font-size: 14px; color: var(--accent); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.peek-link:hover { color: var(--ink); }
+.ai-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+
+/* issue forms as cards, each with the label it sets */
+.fcards { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 10px; }
+.fcard { position: relative; display: block; margin: 0; font-weight: 400; cursor: pointer; }
+.fcard input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; }
+.fcard > span { display: flex; flex-direction: column; gap: 6px; height: 100%; padding: 11px 12px; background: var(--surface); border: 1.5px solid var(--line); border-radius: 12px; transition: border-color .15s; }
+.fcard b { display: flex; align-items: center; font-weight: 500; font-size: 14.5px; color: var(--soft); }
+.fcard b svg { width: 0; height: 13px; transition: width .15s, margin-right .15s; }
+.fcard small { font-size: 13px; color: var(--soft); line-height: 1.35; }
+.fcard-label { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: auto; }
+.fcard input:checked + span { border-color: var(--accent); }
+.fcard input:checked + span b { color: var(--ink); }
+.fcard input:checked + span b svg { width: 13px; margin-right: 6px; color: var(--accent); }
+.fcard:hover > span { border-color: var(--soft); }
+.fcard input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+.fcard input:not(:checked) + span .label-chip { opacity: 0.6; }
+.label-chip { display: inline-block; padding: 1px 9px; border-radius: 99px; font-size: 12.5px; font-weight: 500; line-height: 1.6; color: var(--ink); background: color-mix(in srgb, var(--lc) 30%, var(--surface)); border: 1px solid color-mix(in srgb, var(--lc) 70%, transparent); }
+.auto { display: inline-flex; align-items: center; gap: 4px; font-size: 12.5px; color: var(--soft); }
+.auto svg, .shield-note svg { width: 13px; height: 13px; }
+.kept-line { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-size: 13.5px; color: var(--soft); }
+.pill .dot { flex: none; width: 9px; height: 9px; margin-right: 7px; border-radius: 50%; background: var(--lc); }
+
+/* README badges drawn as they look in a README */
+.shields { display: flex; flex-wrap: wrap; gap: 10px 14px; }
+.shield-opt { flex-wrap: wrap; }
+.shield { position: relative; display: inline-flex; margin: 0; font-weight: 400; cursor: pointer; }
+.shield input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; }
+.shield > span { display: inline-flex; align-items: stretch; height: 30px; padding: 2px; border: 1.5px solid var(--line); border-radius: 8px; transition: border-color .15s; }
+.shield svg { align-self: center; width: 0; height: 13px; color: var(--accent); transition: width .15s, margin .15s; }
+.shield b, .shield i { display: grid; place-items: center; padding: 0 8px; font: 500 13px/1 Verdana, 'DejaVu Sans', sans-serif; font-style: normal; color: #fff; text-shadow: 0 1px 0 rgb(0 0 0 / 30%); }
+.shield b { background: #555; border-radius: 4px 0 0 4px; }
+.shield i { background: var(--sc); border-radius: 0 4px 4px 0; }
+.shield input:checked + span { border-color: var(--accent); }
+.shield input:checked + span svg { width: 13px; margin: 0 6px 0 4px; }
+.shield:hover > span { border-color: var(--soft); }
+.shield input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+.shield:has(input:disabled) { cursor: default; }
+.shield:has(input:disabled:not(:checked)) > span { opacity: 0.55; }
+.shield-note { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; color: var(--ink); }
+
+/* After that: four short bullets */
+.after h3 { margin: 0 0 6px; font-size: 15px; font-weight: 500; color: var(--ink); }
+.after ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
+.after li { line-height: 1.5; }
+.after code { font-size: 13px; overflow-wrap: anywhere; }
+
+/* the shared preview window: a list on the left, what it shows on the right; the whole screen on a phone */
+dialog.peek { width: min(980px, calc(100% - 32px)); height: min(720px, calc(100% - 48px)); max-width: none; max-height: none; padding: 0; border: 1px solid var(--line); border-radius: 18px; background: var(--bg); color: var(--ink); overflow: hidden; }
+dialog.peek[open] { display: flex; flex-direction: column; }
+dialog.peek::backdrop { background: rgb(0 0 0 / 55%); }
+.peek-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px 12px 20px; border-bottom: 1px solid var(--line); }
+.peek-head h2 { margin: 0; font-size: 18px; }
+.peek .peek-close { position: static; }
+.peek-grid { flex: 1; min-height: 0; display: grid; grid-template-columns: 220px minmax(0, 1fr); }
+.peek-list { overflow: auto; padding: 12px; border-right: 1px solid var(--line); }
+.peek-list h3 { margin: 12px 8px 4px; font-size: 12.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--soft); font-weight: 500; }
+.peek-list h3:first-child { margin-top: 2px; }
+.peek-list ul { margin: 0; padding: 0; list-style: none; }
+.peek-list button { display: block; width: 100%; min-height: 34px; padding: 6px 8px; border: 0; border-radius: 8px; background: none; color: var(--ink); font: inherit; font-size: 14.5px; text-align: left; cursor: pointer; }
+.peek-list button:hover { background: var(--surface); }
+.peek-list button[aria-current='true'] { background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent); }
+.peek-pane { overflow: auto; padding: 18px 22px 28px; }
+.peek-kind { margin: 0 0 4px; font-size: 13px; color: var(--soft); }
+.peek-title { margin: 0; font-size: 22px; }
+.peek-when { margin: 4px 0 14px; color: var(--soft); font-size: 14.5px; }
+.peek-pane h4 { margin: 16px 0 6px; font-size: 15px; font-weight: 600; }
+.peek-boxes { margin: 0; padding: 0; list-style: none; display: grid; gap: 7px; }
+.peek-boxes li { display: flex; gap: 9px; font-size: 14.5px; line-height: 1.45; }
+.peek-boxes em { font-style: normal; color: var(--soft); }
+.peek-boxes .tag { margin: 0 0 0 6px; padding: 0 7px; font-size: 11.5px; vertical-align: 1px; }
+.peek-box { flex: none; width: 14px; height: 14px; margin-top: 4px; border: 1.5px solid var(--soft); border-radius: 3px; }
+.peek-foot { margin-top: 18px; font-size: 13.5px; color: var(--soft); }
+.peek-md p { margin: 0 0 6px; font-size: 14px; color: var(--soft); }
+.peek-field { margin: 14px 0 0; }
+.peek-label { margin: 0; font-weight: 600; font-size: 14.5px; }
+.peek-req { color: var(--no); }
+.peek-help { margin: 2px 0 6px; font-size: 13.5px; color: var(--soft); white-space: pre-line; }
+.peek-input { height: 34px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+.peek-input.tall { height: 90px; }
+.peek-md-doc { font-size: 14.5px; line-height: 1.55; }
+.peek-md-doc h1 { font-size: 22px; margin: 4px 0 8px; }
+.peek-md-doc h2 { font-size: 17px; margin: 18px 0 6px; }
+.peek-md-doc code { font-size: 13px; }
+.peek-md-doc pre { overflow: auto; padding: 10px 12px; background: var(--surface); border-radius: 8px; }
+.peek-md-doc table { border-collapse: collapse; font-size: 13.5px; }
+.peek-md-doc th, .peek-md-doc td { padding: 6px 8px; border: 1px solid var(--line); text-align: left; vertical-align: top; }
+@media (max-width: 860px) {
+  dialog.peek { width: 100%; height: 100%; border-radius: 0; border: 0; }
+  .peek-grid { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
+  .peek-list { display: flex; gap: 6px; overflow-x: auto; padding: 10px 12px; border-right: 0; border-bottom: 1px solid var(--line); }
+  .peek-list h3 { display: none; }
+  .peek-list ul { display: flex; gap: 6px; }
+  .peek-list button { white-space: nowrap; min-height: 44px; border: 1px solid var(--line); border-radius: 99px; padding: 0 14px; }
+  .peek-pane { padding: 16px var(--gut) 28px; }
+  .fcards { grid-template-columns: minmax(0, 1fr); }
+  .stepbar button span { font-size: 13px; }
+  .stepbar button { min-height: 44px; }
+  .git-head, .ai-row { flex-wrap: wrap; }
+}
+/* hidden means hidden, whatever display a touch rule gives the element */
+.reset[hidden], .primary[hidden], .quiet[hidden] { display: none; }
+@media (max-width: 860px) {
+  .mod-actions { flex-wrap: nowrap; }
+  .mod-actions .quiet { flex: none; }
+  .mod-actions .primary { flex: 1; width: auto; }
+}

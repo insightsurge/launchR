@@ -1,7 +1,27 @@
+---
+// The setup form. The shared preview window's contents are rendered here, at build time, from the same lists and
+// templates the zip is built from (src/form/peek.js), and from public/skill.md.
+import { checklists, issueForms } from '../form/peek.js';
+import { Content as Skill } from '../../public/skill.md';
+
+const stages = checklists();
+const forms = issueForms();
+const box = (b) => [b.where && b.pick ? `${b.where}: ${b.pick}` : b.where || b.pick].filter(Boolean)[0] ?? '';
+---
 <dialog id="setup" aria-labelledby="setupTitle">
     <div class="setup-inner">
       <button type="button" class="close" id="close" aria-label="Close the form"><svg aria-hidden="true"><use href="#i-close" /></svg></button>
       <div class="setup-grid">
+        <div class="views">
+        <nav class="stepbar" id="stepBar" aria-label="Steps" hidden>
+          <ol>
+            <li><button type="button" data-step="1"><i>1</i><span>About</span></button></li>
+            <li><button type="button" data-step="2"><i>2</i><span>Checks</span></button></li>
+            <li class="new-only"><button type="button" data-step="3"><i>3</i><span>Issues</span></button></li>
+            <li><button type="button" data-step="4"><i>4</i><span><span class="new-only">README</span><span class="ex-only">Website</span></span></button></li>
+            <li class="new-only"><button type="button" data-step="5"><i>5</i><span>Extras</span></button></li>
+          </ol>
+        </nav>
         <form id="form" onsubmit="return false" novalidate>
           <h2 id="setupTitle">Set up your package</h2>
           <p class="sub">Five questions. Nothing you type leaves your browser. <button type="button" class="reset" id="toExisting">Already have a package?</button></p>
@@ -36,28 +56,29 @@
             <p class="field-note" id="owner-note">No GitHub account yet? <a href="https://github.com/signup" target="_blank" rel="noopener">Sign up free</a>, then come back with your username.</p>
           </div>
           <fieldset class="plans" id="plans">
-            <legend>What is the plan for this package?</legend>
+            <legend id="planLegend">What is the plan for this package?</legend>
             <label class="plan p1"><input type="radio" name="plan" value="a" checked /><i class="chip c1"></i><span><b>Public, going to CRAN</b></span></label>
             <label class="plan p2"><input type="radio" name="plan" value="b" /><i class="chip c2"></i><span><b>Public, not for CRAN</b><em>Installed from GitHub</em></span></label>
             <label class="plan p3"><input type="radio" name="plan" value="c" /><i class="chip c3"></i><span><b>Private for now</b><em>Public and CRAN later</em></span></label>
             <label class="plan p4"><input type="radio" name="plan" value="d" /><i class="chip c4"></i><span><b>Private for good</b><em>Company or personal</em></span></label>
           </fieldset>
+          <div class="opt custom-opt"><label class="sw"><input type="checkbox" id="custom" /><i aria-hidden="true"></i><b>Customise every setting</b></label><span class="tip" tabindex="0" role="note" aria-label="Go through four more steps: checks, issues and checklists, README and website, and extras. Your plan's choices are the starting point."><svg aria-hidden="true"><use href="#i-info" /></svg><span role="tooltip" aria-hidden="true">Go through four more steps: checks, issues and checklists, README and website, and extras. Your plan's choices are the starting point.</span></span></div>
           <p class="plan-line" id="planLine" role="status"></p>
           <div class="actions">
-            <button type="button" class="primary" id="download">Download <span id="dlName">fooBarPkg</span>.zip</button>
-            <button type="button" class="quiet" id="modify">Modify</button>
+            <button type="button" class="primary" id="download" aria-disabled="true" aria-describedby="missing">Download <span id="dlName">fooBarPkg</span>.zip</button>
+            <button type="button" class="primary" id="modify" hidden aria-disabled="true" aria-describedby="missing">Next</button>
           </div>
+          <p class="note" id="missing" role="status"></p>
           <p class="note" id="planNote" role="status"></p>
                   </form>
         <section id="modifyView" aria-labelledby="modTitle" hidden>
-          <button type="button" class="back" id="modBack"><svg aria-hidden="true" viewBox="0 0 16 16"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M10 3 5 8l5 5" /></svg>Back to the questions</button>
-          <h2 id="modTitle" tabindex="-1">Modify <span id="modPkg">fooBarPkg</span></h2>
+          <h2 id="modTitle" tabindex="-1"><span id="stepTitle">Checks on GitHub</span> <span class="for">for <span id="modPkg">fooBarPkg</span></span></h2>
           <p class="sub">Already set up for your plan. Change only what you want. <button type="button" class="reset" id="modReset" hidden>Back to recommended</button></p>
-          <details class="mod" name="mod" open><summary><b>Checks on GitHub</b><span id="sumCi"></span></summary><div class="mod-body" id="bodyCi"></div></details>
-          <details class="mod" name="mod"><summary><b>Website</b><span id="sumSite"></span></summary><div class="mod-body" id="bodySite"></div></details>
-          <details class="mod new-only" name="mod"><summary><b>GitHub setup</b><span id="sumGit"></span></summary><div class="mod-body" id="bodyGit"></div></details>
-          <details class="mod new-only" name="mod"><summary><b>Extras</b><span id="sumMore"></span></summary><div class="mod-body" id="bodyMore"></div></details>
-          <div class="actions mod-actions"><button type="button" class="primary" id="modDownload">Download</button></div>
+          <section class="mod" data-step="2" aria-label="Checks on GitHub"><p class="step-sum" id="sumCi"></p><div class="mod-body" id="bodyCi"></div></section>
+          <section class="mod new-only" data-step="3" aria-label="Issues and checklists"><p class="step-sum" id="sumGit"></p><div class="mod-body" id="bodyGit"></div></section>
+          <section class="mod" data-step="4" aria-label="README and website"><p class="step-sum" id="sumSite"></p><div class="mod-body" id="bodySite"></div></section>
+          <section class="mod new-only" data-step="5" aria-label="Extras"><p class="step-sum" id="sumMore"></p><div class="mod-body" id="bodyMore"></div></section>
+          <div class="actions mod-actions"><button type="button" class="quiet" id="modBack">Back</button><button type="button" class="primary" id="stepNext">Next</button><button type="button" class="primary" id="modDownload" hidden>Download</button></div>
         </section>
         <section id="existingView" aria-labelledby="exTitle" hidden>
           <button type="button" class="back" id="exBack"><svg aria-hidden="true" viewBox="0 0 16 16"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M10 3 5 8l5 5" /></svg>Start a new package instead</button>
@@ -91,16 +112,17 @@
             <label><input type="radio" name="route" value="desktop" /><span>With GitHub Desktop</span></label>
           </fieldset>
           <ol class="steps" id="stepList"></ol>
-          <p class="after" id="nextAfter"></p>
+          <div class="after" id="nextAfter"></div>
           <div class="actions"><button type="button" class="primary" id="nextDone">Done</button><button type="button" class="quiet" id="nextChange">Change something</button></div>
         </section>
+        </div>
         <aside class="preview" aria-label="What this plan gives you">
           <div class="pv-hex" id="pvHex">
             <svg viewBox="0 0 87 100" aria-hidden="true"><polygon points="43.500,3 84,26 84,74 43.500,97 3,74 3,26" /></svg>
             <span id="pvLetter">fB</span>
           </div>
           <p class="pv-name"><span id="pvName">fooBarPkg</span>.zip</p>
-          <p class="pv-plan" id="pvPlan" aria-live="polite">Public, going to CRAN</p>
+          <p class="pv-plan" aria-live="polite"><span id="pvPlan">Public, going to CRAN</span><span id="pvCustom" hidden>, customised</span></p>
           <dl class="pv-rows">
             <div><dt>Checks on GitHub</dt><dd id="pvChecks">All seven</dd></div>
             <div class="pv-more"><dt>Systems</dt><dd id="pvSystems"></dd></div>
@@ -111,4 +133,63 @@
         </aside>
       </div>
     </div>
+    <dialog id="peek" class="peek" aria-labelledby="peekTitle">
+      <div class="peek-head">
+        <h2 id="peekTitle">Preview</h2>
+        <button type="button" class="close peek-close" id="peekClose" aria-label="Close the preview"><svg aria-hidden="true"><use href="#i-close" /></svg></button>
+      </div>
+      <div class="peek-grid">
+        <nav class="peek-list" aria-label="What to preview">
+          <h3>Checklists</h3>
+          <ul>{stages.map((s) => <li><button type="button" data-peek={`cl-${s.key}`}>{s.stage}</button></li>)}</ul>
+          <h3>Issue forms</h3>
+          <ul>{forms.map((f) => <li><button type="button" data-peek={`form-${f.key}`}>{f.title}</button></li>)}</ul>
+          <h3>For AI assistants</h3>
+          <ul><li><button type="button" data-peek="skill">skill.md</button></li></ul>
+        </nav>
+        <div class="peek-pane">
+          {stages.map((s) => (
+            <article class="peek-issue" data-peek={`cl-${s.key}`} hidden>
+              <p class="peek-kind">Checklist issue, as GitHub shows it</p>
+              <h3 class="peek-title">Checklist: {s.stage}</h3>
+              <p class="peek-when">{s.opens}</p>
+              {s.sections.map((sec) => (
+                <>
+                  <h4>{sec.name}</h4>
+                  <ul class="peek-boxes">
+                    {sec.boxes.map((b) => (
+                      <li>
+                        <span class="peek-box" aria-hidden="true"></span>
+                        <span>{b.text.split('`').map((part, i) => (i % 2 ? <code>{part}</code> : part))}{box(b) && <em> ({box(b)})</em>}{b.auto && <span class="tag">launchR ticks this</span>}{b.cran && <span class="tag">CRAN only</span>}{b.needs && <span class="tag">{b.needs}</span>}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              ))}
+              <p class="peek-foot">Last checked by launchR on the date of the last run.</p>
+            </article>
+          ))}
+          {forms.map((f) => (
+            <article class="peek-form" data-peek={`form-${f.key}`} hidden>
+              <p class="peek-kind">Issue form, as GitHub shows it · sets the label <code>{f.label}</code></p>
+              <h3 class="peek-title">{f.name}</h3>
+              <p class="peek-when">{f.description}</p>
+              {f.body.map((part) => part.type === 'markdown' ? (
+                <div class="peek-md">{part.value.split('\n').map((line) => <p>{line}</p>)}</div>
+              ) : (
+                <div class="peek-field">
+                  <p class="peek-label">{part.label}{part.required && <span class="peek-req" aria-label="required"> *</span>}</p>
+                  {part.description && <p class="peek-help">{part.description}</p>}
+                  <div class={part.type === 'textarea' ? 'peek-input tall' : 'peek-input'} aria-hidden="true"></div>
+                </div>
+              ))}
+            </article>
+          ))}
+          <article class="peek-md-doc" data-peek="skill" hidden>
+            <p class="peek-kind">launchR's guide for AI agents, at <a href="/skill.md">/skill.md</a></p>
+            <Skill />
+          </article>
+        </div>
+      </div>
+    </dialog>
   </dialog>

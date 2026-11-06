@@ -29,7 +29,7 @@ default_choices <- function(package, preset = kit_setting("preset"), plan = kit_
   ) |> c(plan_extras(chosen))
 }
 
-# The Modify choices that follow from the plan: badges and the stage checklists depend on the plan; the licence is
+# The settings that follow from the plan: badges and the stage checklists depend on the plan; the licence is
 # proprietary only for a private package that won't go to CRAN, since R CMD check as CRAN gives a NOTE for any other
 # licence than an open-source one. site/src/form/engine.js has the same.
 plan_extras <- function(chosen) {
