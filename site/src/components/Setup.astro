@@ -17,14 +17,14 @@ const box = (b) => [b.where && b.pick ? `${b.where}: ${b.pick}` : b.where || b.p
           <ol>
             <li><button type="button" data-step="1"><i>1</i><span>About</span></button></li>
             <li><button type="button" data-step="2"><i>2</i><span>CI checks</span></button></li>
-            <li class="new-only"><button type="button" data-step="3"><i>3</i><span>Issues</span></button></li>
-            <li><button type="button" data-step="4"><i>4</i><span><span class="new-only">README</span><span class="ex-only">Website</span></span></button></li>
+            <li class="new-only"><button type="button" data-step="3"><i>3</i><span>Issues and checklists</span></button></li>
+            <li><button type="button" data-step="4"><i>4</i><span><span class="new-only">README and website</span><span class="ex-only">Website</span></span></button></li>
             <li class="new-only"><button type="button" data-step="5"><i>5</i><span>Extras</span></button></li>
           </ol>
         </nav>
         <form id="form" onsubmit="return false" novalidate>
           <h2 id="setupTitle">Set up your package</h2>
-          <p class="sub">Five questions. Nothing you type leaves your browser. <button type="button" class="reset" id="toExisting">Already have a package?</button></p>
+          <p class="sub">A few questions. Nothing you type leaves your browser. <button type="button" class="reset" id="toExisting">Already have a package?</button></p>
           <div class="field">
             <div class="field-head"><label for="pkg">Package name</label><span class="tip" tabindex="0" aria-describedby="tip-pkg"><svg aria-hidden="true"><use href="#i-info" /></svg><span role="tooltip" id="tip-pkg">Letters, numbers and dots only, starting with a letter: no - or _. Going to CRAN? Check the name is free first: open cran.r-project.org/package=yourname.</span></span></div>
             <input id="pkg" type="text" maxlength="80" autocomplete="off" spellcheck="false" placeholder="fooBarPkg" aria-describedby="tip-pkg" />
@@ -65,7 +65,7 @@ const box = (b) => [b.where && b.pick ? `${b.where}: ${b.pick}` : b.where || b.p
           </div>
           <fieldset class="plans" id="plans">
             <legend id="planLegend" class="sr">What is the plan for this package?</legend>
-            <label class="plan p1"><input type="radio" name="plan" value="a" checked /><i class="chip c1"></i><span><b>Public, going to CRAN</b></span></label>
+            <label class="plan p1"><input type="radio" name="plan" value="a" checked /><i class="chip c1"></i><span><b>Public, going to CRAN</b><em>Anyone can install it</em></span></label>
             <label class="plan p2"><input type="radio" name="plan" value="b" /><i class="chip c2"></i><span><b>Public, not for CRAN</b><em>Installed from GitHub</em></span></label>
             <label class="plan p3"><input type="radio" name="plan" value="c" /><i class="chip c3"></i><span><b>Private for now</b><em>Public and CRAN later</em></span></label>
             <label class="plan p4"><input type="radio" name="plan" value="d" /><i class="chip c4"></i><span><b>Private for good</b><em>Company or personal</em></span></label>
@@ -97,9 +97,9 @@ const box = (b) => [b.where && b.pick ? `${b.where}: ${b.pick}` : b.where || b.p
           </div>
           <fieldset class="routes wide" id="exPlans">
             <legend>Where is this package headed?</legend>
-            <label><input type="radio" name="explan" value="a" checked /><span>CRAN</span></label>
-            <label><input type="radio" name="explan" value="b" /><span>Public, not CRAN</span></label>
-            <label><input type="radio" name="explan" value="c" /><span>Private, public later</span></label>
+            <label><input type="radio" name="explan" value="a" checked /><span>Public, going to CRAN</span></label>
+            <label><input type="radio" name="explan" value="b" /><span>Public, not for CRAN</span></label>
+            <label><input type="radio" name="explan" value="c" /><span>Private for now</span></label>
             <label><input type="radio" name="explan" value="d" /><span>Private for good</span></label>
           </fieldset>
           <h3 class="ex-head">What to add</h3>
@@ -120,7 +120,7 @@ const box = (b) => [b.where && b.pick ? `${b.where}: ${b.pick}` : b.where || b.p
           </fieldset>
           <ol class="steps" id="stepList"></ol>
           <div class="after" id="nextAfter"></div>
-          <div class="actions"><button type="button" class="primary" id="nextDone">Done</button><button type="button" class="quiet" id="nextChange">Change something</button></div>
+          <div class="actions"><button type="button" class="primary" id="nextDone">Done</button><button type="button" class="quiet" id="nextChange">Change my choices</button></div>
         </section>
         </div>
         <aside class="preview" aria-label="What this plan gives you">

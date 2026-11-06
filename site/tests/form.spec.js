@@ -49,11 +49,11 @@ async function download(page, button) {
   return { name: file.suggestedFilename(), files };
 }
 
-// Customise a plan, then Next: the first settings step, CI checks on GitHub.
+// Customise a plan, then Next: the first settings step, CI checks.
 async function customise(page) {
   if (!(await page.locator('#custom').isChecked())) await page.locator('#how label', { hasText: 'Customise a plan' }).click();
   await page.locator('#modify').click();
-  await expect(page.locator('#stepTitle')).toHaveText('CI checks on GitHub');
+  await expect(page.locator('#stepTitle')).toHaveText('CI checks');
 }
 const step = (page, name) => page.locator('#stepBar button', { hasText: name }).click();
 
@@ -385,7 +385,7 @@ test('Use a plan downloads at once; Customise a plan turns Download into Next an
   await page.locator('#how label', { hasText: 'Customise a plan' }).click();
   await expect(page.locator('#planLegend')).toHaveText('Start from this plan');
   await expect(page.locator('#download')).toBeHidden();
-  await expect(page.locator('#stepBar button')).toHaveText([/^1\s*About$/, /^2\s*CI checks$/, /^3\s*Issues$/, /^4\s*README$/, /^5\s*Extras$/], { useInnerText: true });
+  await expect(page.locator('#stepBar button')).toHaveText([/^1\s*About$/, /^2\s*CI checks$/, /^3\s*Issues and checklists$/, /^4\s*README and website$/, /^5\s*Extras$/], { useInnerText: true });
   await page.locator('#modify').click();
   for (const [name, title] of [['Issues', 'Issues and checklists'], ['README', 'README and website'], ['Extras', 'Extras']]) {
     await page.locator('#stepNext').click();

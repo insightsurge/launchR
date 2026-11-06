@@ -217,7 +217,7 @@ function summary() {
     $('#pvLists').innerHTML = shown.length ? shown.map((stage, i) => `<li style="animation-delay:${i * 50}ms">${esc(stage)}</li>`).join('') : '<li class="none">None</li>';
   }
   $('#modReset').disabled = !changed;
-  $('#planLine').textContent = `${on === 7 ? 'All seven' : WORDS[on]} ${on === 1 ? 'check' : 'checks'}, ${shown.length ? `${shown.length} ${shown.length === 1 ? 'checklist' : 'checklists'}` : 'no checklists'}. ${$('#pvRelease').textContent.replace(/^None\. /, '')}`;
+  $('#planLine').textContent = `${on === 7 ? 'All seven' : WORDS[on]} ${on === 1 ? 'check' : 'checks'} and ${shown.length ? `${shown.length} ${shown.length === 1 ? 'checklist' : 'checklists'}` : 'no checklists'}. Release features: ${$('#pvRelease').textContent.replace(/^None\. /, '')}`;
 }
 
 function offLabel(name) {
@@ -272,7 +272,7 @@ function timeProblem() {
 
 /* the steps: About (the questions and the plan), then the four groups of settings. A package that exists already gets
    Checks and Website only. */
-const STEP_TITLES = { 2: 'CI checks on GitHub', 3: 'Issues and checklists', 4: 'README and website', 5: 'Extras' };
+const STEP_TITLES = { 2: 'CI checks', 3: 'Issues and checklists', 4: 'README and website', 5: 'Extras' };
 const stepList = () => (mode === 'new' ? [1, 2, 3, 4, 5] : [2, 4]);
 
 function view(name, focus) {
@@ -530,7 +530,7 @@ $('#exPlans').addEventListener('change', (e) => { $(`input[name=plan][value=${e.
 $('#exModify').addEventListener('click', () => { paint(); goStep(2); });
 
 function existingValid() {
-  const name = nameProblem(v('exPkg'), 'Add the name in your DESCRIPTION file.');
+  const name = nameProblem(v('exPkg'), 'Add your package\'s name, as in its DESCRIPTION file.');
   const owner = ownerProblem(v('exOwner')) || (add.website && !v('exOwner') ? 'A website needs your GitHub name, so it has an address.' : '');
   put('exPkg', name);
   put('exOwner', owner);
