@@ -60,7 +60,7 @@ function modifyExtras() {
   const extras = planExtras(lists, planRow(lists, plan()));
   const ticks = (rows, key, on) => Object.fromEntries(rows.map((row) => [row[key], on.includes(row[key])]));
   return {
-    ciReport: extras.ciReport, licence: extras.licence, qc: extras.qc,
+    ciReport: extras.ciReport, licence: extras.licence, qc: extras.checklists.includes('qc'),
     badges: ticks(lists.badges, 'key', extras.badges), navbar: ticks(lists.navbar, 'key', extras.navbar),
     forms: ticks(lists.forms, 'key', extras.forms), labels: ticks(lists.labels, 'name', extras.labels),
   };
@@ -160,9 +160,9 @@ function summary() {
   $('#planLine').textContent = `${on === 7 ? 'All seven' : WORDS[on]} ${on === 1 ? 'check' : 'checks'}, ${count ? `${count} ${count === 1 ? 'checklist' : 'checklists'}` : 'no checklists'}. ${$('#pvRelease').textContent.replace(/^None\. /, '')}`;
 }
 
-/* the plan preview (page.js writes its checklists per plan) adds QC before release while the QC checklist is on. A
-   private package that won't go public gets it in place of Before public, as cli/R/github.R opens them. It changes the
-   list only when it differs, so the list's observer settles. */
+/* the plan preview (page.js writes its checklists per plan) adds QC before release while the QC checklist is on.
+   Private for good starts with QC alone (lists/plans.tsv), so without it there is no checklist. It changes the list
+   only when it differs, so the list's observer settles. */
 function previewQc() {
   const ul = $('#pvLists');
   if (!ul || !lists) return;
@@ -172,10 +172,11 @@ function previewQc() {
   const before = [...ul.querySelectorAll('li')].find((x) => x.textContent === 'Before public');
   if (on && !li) {
     if (forGood) before?.remove();
+    ul.querySelector('li.none')?.remove();
     ul.insertAdjacentHTML('afterbegin', `<li class="qc">${esc(lists.settings.qc_stage)}</li>`);
   } else if (!on && li) {
     li.remove();
-    if (forGood && !before) ul.insertAdjacentHTML('afterbegin', '<li>Before public</li>');
+    if (!ul.querySelector('li')) ul.innerHTML = '<li class="none">None, no release features</li>';
   }
 }
 
@@ -310,7 +311,8 @@ function choices() {
     ...base, parts, checks, existing: mode === 'existing', visibility: visibility(), release: release(), owner: mode === 'new' ? v('owner') : v('exOwner'),
     package: pkg(), title: mode === 'new' ? v('what') : '', description: mode === 'new' ? v('details') : '', given: v('first'), family: v('last'), email,
     minR: minRProblem() ? base.minR : S.minR || base.minR,
-    ciReport: S.ciReport, licence: S.licence, qc: S.qc && !isPublic(),
+    ciReport: S.ciReport, licence: S.licence,
+    checklists: [...planExtras(lists, planRow(lists, plan())).checklists.filter((key) => key !== 'qc'), ...(S.qc && !isPublic() ? ['qc'] : [])],
     badges: keys(S.badges), navbar: keys(S.navbar), forms: keys(S.forms), labels: keys(S.labels),
   };
 }

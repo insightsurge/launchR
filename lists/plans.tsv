@@ -1,9 +1,10 @@
 # The four plans: the site's form and the CLI's --plan. visibility and release follow from the plan; extended says
 # whether r-cmd-check-extended starts on (off for a private internal package, to save minutes); first_checklist is the
 # checklist the next steps point to.
-# qc: the QC checklist (lists/checklists.tsv, stage qc_stage in settings.tsv) starts on; it is offered for private plans.
-plan	label	visibility	release	extended	first_checklist	qc
-a	Public, going to CRAN	public	cran	yes	After public	
-b	Public, not for CRAN	public	internal	yes	After public	
-c	Private for now	private	cran	yes	Before public	
-d	Private for good	private	internal	no		yes
+# checklists: the stage checklists (lists/stages.tsv, keys comma separated) the plan starts with; qc is offered for private plans only. A
+# package that gets all but qc needs no line in DESCRIPTION (Config/launchR/checklists).
+plan	label	visibility	release	extended	first_checklist	checklists
+a	Public, going to CRAN	public	cran	yes	After public	after-public,before-cran,after-acceptance,next-release
+b	Public, not for CRAN	public	internal	yes	After public	after-public
+c	Private for now	private	cran	yes	Before public	before-public,after-public,before-cran,after-acceptance,next-release
+d	Private for good	private	internal	no		qc

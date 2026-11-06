@@ -126,7 +126,7 @@ sequenceDiagram
 
 With the GitHub setup part, your repository gets a **Set up this repository** workflow. Its first run, from your first
 push, only lists what it would make. Run it from the Actions tab to create the labels, a root issue and the stage
-checklists (Before public, After public, Before CRAN, ...). It ticks the boxes it can check, such as "CI is green on
+checklists you chose (Before public, After public, Before CRAN, ...; DESCRIPTION's `Config/launchR/checklists` lists them, and a plan starts with its own). It ticks the boxes it can check, such as "CI is green on
 the default branch", and links each repository setting it can't change. Run it again at any time: it edits only the
 lines it wrote. Labels that aren't launchR's, such as GitHub's own (duplicate, question, ...) and any you made, stay; to
 remove them, tick **Also remove labels that aren't launchR's** when you click Run workflow. Dependabot's labels are kept.
@@ -164,7 +164,8 @@ Rscript cli/launchr.R eject                           # copy launchR's checks in
 | `--badges check,lifecycle` | README badges, from `lists/badges.tsv` (`none` for no badges) |
 | `--navbar reference,news,search` | The website's navbar items, from `lists/navbar.tsv` |
 | `--forms bug,docs`, `--labels bug,idea` | Which issue forms (`lists/forms.tsv`) and labels (`lists/labels.tsv`); a form's label, and `epic` (the set-up step's root issue uses it), are always kept |
-| `--qc`, `--no-qc` | The QC checklist for a private package (default: on for plan d) |
+| `--checklists before-public,qc` | Which stage checklists the package gets, from `lists/stages.tsv` (`none` for no checklist); the plan's own list is the default, and DESCRIPTION records the choice as `Config/launchR/checklists` |
+| `--qc`, `--no-qc` | Add or remove the QC checklist, for a private package (on for plan d) |
 | `--preset starter` / `everything` | Which parts and checks are on |
 | `--public`, `--internal` | Older spelling of the plan: public, and not going to CRAN |
 | `--path DIR` | Where to write the package (default: a folder named after it) |

@@ -29,7 +29,7 @@ default_choices <- function(package, preset = kit_setting("preset"), plan = kit_
   ) |> c(plan_extras(chosen))
 }
 
-# The Modify choices that follow from the plan: badges and the QC checklist depend on the visibility; the licence is
+# The Modify choices that follow from the plan: badges and the stage checklists depend on the plan; the licence is
 # proprietary only for a private package that won't go to CRAN, since R CMD check as CRAN gives a NOTE for any other
 # licence than an open-source one. site/src/form/engine.js has the same.
 plan_extras <- function(chosen) {
@@ -42,7 +42,7 @@ plan_extras <- function(chosen) {
     navbar = navbar$key[navbar$on == "yes"],
     forms = read_list("forms.tsv")$key,
     labels = read_list("labels.tsv")$name,
-    qc = identical(chosen$qc, "yes")
+    checklists = trimws(strsplit(chosen$checklists, ",", fixed = TRUE)[[1]])
   )
 }
 
@@ -63,6 +63,16 @@ chosen_labels <- function(choices) {
   forms <- forms[forms$key %in% choices$forms & forms$part %in% choices$parts, , drop = FALSE]
   labels <- read_list("labels.tsv")
   labels$name[labels$name %in% c(choices$labels, forms$label) | nzchar(labels$kept)]
+}
+
+# The stage checklists as DESCRIPTION records them (Config/launchR/checklists): their names in lists/stages.tsv order. The
+# QC checklist is only for a private package, and "none" says no checklist at all. All but QC is what a package without the line gets, so it needs none.
+# site/src/form/engine.js has the same.
+checklist_line <- function(choices, public) {
+  stages <- read_list("stages.tsv")
+  keys <- stages$key[stages$key %in% choices$checklists & !(public & stages$key == "qc")]
+  if (!"github" %in% choices$parts || identical(keys, stages$key[stages$key != "qc"])) return("")
+  paste0("Config/launchR/checklists: ", if (length(keys) == 0) "none" else paste(stages$stage[match(keys, stages$key)], collapse = ", "))
 }
 
 # What a plan starts from: visibility, release, and whether r-cmd-check-extended is on (lists/plans.tsv).
