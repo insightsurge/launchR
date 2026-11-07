@@ -21,7 +21,7 @@ cases.push({ name: 'no-email', plan: 'd', preset: 'starter', flags: ['--plan', '
 cases.push({ name: 'min-r', plan: 'a', preset: 'everything', flags: ['--plan', 'a', '--preset', 'everything', '--min-r', '4.3'], minR: '4.3' });
 cases.push({ name: 'min-r-private', plan: 'c', preset: 'starter', flags: ['--plan', 'c', '--min-r', '4.4'], minR: '4.4' });
 cases.push({ name: 'description', plan: 'd', preset: 'starter', flags: ['--plan', 'd', '--description', 'Builds   tables for clinical reports'], description: 'Builds   tables for clinical reports' });
-// The Modify choices (issue 21): each through the CLI's flags and the engine's choices.
+// The Customise choices (issue 21): each through the CLI's flags and the engine's choices.
 cases.push({ name: 'modify-public', plan: 'a', preset: 'everything',
   flags: ['--plan', 'a', '--preset', 'everything', '--no-ci-report', '--badges', 'check,codecov,cran,downloads,universe,launchr', '--navbar', 'reference,search', '--forms', 'bug,docs', '--labels', 'priority: high'],
   extra: { ciReport: false, badges: ['check', 'codecov', 'cran', 'downloads', 'universe', 'launchr'], navbar: ['reference', 'search'], forms: ['bug', 'docs'], labels: ['priority: high'] } });
@@ -35,7 +35,7 @@ cases.push({ name: 'qc-public', plan: 'a', preset: 'starter', flags: ['--plan', 
 cases.push({ name: 'no-checklists', plan: 'b', preset: 'starter', flags: ['--plan', 'b', '--checklists', 'none'], extra: { checklists: [] } });
 cases.push({ name: 'checklists', plan: 'a', preset: 'everything', flags: ['--plan', 'a', '--preset', 'everything', '--checklists', 'after-public,next-release'],
   extra: { checklists: ['after-public', 'next-release'] } });
-// One case per setup the user journeys use, with the Modify choices that journey makes. Beginner defaults is a-starter
+// One case per setup the user journeys use, with the Customise choices that journey makes. Beginner defaults is a-starter
 // above. The CLI picks parts by preset only, so "website without the AI and front-end parts" and "CI files only" can't
 // be built by both routes, and a frozen (snapshot) setup doesn't exist yet: those three are not here.
 const journeys = [

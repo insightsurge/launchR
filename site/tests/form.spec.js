@@ -165,7 +165,7 @@ test('Customise: the AI switch adds AGENTS.md, its rules files, CLAUDE.md and th
   expect('tablePkg/.github/ISSUE_TEMPLATE/06-ai-instructions.yml' in files).toBe(true);
 });
 
-test('Customise: the CI report comment, licence, badges, issue forms, labels and QC checklist reach the zip', async ({ page }) => {
+test('Customise: the CI report comment, licence, badges, issue forms, labels and the QC sections reach the zip', async ({ page }) => {
   await openForm(page);
   await fillForm(page);
   await page.locator('input[name=plan][value=d]').check();
@@ -549,7 +549,7 @@ test('Customise: New feature sets its own label, a shared label says which form 
   expect(files['tablePkg/DESCRIPTION']).toContain('R (>= 4.1.0)');
 });
 
-test('after Change something, the keyboard lands on the button that is there', async ({ page }) => {
+test('after Change my choices, the keyboard lands on the button that is there', async ({ page }) => {
   await openForm(page);
   await fillForm(page);
   await download(page, '#download');

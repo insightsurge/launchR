@@ -69,7 +69,7 @@ submit	Before CRAN	Submission	manual		cran		Submitted with `devtools::submit_cra
 resubmit	Before CRAN	Submission	manual		cran		If CRAN asked for changes: made, described under a "Resubmission" heading in cran-comments.md, and sent again					
 on-cran	Before CRAN	Submission	cran		cran		The package is on CRAN					
 install-cran	After acceptance	Tell people	contains	README.md|install.packages("{package}")	cran		The README installs from CRAN first (`install.packages("pkg")`), then the development version					
-cran-badges	After acceptance	Tell people	contains	README.md|r-pkg.org/badges/version	cran		CRAN status and downloads badges in the README					
+cran-badges	After acceptance	Tell people	contains	README.md|r-pkg.org/badges/version	cran		A CRAN status badge in the README (and a downloads badge, if you chose it)					
 announce	After acceptance	Tell people	manual		cran		Optional: announced (a blog post, R Weekly, social media)					yes
 release	After acceptance	Release record	setting	repos/{repo}/releases?per_page=1|length > 0	cran		GitHub release published from the accepted commit (`usethis::use_github_release()`)	Releases	https://github.com/{repo}/releases/new	choose the tag of the accepted version and click Publish release		
 dev-version	After acceptance	Release record	manual		cran		Development version on the default branch (`usethis::use_dev_version()`), with a new NEWS.md heading					

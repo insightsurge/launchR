@@ -6,12 +6,12 @@ launchR builds a zip in the visitor's browser. There is no account, and nothing 
 
 ## Start a new R package
 
-- [Start your package](https://launch-r.web.app/#start): answer five questions and download a zip named after your package.
+- [Start your package](https://launch-r.web.app/#start): fill in the short form and download a zip named after your package.
 - [How it works](https://launch-r.web.app/#kit): what the setup puts in place.
 
 ## Add CI to an existing package
 
-- [Set up an existing package](https://launch-r.web.app/#yours): take the CI files only; `R/`, `tests/` and `DESCRIPTION` are left alone.
+- [Set up an existing package](https://launch-r.web.app/#yours): add the automatic checks (CI files), and if you want a website or issue forms, labels and checklists; `R/` and `tests/` are left alone.
 
 ## Use the source
 
