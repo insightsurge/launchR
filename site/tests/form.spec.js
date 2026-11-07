@@ -298,9 +298,14 @@ test("the next steps give both routes, the first commands and an organisation's 
   await expect(steps).toContainText('usethis::use_github(private = FALSE)');
   // The GitHub name may be an organisation: the site can't tell without asking GitHub, so both lines are there.
   await expect(steps).toContainText('usethis::use_github(organisation = "sample-org", private = FALSE)');
+  // Someone who made the repository on GitHub first connects to it, and a saved login is replaced, not kept.
+  await expect(steps).toContainText('usethis::use_git_remote("origin", "https://github.com/sample-org/tablePkg.git")');
+  await expect(steps).toContainText('gert::git_push(set_upstream = TRUE)');
+  await expect(steps).toContainText('Replace these credentials');
   await page.getByText('With GitHub Desktop').click();
   await expect(steps).toContainText('Publish repository');
   await expect(steps).toContainText('If sample-org is an organisation, pick it under Organization.');
+  await expect(steps).toContainText('paste https://github.com/sample-org/tablePkg.git as the remote, save, and click Publish branch');
   // Each step says what to do in a line; the explanations fold away until asked for.
   const more = steps.locator('details.more').first();
   await expect(more).not.toHaveAttribute('open', '');

@@ -613,7 +613,7 @@ function steps() {
     step(`${unzip} Then, in RStudio, choose Build, then Test Package, to see your first test pass; in Positron, run ${code('devtools::test()')} in the console.`, '', `The first time, install the tools: in RStudio choose Tools, then Install Packages, and install ${code('devtools')}; in Positron, run ${code('install.packages("devtools")')}. Skip this if you already have it.`),
     step('Install <a href="https://desktop.github.com" target="_blank" rel="noopener">GitHub Desktop</a> and sign in with your GitHub account.', '', 'It brings Git with it. Skip this if you already use it.'),
     step(`In GitHub Desktop, choose File, then Add local repository, pick the ${code(name)} folder, and accept when it offers to create the repository.`),
-    step(`Click Publish repository. ${priv ? 'Leave Keep this code private ticked.' : 'Untick Keep this code private.'} If ${code(owner)} is an organisation, pick it under Organization.`),
+    step(`Click Publish repository. ${priv ? 'Leave Keep this code private ticked.' : 'Untick Keep this code private.'} If ${code(owner)} is an organisation, pick it under Organization.`, '', `Already made the repository on GitHub? Keep it empty (no README or licence) and, in place of Publish repository, choose Repository, then Repository settings, paste ${code(`https://github.com/${owner}/${name}.git`)} as the remote, save, and click Publish branch. If it already has files, delete it on GitHub first, or come back and press <em>Already have a package?</em>.`),
     ...running,
     ...(S.github ? [step(setupButton, '', setupMore)] : []),
   ] : [
@@ -622,10 +622,10 @@ function steps() {
       'devtools brings usethis and testthat. The second line installs the packages your package uses. In RStudio, Build, then Test Package, does the same as the third line.'),
     step('Let R talk to GitHub, once. Skip this if R already can.',
       `${copy('usethis::create_github_token()')}${copy('gitcreds::gitcreds_set()')}`,
-      `The first line opens a GitHub page with the right boxes already ticked: scroll down, click Generate token, and copy the token. The second asks for it: paste it there. It is kept in your computer's password store (Keychain on a Mac, Credential Manager on Windows), where usethis and pak find it. Don't save it in a file such as ${code('.Renviron')}: that is plain text.`),
+      `The first line opens a GitHub page with the right boxes already ticked: scroll down, click Generate token, and copy the token. The second asks for it: paste it there. It is kept in your computer's password store (Keychain on a Mac, Credential Manager on Windows), where usethis and pak find it. Don't save it in a file such as ${code('.Renviron')}: that is plain text. If it says a login is already saved, choose <em>Replace these credentials</em>.`),
     step('Put the package on GitHub: run the first line and answer yes to each question; after RStudio restarts, run the line for your account.',
       `${copy('usethis::use_git()')}${label('Your own account:')}${copy(`usethis::use_github(private = ${privArg})`)}${label('An organisation, such as a company\'s:')}${copy(`usethis::use_github(organisation = "${owner}", private = ${privArg})`)}`,
-      `The first line asks to commit your files and then to restart RStudio; the yes answer moves around, so read each one. ${code('DESCRIPTION')} already links to ${code(`github.com/${owner}/${name}`)}, so the repository should be made there.`),
+      `The first line asks to commit your files and then to restart RStudio; the yes answer moves around, so read each one. ${code('DESCRIPTION')} already links to ${code(`github.com/${owner}/${name}`)}, so the repository should be made there. Already made the repository on GitHub? Keep it empty (no README or licence) and, in place of ${code('use_github()')}, run ${code(`usethis::use_git_remote("origin", "https://github.com/${owner}/${name}.git")`)} and then ${code('gert::git_push(set_upstream = TRUE)')}. If it already has files, delete it on GitHub first, or come back and press <em>Already have a package?</em>.`),
     ...running,
     ...(S.github ? [step(setupButton, '', setupMore)] : []),
   ];
