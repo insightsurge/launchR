@@ -621,33 +621,16 @@ test('the first screen fits a 1440 by 900 window, with the sign-up hint in the G
   await expect(page.locator('#tip-owner')).toContainText('Sign up free at github.com/signup');
 });
 
-test('the CI checks step says in a line what each check does', async ({ page }) => {
+test('on the settings steps the preview card stays at one height', async ({ page }) => {
   await openForm(page);
   await fillForm(page);
   await customise(page);
-  // Each chip keeps its id; a plain line under it says what the check does, and the chip is described by it.
-  await expect(page.locator('#bodyCi .check-cell')).toHaveCount(8);
-  await expect(page.locator('#gloss-no_suggests')).toHaveText('Works without its optional packages.');
-  await expect(page.locator('#bodyCi [data-check=no_suggests]')).toHaveAttribute('aria-describedby', 'gloss-no_suggests');
-  await expect(page.locator('#gloss-ci-report')).toHaveText('One results comment on each pull request.');
-});
-
-test('the issues step folds the labels behind a count, shut until opened, and keeps it open', async ({ page }) => {
-  await openForm(page);
-  await fillForm(page);
-  await customise(page);
-  await step(page, 'Issues');
-  const fold = page.locator('#labelsFold');
-  const labels = await page.locator('#bodyGit [data-label]').count();
-  await expect(fold.locator('summary')).toHaveText(`Labels (${labels})`);
-  await expect(fold).not.toHaveAttribute('open', '');
-  await expect(page.locator('#bodyGit [data-label]').first()).toBeHidden();
-  await fold.locator('summary').click();
-  await expect(page.locator('#bodyGit [data-label]').first()).toBeVisible();
-  // A form taken off puts its label among the others and redraws the step: the list stays open.
-  await page.locator('label.fcard', { hasText: 'Idea' }).click();
-  await expect(fold.locator('summary')).toHaveText(`Labels (${labels + 1})`);
-  await expect(fold).toHaveAttribute('open', '');
+  const top = async () => (await page.locator('.preview').boundingBox()).y;
+  const first = await top();
+  for (const name of ['Issues', 'README', 'Extras']) {
+    await step(page, name);
+    expect(Math.round(await top()), name).toBe(Math.round(first));
+  }
 });
 
 test('the next steps give one step for the checks running and Set up this repository, on both routes', async ({ page }) => {

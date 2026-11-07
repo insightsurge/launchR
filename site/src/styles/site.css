@@ -791,7 +791,7 @@ input { caret-color: var(--accent); }
 .stepbar button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .primary[aria-disabled='true'] { opacity: 0.72; box-shadow: none; }
 #missing { color: var(--soft); }
-#modTitle .for { color: var(--soft); font-weight: 400; font-size: max(0.62em, 12px); }
+#modTitle .for { color: var(--soft); font-weight: 400; font-size: 0.62em; }
 #modifyView .mod[hidden] { display: none; }
 #modifyView .mod-body { padding-left: 0; }
 .mod-actions { justify-content: flex-start; }
@@ -1006,22 +1006,8 @@ dialog#setup { scrollbar-gutter: stable; }
 [data-palette='paper'] .stepbar button[aria-current='step'] { color: color-mix(in srgb, var(--accent) 80%, var(--ink)); }
 /* Back to recommended reads as a link in both states */
 #setup .reset#modReset { text-decoration: underline; text-underline-offset: 3px; }
-/* CI checks: each chip with a plain line under it; ci-report sits on a row of its own, apart: it reports on the checks */
-.check-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 14px 12px; }
-.check-cell { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; min-width: 0; }
-.check-cell small { padding-left: 4px; font-size: 13.5px; line-height: 1.35; color: var(--soft); }
-.check-cell.check-report { grid-column: 1 / -1; margin-top: 2px; padding-top: 14px; border-top: 1px solid var(--line); }
-
-/* a list folded behind a heading that says how many it holds */
-.fold { margin-top: 16px; }
-.fold > summary { display: inline-flex; align-items: center; gap: 8px; min-height: 34px; font-size: 15px; font-weight: 500; cursor: pointer; list-style: none; }
-.fold > summary::-webkit-details-marker { display: none; }
-.fold > summary::before { content: ''; width: 7px; height: 7px; border-right: 1.8px solid currentColor; border-bottom: 1.8px solid currentColor; transform: rotate(-45deg); transition: transform .15s; }
-.fold[open] > summary::before { transform: rotate(45deg); }
-.fold > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
-.fold > .sw-note { margin: 2px 0 10px; }
-@media (max-width: 860px) { .fold > summary { min-height: 44px; } }
-@media (prefers-reduced-motion: reduce) { .fold > summary::before { transition: none; } }
+/* ci-report sits with the checks but apart from them: it reports on them */
+.tick-divider { align-self: center; width: 1px; height: 24px; margin: 0 4px; background: var(--line); }
 
 /* the preview window's list: group names are quiet labels with a line above; the entries sit in under them */
 .peek-list h3 { margin: 16px 0 6px; padding-top: 12px; border-top: 1px solid var(--line); font-size: 12px; letter-spacing: 0.04em; text-transform: none; font-weight: 600; color: var(--soft); }
@@ -1045,8 +1031,12 @@ dialog#setup { scrollbar-gutter: stable; }
   #form .actions { margin-top: 14px; flex-wrap: nowrap; }
   #form #missing { margin: -44px 0 0; max-width: calc(100% - 260px); min-height: 44px; display: flex; align-items: center; text-align: left; }
 }
-/* the preview card sits level with the middle of the form beside it */
-@media (min-width: 861px) { #setup .setup-grid > .preview { align-self: center; } }
+/* the preview card sits level with the middle of the form beside it on the first screen; on the settings steps it
+   stays at one height from the top, so it does not move when Next changes the step */
+@media (min-width: 861px) {
+  #setup .setup-grid > .preview { align-self: center; }
+  #setup[data-view='modify'] .setup-grid > .preview { align-self: start; }
+}
 
 /* the step bar is the dialog's progress line: one centred row above the form and the preview card */
 .setup-grid > .stepbar { grid-column: 1 / -1; justify-self: center; margin: 0 0 28px; }

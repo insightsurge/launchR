@@ -106,14 +106,6 @@ const sw = (id, text, why, on, soon) => `<div class="opt"><label class="sw"><inp
 const swList = (id, text, list, on) => `<div class="opt"><label class="sw"><input type="checkbox" id="${id}"${on ? ' checked' : ''} /><i aria-hidden="true"></i><b>${text}</b></label>${bullets(list)}</div>`;
 const pill = (attrs, text, on) => `<label class="pill"><input type="checkbox" ${attrs}${on ? ' checked' : ''} /><span>${text}</span></label>`;
 const nest = (html) => `<div class="nest">${html}</div>`;
-/* a short plain line for each check, shortened from its help in lists/checks.tsv (the tooltip keeps the long form) */
-const GLOSS = {
-  r_cmd_check: 'The core check of your package.', lint: 'Style, docs in sync, and spelling.',
-  no_suggests: 'Works without its optional packages.', secret_scan: 'Passwords or tokens saved by mistake.',
-  coverage: 'How much of your code the tests run.', full_tests: 'Every test, even the ones CRAN skips.',
-  r_cmd_check_extended: 'The core check on more systems, every week.', ci_report: 'One results comment on each pull request.',
-};
-const checkCell = (chip, id, gloss, extra = '') => `<div class="check-cell${extra ? ` ${extra}` : ''}">${chip}<small id="${id}">${esc(gloss)}</small></div>`;
 const head3 = (text, why) => `<h4>${text}${Array.isArray(why) ? bullets(why) : why ? help(why) : ''}</h4>`;
 
 function paint() {
@@ -122,7 +114,7 @@ function paint() {
   const extra = S.checks.full_tests || S.checks.r_cmd_check_extended;
   $('#bodyCi').innerHTML = `
     ${head3('Checks to run', [...CHECKS.map(([, n, w]) => [n, w]), ...(REPORTING.some((k) => S.checks[k]) ? [['ci-report', 'Not a check: one comment on each pull request with the results of the checks you chose, updated as each one finishes: failures with links to their logs, test counts, coverage and its change, style findings. Off leaves the comment out; each run still shows its results on its own page under Actions. You can change it later: ci-report in each file in .github/workflows/.']] : [])])}
-    ${nest(`<div class="check-grid">${CHECKS.map(([k, name]) => checkCell(pill(`data-check="${k}" aria-describedby="gloss-${k}"`, `<code>${name}</code>`, S.checks[k]), `gloss-${k}`, GLOSS[k])).join('')}${REPORTING.some((k) => S.checks[k]) ? checkCell(pill('id="ciReport" aria-describedby="gloss-ci-report"', '<code>ci-report</code>', S.ciReport), 'gloss-ci-report', GLOSS.ci_report, 'check-report') : ''}</div>`)}
+    ${nest(`<div class="ticks">${CHECKS.map(([k, name]) => pill(`data-check="${k}"`, `<code>${name}</code>`, S.checks[k])).join('')}${REPORTING.some((k) => S.checks[k]) ? `<span class="tick-divider" aria-hidden="true"></span>${pill('id="ciReport"', '<code>ci-report</code>', S.ciReport)}` : ''}</div>`)}
     ${head3('R CMD check: R versions × systems', [['release', 'The current R.'], ['oldrel-1', 'The R release before it. Linux only.'], ['devel', 'The next R, not released yet: it shows early what will break. Linux only.'], ['Oldest R your package supports', 'Type it as x.y, from 4.1 up, such as 4.3. DESCRIPTION then says R (>= 4.3.0), and Linux also checks the newest 4.3. The default is 4.1.'], ['Systems', 'launchR picks the system version: Ubuntu 26.04, and the latest Windows and macOS on GitHub.'], ['Cost', 'Free on a public repository. A private one gets 2,000 free minutes a month on GitHub\'s free plan, and Mac minutes count ten times, Windows twice.']])}
     <div class="nest"><div class="line"><label for="minR">Oldest R your package supports</label><span class="when affix"><input id="minR" class="short" type="text" inputmode="decimal" autocomplete="off" maxlength="3" size="3" placeholder="4.1" aria-describedby="minRZero" value="${esc(S.minR)}" /><span class="unit" id="minRZero">.0</span></span></div>
     <p class="fieldnote" id="minRNote" role="status"></p>
@@ -185,10 +177,8 @@ function gitChoices() {
   return `<div class="git-head">${head3('Issue forms', 'The forms people fill in when they open an issue on GitHub. Each sets its own label. They are saved in .github/ISSUE_TEMPLATE/.')}${peekLink(`form-${forms[0].key}`, 'Preview the issue forms')}</div>
     <div class="fcards nest">${forms.map((row) => `<label class="fcard"><input type="checkbox" data-form="${row.key}"${S.forms[row.key] ? ' checked' : ''} /><span><b>${esc(row.title)}</b><small>${esc(row.help)}</small><span class="fcard-label">${chip(row.label)}<span class="auto"><svg aria-hidden="true"><use href="#i-lock" /></svg>${S.forms[row.key] ? 'auto-applied' : (() => { const other = forms.find((f) => f !== row && f.label === row.label && S.forms[f.key]); return other ? `still set by ${esc(other.title)}` : 'not added'; })()}</span></span></span></label>`).join('')}</div>
     ${kept.map((row) => `<p class="kept-line nest">${chip(row.name)}<span class="auto"><svg aria-hidden="true"><use href="#i-lock" /></svg>always created</span> ${esc(row.description)}. ${esc(row.kept)}</p>`).join('')}
-    <details class="fold nest" id="labelsFold"${labelsOpen ? ' open' : ''}><summary>Labels (${free.length})</summary>
-      <div class="sw-note">Set up this repository creates them on GitHub. A label that an issue form sets stays on while the form is on.${bullets(lists.labels.map((row) => [row.name, `${row.description}${locked.has(row.name) ? (row.kept ? '. Always created.' : '. Set by an issue form you chose.') : '.'}`]))}</div>
-      <div class="ticks">${free.map((row) => `<label class="pill" title="${esc(row.description)}"><input type="checkbox" data-label="${esc(row.name)}"${S.labels[row.name] ? ' checked' : ''} /><span><i class="dot" style="--lc:${colour(row.name)}"></i>${esc(row.name)}</span></label>`).join('')}</div>
-    </details>
+    ${head3('Labels', [['Labels', 'Set up this repository creates them on GitHub. A label that an issue form sets stays on while the form is on.'], ...lists.labels.map((row) => [row.name, `${row.description}${locked.has(row.name) ? (row.kept ? '. Always created.' : '. Set by an issue form you chose.') : '.'}`])])}
+    <div class="ticks nest">${free.map((row) => `<label class="pill" title="${esc(row.description)}"><input type="checkbox" data-label="${esc(row.name)}"${S.labels[row.name] ? ' checked' : ''} /><span><i class="dot" style="--lc:${colour(row.name)}"></i>${esc(row.name)}</span></label>`).join('')}</div>
     <div class="git-head">${head3('Checklists', stages.map((row) => [row.stage, row.opens]))}${peekLink(`cl-${(chosenStages()[0] ?? stages[0] ?? lists.stages[0]).key}`, 'Preview the checklists')}</div>
     <div class="ticks nest">${stages.map((row) => pill(`data-stage="${row.key}"`, row.stage, S.checklists[row.key])).join('')}</div>
     ${notOffered.length ? `<p class="sw-note nest">${[isPublic() && 'Before public is for a private package.', release() !== 'cran' && 'Before CRAN and After acceptance are for a package going to CRAN.'].filter(Boolean).join(' ')}</p>` : ''}`;
@@ -221,9 +211,6 @@ function offLabel(name) {
 function touched(fn) { fn(); changed = true; summary(); }
 
 const body = $('#modifyView');
-/* the Labels list stays open or shut across a redraw of the step */
-let labelsOpen = false;
-body.addEventListener('toggle', (e) => { if (e.target.id === 'labelsFold') labelsOpen = e.target.open; }, true);
 body.addEventListener('change', (e) => {
   const t = e.target;
   if (t.dataset.check) { touched(() => { S.checks[t.dataset.check] = t.checked; }); paint(); return; }
