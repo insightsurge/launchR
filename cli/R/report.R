@@ -53,7 +53,7 @@ report_console <- function(data) {
     sprintf("- all %d already right", data$label_count))
   out <- c(out, "", "Issues")
   for (issue in data$issues) {
-    out <- c(out, sprintf("- %s: %s%s", issue$title, issue$action, if (issue$closed) ", closed: every box is ticked" else ""))
+    out <- c(out, sprintf("- %s: %s%s", issue$title, issue$action, if (issue$closed) ", closed: every box that isn't optional is ticked" else ""))
     if (nzchar(issue$url)) out <- c(out, paste0("  ", issue$url))
     if (length(issue$ticked)) out <- c(out, paste0("  ticked: ", issue$ticked))
     if (length(issue$unticked)) out <- c(out, paste0("  unticked: ", issue$unticked))

@@ -4,7 +4,7 @@
 # Keep every row at 13 tab-separated cells, and no hash sign inside a cell (lists treat it as a comment).
 id	stage	section	kind	target	release	needs	text	where	link	pick	parent	optional
 own-code	Set up	Your package	group		any		The example is replaced with your own code					
-example	Set up	Your package	placeholder	R/say_hello.R|say_hello	any		`say_hello()`, its tests and its help page are gone				own-code	
+example	Set up	Your package	placeholder	R/say_hello.R|say_hello	any		`R/say_hello.R` is gone or no longer has `say_hello()`; its tests and help page go too				own-code	
 example-readme	Set up	Your package	placeholder	README.md|say_hello	any		The README's example uses your own functions				own-code	
 own-description	Set up	Your package	group		any		DESCRIPTION is yours					
 description	Set up	Your package	description	DESCRIPTION	any		Description says what only this package does				own-description	

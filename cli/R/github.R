@@ -291,7 +291,7 @@ print_plan <- function(ctx, plan) {
     extra <- c(
       if (length(item$ticked)) sprintf("tick %d", length(item$ticked)),
       if (length(item$unticked)) sprintf("untick %d (%s)", length(item$unticked), paste(item$unticked, collapse = ", ")),
-      if (item$close) "close it, every box is ticked"
+      if (item$close) "close it, every box that isn't optional is ticked"
     )
     cat(sprintf("- \"%s\": %s; %d of %d boxes ticked%s\n", checklist_title(item$stage), what, item$done, item$total,
       if (length(extra)) paste0("; ", paste(extra, collapse = "; ")) else ""))
