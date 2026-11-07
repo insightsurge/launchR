@@ -14,6 +14,7 @@
   --surface: #171d27;
   --ink: #f4f1ec;
   --soft: #b7bcc6;
+  --hint: #808795;
   --accent: #f6ab85;
   --btn: #f6ab85;
   --btn-ink: #0d1117;
@@ -336,7 +337,7 @@ fieldset.plans { border: 0; margin: 18px 0 0; padding: 0; display: grid; grid-te
 }
 
 /* ---------- designs 1 to 3 ---------- */
-[data-palette='paper'] { --ok:#2a7050; --no:#b3261e; --bg:#f5f1ea; --surface:#fff; --ink:#1c1b22; --soft:#4b4a56; --accent:#a3411a; --btn:#a3411a; --btn-ink:#fffaf5; --hexfill:#fbe4d4; --line:rgb(28 27 34 / 22%); --c1:#c2552a; --c2:#3b5bb0; --c3:#9a3f8f; --c4:#1f8a6a; color-scheme:light; }
+[data-palette='paper'] { --ok:#2a7050; --no:#b3261e; --bg:#f5f1ea; --surface:#fff; --ink:#1c1b22; --soft:#4b4a56; --hint:#73737e; --accent:#a3411a; --btn:#a3411a; --btn-ink:#fffaf5; --hexfill:#fbe4d4; --line:rgb(28 27 34 / 22%); --c1:#c2552a; --c2:#3b5bb0; --c3:#9a3f8f; --c4:#1f8a6a; color-scheme:light; }
 .brand { display: inline-flex; align-items: baseline; gap: 9px; }
 .brand b { font-weight: inherit; color: var(--accent); }
 .brand small { font: 400 13px var(--font); letter-spacing: 0; color: var(--soft); }
@@ -715,7 +716,7 @@ html.plain { scroll-snap-type: none; }
 
 /* long names wrap instead of pushing the page sideways */
 #modTitle, #nextTitle, .pv-name, .steps, .steps code { overflow-wrap: anywhere; }
-.primary:disabled { opacity: 0.6; cursor: not-allowed; }
+.primary:disabled { opacity: 0.72; cursor: not-allowed; }
 .note:empty { display: none; }
 @media (max-width: 860px) { #modifyView input[type='text'], #modifyView select { font-size: 16px; } }
 
@@ -788,9 +789,9 @@ input { caret-color: var(--accent); }
 .stepbar button.done { color: var(--ink); }
 .stepbar button[aria-current='step'] { border-color: var(--accent); color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); }
 .stepbar button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.primary[aria-disabled='true'] { opacity: 0.55; box-shadow: none; }
+.primary[aria-disabled='true'] { opacity: 0.72; box-shadow: none; }
 #missing { color: var(--soft); }
-#modTitle .for { color: var(--soft); font-weight: 400; font-size: 0.62em; }
+#modTitle .for { color: var(--soft); font-weight: 400; font-size: max(0.62em, 12px); }
 #modifyView .mod[hidden] { display: none; }
 #modifyView .mod-body { padding-left: 0; }
 .mod-actions { justify-content: flex-start; }
@@ -956,13 +957,13 @@ dialog#setup { scrollbar-gutter: stable; }
 
 /* The form's type scale, one rule per kind of text, the same on every view.
    Question and heading: 15px, 500, ink. Answer (typed text, choices): 15px, 400. Card title: 15px, 500.
-   Placeholder: 14px, soft, lighter, so it never looks louder than its question. Note and help: 13.5px, soft.
+   Placeholder: 14px, hint (about 4.6:1), lighter than typed text, so a field never looks filled in. Note and help: 13.5px, soft.
    Spacing: question to answer 8px; one question to the next 20px; a heading to its choices 10px. */
 #setup .field-head label, #setup .field > label, #setup .field.two label, #setup legend, #setup .plans legend,
 #setup .mod-body h4, #setup #modifyView .mod-body h4, #setup .ex-head, #setup .routes legend { font-size: 15px; font-weight: 500; }
 #setup input[type='text'], #setup input[type='email'], #setup textarea, #setup select,
 #setup #modifyView input[type='text'], #setup #modifyView select { font-size: 15px; }
-#setup ::placeholder { font-size: 14px; color: var(--soft); opacity: 0.7; }
+#setup ::placeholder { font-size: 14px; color: var(--hint); opacity: 1; }
 #setup .pill span, #setup #modifyView .pill span, #setup .routes span, #setup .pick b, #setup #modifyView .pick b, #setup .sw b,
 #setup #modifyView .sw b, #setup .line label, #setup #modifyView .line label, #setup .rmatrix tbody th { font-size: 15px; font-weight: 400; }
 #setup .plan b, #setup .fcard b { font-size: 15px; font-weight: 500; }
@@ -999,16 +1000,28 @@ dialog#setup { scrollbar-gutter: stable; }
   }
   .peek-link, .field-note a { display: inline-block; }
 }
-/* paper theme: soft text stays readable at small sizes */
-[data-palette='paper'] #setup ::placeholder { opacity: 1; }
 #setup .reset:disabled { opacity: 1; color: var(--soft); }
 #setup .pick .soon, #setup .pick label.soon { opacity: 1; color: var(--soft); }
 #setup .pick .opt:has(.soon) { opacity: 1; }
 [data-palette='paper'] .stepbar button[aria-current='step'] { color: color-mix(in srgb, var(--accent) 80%, var(--ink)); }
 /* Back to recommended reads as a link in both states */
 #setup .reset#modReset { text-decoration: underline; text-underline-offset: 3px; }
-/* ci-report sits with the checks but apart from them: it reports on them */
-.tick-divider { align-self: center; width: 1px; height: 24px; margin: 0 4px; background: var(--line); }
+/* CI checks: each chip with a plain line under it; ci-report sits on a row of its own, apart: it reports on the checks */
+.check-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 14px 12px; }
+.check-cell { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; min-width: 0; }
+.check-cell small { padding-left: 4px; font-size: 13.5px; line-height: 1.35; color: var(--soft); }
+.check-cell.check-report { grid-column: 1 / -1; margin-top: 2px; padding-top: 14px; border-top: 1px solid var(--line); }
+
+/* a list folded behind a heading that says how many it holds */
+.fold { margin-top: 16px; }
+.fold > summary { display: inline-flex; align-items: center; gap: 8px; min-height: 34px; font-size: 15px; font-weight: 500; cursor: pointer; list-style: none; }
+.fold > summary::-webkit-details-marker { display: none; }
+.fold > summary::before { content: ''; width: 7px; height: 7px; border-right: 1.8px solid currentColor; border-bottom: 1.8px solid currentColor; transform: rotate(-45deg); transition: transform .15s; }
+.fold[open] > summary::before { transform: rotate(45deg); }
+.fold > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+.fold > .sw-note { margin: 2px 0 10px; }
+@media (max-width: 860px) { .fold > summary { min-height: 44px; } }
+@media (prefers-reduced-motion: reduce) { .fold > summary::before { transition: none; } }
 
 /* the preview window's list: group names are quiet labels with a line above; the entries sit in under them */
 .peek-list h3 { margin: 16px 0 6px; padding-top: 12px; border-top: 1px solid var(--line); font-size: 12px; letter-spacing: 0.04em; text-transform: none; font-weight: 600; color: var(--soft); }

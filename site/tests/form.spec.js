@@ -386,7 +386,7 @@ test('Use a plan downloads at once; Customise a plan turns Download into Next an
   await page.locator('#how label', { hasText: 'Customise a plan' }).click();
   await expect(page.locator('#planLegend')).toHaveText('Start from this plan');
   await expect(page.locator('#download')).toBeHidden();
-  await expect(page.locator('#stepBar button')).toHaveText([/^1\s*About$/, /^2\s*CI checks$/, /^3\s*Issues and checklists$/, /^4\s*README and website$/, /^5\s*Extras$/], { useInnerText: true });
+  await expect(page.locator('#stepBar button')).toHaveText([/^1\s*Your package$/, /^2\s*CI checks$/, /^3\s*Issues and checklists$/, /^4\s*README and website$/, /^5\s*Extras$/], { useInnerText: true });
   await page.locator('#modify').click();
   for (const [name, title] of [['Issues', 'Issues and checklists'], ['README', 'README and website'], ['Extras', 'Extras']]) {
     await page.locator('#stepNext').click();
@@ -399,7 +399,7 @@ test('Use a plan downloads at once; Customise a plan turns Download into Next an
   await step(page, 'Extras');
   await page.locator('label.sw', { hasText: 'JS or CSS' }).click();
   await expect(page.locator('#pvCustom')).toBeVisible();
-  await step(page, 'About');
+  await step(page, 'Your package');
   await page.locator('#how label', { hasText: 'Use a plan' }).click();
   await expect(page.locator('#planNote')).toHaveText("Your own settings were reset to the plan's.");
   await expect(page.locator('#pvCustom')).toBeHidden();
@@ -493,12 +493,12 @@ test('Customise: each plan is offered only the checklists it can open', async ({
   await customise(page);
   await step(page, 'Issues');
   expect(await offered()).toEqual(['set-up', 'before-public', 'after-public', 'before-cran', 'after-acceptance', 'next-release', 'qc']);
-  await step(page, 'About');
+  await step(page, 'Your package');
   await page.locator('input[name=plan][value=a]').check();
   await step(page, 'Issues');
   expect(await offered()).toEqual(['set-up', 'after-public', 'before-cran', 'after-acceptance', 'next-release', 'qc']);
   await expect(page.locator('#bodyGit')).toContainText('Before public is for a private package.');
-  await step(page, 'About');
+  await step(page, 'Your package');
   await page.locator('input[name=plan][value=d]').check();
   await step(page, 'Issues');
   expect(await offered()).toEqual(['set-up', 'before-public', 'after-public', 'next-release', 'qc']);
@@ -619,4 +619,56 @@ test('the first screen fits a 1440 by 900 window, with the sign-up hint in the G
   expect(box.y + box.height).toBeLessThanOrEqual(900);
   await expect(page.locator('#owner-note')).toHaveCount(0);
   await expect(page.locator('#tip-owner')).toContainText('Sign up free at github.com/signup');
+});
+
+test('the CI checks step says in a line what each check does', async ({ page }) => {
+  await openForm(page);
+  await fillForm(page);
+  await customise(page);
+  // Each chip keeps its id; a plain line under it says what the check does, and the chip is described by it.
+  await expect(page.locator('#bodyCi .check-cell')).toHaveCount(8);
+  await expect(page.locator('#gloss-no_suggests')).toHaveText('Works without its optional packages.');
+  await expect(page.locator('#bodyCi [data-check=no_suggests]')).toHaveAttribute('aria-describedby', 'gloss-no_suggests');
+  await expect(page.locator('#gloss-ci-report')).toHaveText('One results comment on each pull request.');
+});
+
+test('the issues step folds the labels behind a count, shut until opened, and keeps it open', async ({ page }) => {
+  await openForm(page);
+  await fillForm(page);
+  await customise(page);
+  await step(page, 'Issues');
+  const fold = page.locator('#labelsFold');
+  const labels = await page.locator('#bodyGit [data-label]').count();
+  await expect(fold.locator('summary')).toHaveText(`Labels (${labels})`);
+  await expect(fold).not.toHaveAttribute('open', '');
+  await expect(page.locator('#bodyGit [data-label]').first()).toBeHidden();
+  await fold.locator('summary').click();
+  await expect(page.locator('#bodyGit [data-label]').first()).toBeVisible();
+  // A form taken off puts its label among the others and redraws the step: the list stays open.
+  await page.locator('label.fcard', { hasText: 'Idea' }).click();
+  await expect(fold.locator('summary')).toHaveText(`Labels (${labels + 1})`);
+  await expect(fold).toHaveAttribute('open', '');
+});
+
+test('the next steps give one step for the checks running and Set up this repository, on both routes', async ({ page }) => {
+  await openForm(page);
+  await fillForm(page);
+  await download(page, '#download');
+  const steps = page.locator('#stepList li');
+  const actions = steps.filter({ hasText: 'go to Actions' });
+  await expect(actions).toHaveCount(1);
+  await expect(actions).toContainText('your checks are running. Then open Set up this repository');
+  await page.getByText('With GitHub Desktop').click();
+  await expect(steps.filter({ hasText: 'go to Actions' })).toHaveCount(1);
+  await expect(steps.filter({ hasText: 'Set up this repository' })).toHaveCount(1);
+  await expect(page.locator('#nextDone')).toHaveText('Close');
+});
+
+test('an existing package with CI and the issue forms gets one Actions step', async ({ page }) => {
+  await openExisting(page);
+  await page.locator('#exRows label.pill', { hasText: 'Issue forms' }).click();
+  await download(page, '#exDownload');
+  const actions = page.locator('#stepList li').filter({ hasText: 'go to Actions' });
+  await expect(actions).toHaveCount(1);
+  await expect(actions).toContainText('your checks are running. Then open Set up this repository');
 });

@@ -106,6 +106,14 @@ const sw = (id, text, why, on, soon) => `<div class="opt"><label class="sw"><inp
 const swList = (id, text, list, on) => `<div class="opt"><label class="sw"><input type="checkbox" id="${id}"${on ? ' checked' : ''} /><i aria-hidden="true"></i><b>${text}</b></label>${bullets(list)}</div>`;
 const pill = (attrs, text, on) => `<label class="pill"><input type="checkbox" ${attrs}${on ? ' checked' : ''} /><span>${text}</span></label>`;
 const nest = (html) => `<div class="nest">${html}</div>`;
+/* a short plain line for each check, shortened from its help in lists/checks.tsv (the tooltip keeps the long form) */
+const GLOSS = {
+  r_cmd_check: 'The core check of your package.', lint: 'Style, docs in sync, and spelling.',
+  no_suggests: 'Works without its optional packages.', secret_scan: 'Passwords or tokens saved by mistake.',
+  coverage: 'How much of your code the tests run.', full_tests: 'Every test, even the ones CRAN skips.',
+  r_cmd_check_extended: 'The core check on more systems, every week.', ci_report: 'One results comment on each pull request.',
+};
+const checkCell = (chip, id, gloss, extra = '') => `<div class="check-cell${extra ? ` ${extra}` : ''}">${chip}<small id="${id}">${esc(gloss)}</small></div>`;
 const head3 = (text, why) => `<h4>${text}${Array.isArray(why) ? bullets(why) : why ? help(why) : ''}</h4>`;
 
 function paint() {
@@ -114,7 +122,7 @@ function paint() {
   const extra = S.checks.full_tests || S.checks.r_cmd_check_extended;
   $('#bodyCi').innerHTML = `
     ${head3('Checks to run', [...CHECKS.map(([, n, w]) => [n, w]), ...(REPORTING.some((k) => S.checks[k]) ? [['ci-report', 'Not a check: one comment on each pull request with the results of the checks you chose, updated as each one finishes: failures with links to their logs, test counts, coverage and its change, style findings. Off leaves the comment out; each run still shows its results on its own page under Actions. You can change it later: ci-report in each file in .github/workflows/.']] : [])])}
-    ${nest(`<div class="ticks">${CHECKS.map(([k, name]) => pill(`data-check="${k}"`, `<code>${name}</code>`, S.checks[k])).join('')}${REPORTING.some((k) => S.checks[k]) ? `<span class="tick-divider" aria-hidden="true"></span>${pill('id="ciReport"', '<code>ci-report</code>', S.ciReport)}` : ''}</div>`)}
+    ${nest(`<div class="check-grid">${CHECKS.map(([k, name]) => checkCell(pill(`data-check="${k}" aria-describedby="gloss-${k}"`, `<code>${name}</code>`, S.checks[k]), `gloss-${k}`, GLOSS[k])).join('')}${REPORTING.some((k) => S.checks[k]) ? checkCell(pill('id="ciReport" aria-describedby="gloss-ci-report"', '<code>ci-report</code>', S.ciReport), 'gloss-ci-report', GLOSS.ci_report, 'check-report') : ''}</div>`)}
     ${head3('R CMD check: R versions × systems', [['release', 'The current R.'], ['oldrel-1', 'The R release before it. Linux only.'], ['devel', 'The next R, not released yet: it shows early what will break. Linux only.'], ['Oldest R your package supports', 'Type it as x.y, from 4.1 up, such as 4.3. DESCRIPTION then says R (>= 4.3.0), and Linux also checks the newest 4.3. The default is 4.1.'], ['Systems', 'launchR picks the system version: Ubuntu 26.04, and the latest Windows and macOS on GitHub.'], ['Cost', 'Free on a public repository. A private one gets 2,000 free minutes a month on GitHub\'s free plan, and Mac minutes count ten times, Windows twice.']])}
     <div class="nest"><div class="line"><label for="minR">Oldest R your package supports</label><span class="when affix"><input id="minR" class="short" type="text" inputmode="decimal" autocomplete="off" maxlength="3" size="3" placeholder="4.1" aria-describedby="minRZero" value="${esc(S.minR)}" /><span class="unit" id="minRZero">.0</span></span></div>
     <p class="fieldnote" id="minRNote" role="status"></p>
@@ -177,8 +185,10 @@ function gitChoices() {
   return `<div class="git-head">${head3('Issue forms', 'The forms people fill in when they open an issue on GitHub. Each sets its own label. They are saved in .github/ISSUE_TEMPLATE/.')}${peekLink(`form-${forms[0].key}`, 'Preview the issue forms')}</div>
     <div class="fcards nest">${forms.map((row) => `<label class="fcard"><input type="checkbox" data-form="${row.key}"${S.forms[row.key] ? ' checked' : ''} /><span><b>${esc(row.title)}</b><small>${esc(row.help)}</small><span class="fcard-label">${chip(row.label)}<span class="auto"><svg aria-hidden="true"><use href="#i-lock" /></svg>${S.forms[row.key] ? 'auto-applied' : (() => { const other = forms.find((f) => f !== row && f.label === row.label && S.forms[f.key]); return other ? `still set by ${esc(other.title)}` : 'not added'; })()}</span></span></span></label>`).join('')}</div>
     ${kept.map((row) => `<p class="kept-line nest">${chip(row.name)}<span class="auto"><svg aria-hidden="true"><use href="#i-lock" /></svg>always created</span> ${esc(row.description)}. ${esc(row.kept)}</p>`).join('')}
-    ${head3('Labels', [['Labels', 'Set up this repository creates them on GitHub. A label that an issue form sets stays on while the form is on.'], ...lists.labels.map((row) => [row.name, `${row.description}${locked.has(row.name) ? (row.kept ? '. Always created.' : '. Set by an issue form you chose.') : '.'}`])])}
-    <div class="ticks nest">${free.map((row) => `<label class="pill" title="${esc(row.description)}"><input type="checkbox" data-label="${esc(row.name)}"${S.labels[row.name] ? ' checked' : ''} /><span><i class="dot" style="--lc:${colour(row.name)}"></i>${esc(row.name)}</span></label>`).join('')}</div>
+    <details class="fold nest" id="labelsFold"${labelsOpen ? ' open' : ''}><summary>Labels (${free.length})</summary>
+      <div class="sw-note">Set up this repository creates them on GitHub. A label that an issue form sets stays on while the form is on.${bullets(lists.labels.map((row) => [row.name, `${row.description}${locked.has(row.name) ? (row.kept ? '. Always created.' : '. Set by an issue form you chose.') : '.'}`]))}</div>
+      <div class="ticks">${free.map((row) => `<label class="pill" title="${esc(row.description)}"><input type="checkbox" data-label="${esc(row.name)}"${S.labels[row.name] ? ' checked' : ''} /><span><i class="dot" style="--lc:${colour(row.name)}"></i>${esc(row.name)}</span></label>`).join('')}</div>
+    </details>
     <div class="git-head">${head3('Checklists', stages.map((row) => [row.stage, row.opens]))}${peekLink(`cl-${(chosenStages()[0] ?? stages[0] ?? lists.stages[0]).key}`, 'Preview the checklists')}</div>
     <div class="ticks nest">${stages.map((row) => pill(`data-stage="${row.key}"`, row.stage, S.checklists[row.key])).join('')}</div>
     ${notOffered.length ? `<p class="sw-note nest">${[isPublic() && 'Before public is for a private package.', release() !== 'cran' && 'Before CRAN and After acceptance are for a package going to CRAN.'].filter(Boolean).join(' ')}</p>` : ''}`;
@@ -211,6 +221,9 @@ function offLabel(name) {
 function touched(fn) { fn(); changed = true; summary(); }
 
 const body = $('#modifyView');
+/* the Labels list stays open or shut across a redraw of the step */
+let labelsOpen = false;
+body.addEventListener('toggle', (e) => { if (e.target.id === 'labelsFold') labelsOpen = e.target.open; }, true);
 body.addEventListener('change', (e) => {
   const t = e.target;
   if (t.dataset.check) { touched(() => { S.checks[t.dataset.check] = t.checked; }); paint(); return; }
@@ -260,7 +273,7 @@ function timeProblem() {
   return !ok;
 }
 
-/* the steps: About (the questions and the plan), then the four groups of settings. A package that exists already gets
+/* the steps: Your package (the questions and the plan), then the four groups of settings. A package that exists already gets
    Checks and Website only. */
 const STEP_TITLES = { 2: 'CI checks', 3: 'Issues and checklists', 4: 'README and website', 5: 'Extras' };
 const stepList = () => (mode === 'new' ? [1, 2, 3, 4, 5] : [2, 4]);
@@ -562,7 +575,12 @@ const code = (t) => `<code>${esc(t)}</code>`;
 const finderNote = 'On a Mac, Finder hides folders whose name starts with a dot, such as .github: press Cmd+Shift+. to see them.';
 const setupButton = 'On GitHub, go to Actions, open <em>Set up this repository</em>, click Run workflow, untick <em>Only show what would change</em>, and run it.';
 const setupMore = "Its first run, from your push, only listed what it would make. This run makes your labels and checklists. Labels that aren't launchR's, such as GitHub's own and any you made, stay. To remove them, also tick <em>Also remove labels that aren't launchR's</em>; Dependabot's labels are kept.";
-const actions = 'Open the repository on GitHub and go to Actions: your checks are running.';
+/* the step on GitHub's Actions page: the checks that run on the push, then Set up this repository; one step when both apply */
+const actionsStep = (checksRun, github) => {
+  if (checksRun && github) return [step('Open the repository on GitHub and go to Actions: your checks are running. Then open <em>Set up this repository</em>, click Run workflow, untick <em>Only show what would change</em>, and run it.', '', setupMore)];
+  if (checksRun) return [step('Open the repository on GitHub and go to Actions: your checks are running.')];
+  return github ? [step(setupButton, '', setupMore)] : [];
+};
 // Optional, and only with the coverage check: the check works without Codecov.
 const codecov = () => (S.checks.coverage ? `Optional: to show coverage on Codecov too, follow <em>Codecov</em> in ${code('.github/workflows/README.md')}. ` : '');
 // One step: what to do in a line, the commands, and the explanations folded away.
@@ -584,8 +602,7 @@ function existingSteps() {
   if (add.ci) list.push(step(`Delete any old files in ${code('.github/workflows')} that do the same job.`, '', `If your package already has ${code('.github/workflows/README.md')}, keep yours and copy in only the new rows from the one in the zip.`));
   if (add.ci && release() === 'internal') list.push(step(`Add this line to ${code('DESCRIPTION')}.`, copy('Config/quality-gate/target: internal'), "Your package won't go to CRAN, so the checks then leave out what only CRAN asks for."));
   list.push(step("Commit and push, from RStudio's Git pane or GitHub Desktop."));
-  if (add.ci && CHECKS.some(([k]) => S.checks[k])) list.push(step(actions));
-  if (add.github) list.push(step(setupButton, '', setupMore));
+  list.push(...actionsStep(add.ci && CHECKS.some(([k]) => S.checks[k]), add.github));
   $('#stepList').innerHTML = list.join('');
   $('#nextAfter').innerHTML = after([
     add.ci && ['Run the checks on your computer', `Before a pull request, follow <em>Run the checks on your computer</em> in ${code('.github/workflows/README.md')}.${S.checks.lint ? ` The style step needs <a href="https://posit-dev.github.io/air/" target="_blank" rel="noopener">Air</a>${S.frontend && mode === 'new' ? ', and <a href="https://biomejs.dev" target="_blank" rel="noopener">Biome</a> for the JS and CSS' : ''}: install ${S.frontend && mode === 'new' ? 'them' : 'it'} once.` : ''}${S.frontend && mode === 'new' ? ' The browser tests need Google Chrome.' : ''}`],
@@ -607,15 +624,14 @@ function steps() {
   const gh = '<a href="https://cli.github.com" target="_blank" rel="noopener">GitHub CLI</a>';
   const route = $('input[name=route]:checked').value;
   const setup = `source("https://raw.githubusercontent.com/insightsurge/launchR/v${lists.settings.kit_version}/cli/github-setup.R")`;
-  const running = CHECKS.some(([k]) => S.checks[k]) ? [step(actions)] : [];
+  const checksRun = CHECKS.some(([k]) => S.checks[k]);
   const label = (text) => `<p class="cmd-label">${text}</p>`;
   const list = route === 'desktop' ? [
     step(`${unzip} Then, in RStudio, choose Build, then Test Package, to see your first test pass; in Positron, run ${code('devtools::test()')} in the console.`, '', `The first time, install the tools: in RStudio choose Tools, then Install Packages, and install ${code('devtools')}; in Positron, run ${code('install.packages("devtools")')}. Skip this if you already have it.`),
     step('Install <a href="https://desktop.github.com" target="_blank" rel="noopener">GitHub Desktop</a> and sign in with your GitHub account.', '', 'It brings Git with it. Skip this if you already use it.'),
     step(`In GitHub Desktop, choose File, then Add local repository, pick the ${code(name)} folder, and accept when it offers to create the repository.`),
     step(`Click Publish repository. ${priv ? 'Leave Keep this code private ticked.' : 'Untick Keep this code private.'} If ${code(owner)} is an organisation, pick it under Organization.`, '', `Already made the repository on GitHub? Keep it empty (no README or licence) and, in place of Publish repository, choose Repository, then Repository settings, paste ${code(`https://github.com/${owner}/${name}.git`)} as the remote, save, and click Publish branch. If it already has files, delete it on GitHub first, or come back and press <em>Already have a package?</em>.`),
-    ...running,
-    ...(S.github ? [step(setupButton, '', setupMore)] : []),
+    ...actionsStep(checksRun, S.github),
   ] : [
     step(`${unzip} Then, in the R console, install the tools (skip any you already have) and run your first test.`,
       `${copy('install.packages(c("devtools", "gitcreds", "pak"))')}${copy('pak::local_install_dev_deps()')}${copy('devtools::test()')}`,
@@ -626,8 +642,7 @@ function steps() {
     step('Put the package on GitHub: run the first line and answer yes to each question; after RStudio restarts, run the line for your account.',
       `${copy('usethis::use_git()')}${label('Your own account:')}${copy(`usethis::use_github(private = ${privArg})`)}${label('An organisation, such as a company\'s:')}${copy(`usethis::use_github(organisation = "${owner}", private = ${privArg})`)}`,
       `The first line asks to commit your files and then to restart RStudio; the yes answer moves around, so read each one. ${code('DESCRIPTION')} already links to ${code(`github.com/${owner}/${name}`)}, so the repository should be made there. Already made the repository on GitHub? Keep it empty (no README or licence) and, in place of ${code('use_github()')}, run ${code(`usethis::use_git_remote("origin", "https://github.com/${owner}/${name}.git")`)} and then ${code('gert::git_push(set_upstream = TRUE)')}. If it already has files, delete it on GitHub first, or come back and press <em>Already have a package?</em>.`),
-    ...running,
-    ...(S.github ? [step(setupButton, '', setupMore)] : []),
+    ...actionsStep(checksRun, S.github),
   ];
   $('#stepList').innerHTML = list.join('');
   // The checklists Set up this repository opens on its first run (cli/R/github.R open_stages), and the ones that wait.
@@ -639,7 +654,7 @@ function steps() {
   $('#nextAfter').innerHTML = after([
     S.github && (now.length || later.length || qc) && ['Your checklists', `${now.length ? `${listWords(now)} ${now.length === 1 ? 'opens' : 'open'} in your repository's issues on the first run of Set up this repository.` : ''}${later.length ? ` ${listWords(later)} ${later.length === 1 ? 'opens' : 'open'} on a later run, once ${later.length === 1 ? 'its' : 'their'} stage arrives.` : ''}${qc ? ' QC adds its sections to each Next release checklist.' : ''}`],
     S.github && ['Keep them up to date', `Run <em>Set up this repository</em> on GitHub again at any time: it ticks the boxes it can check and opens each checklist when its stage arrives. A few boxes are repository settings you change by hand; each says where. From R instead: with ${gh} installed and signed in, run ${code(setup)}.`],
-    running.length && ['Run the checks on your computer', `Before a pull request, follow <em>Run the checks on your computer</em> in ${code('.github/workflows/README.md')}.${S.checks.lint ? ` The style step needs <a href="https://posit-dev.github.io/air/" target="_blank" rel="noopener">Air</a>${S.frontend && mode === 'new' ? ', and <a href="https://biomejs.dev" target="_blank" rel="noopener">Biome</a> for the JS and CSS' : ''}: install ${S.frontend && mode === 'new' ? 'them' : 'it'} once.` : ''}${S.frontend && mode === 'new' ? ' The browser tests need Google Chrome.' : ''}`],
+    checksRun && ['Run the checks on your computer', `Before a pull request, follow <em>Run the checks on your computer</em> in ${code('.github/workflows/README.md')}.${S.checks.lint ? ` The style step needs <a href="https://posit-dev.github.io/air/" target="_blank" rel="noopener">Air</a>${S.frontend && mode === 'new' ? ', and <a href="https://biomejs.dev" target="_blank" rel="noopener">Biome</a> for the JS and CSS' : ''}: install ${S.frontend && mode === 'new' ? 'them' : 'it'} once.` : ''}${S.frontend && mode === 'new' ? ' The browser tests need Google Chrome.' : ''}`],
     ['Later', `${email}${codecov()}To add a website or anything else, come back here and choose only that.`],
   ]);
 }
