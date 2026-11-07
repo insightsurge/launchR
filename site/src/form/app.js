@@ -72,17 +72,18 @@ function modifyExtras() {
 
 /* the README badge every package made here carries: a small credit that links to launchR */
 const ALWAYS_BADGE = 'launchr';
-/* the checklists a package can have on its plan: QC and Before public only while private, the CRAN ones only for a
-   package going to CRAN (cli/R/github.R open_stages never opens them otherwise) */
-const CRAN_STAGES = ['before-cran', 'after-acceptance', 'next-release'];
-const stageOffered = (row) => (['qc', 'before-public'].includes(row.key) ? !isPublic() : CRAN_STAGES.includes(row.key) ? release() === 'cran' : true);
+/* the checklists a package can have on its plan: Before public only while private, Before CRAN and After acceptance
+   only for a package going to CRAN (cli/R/github.R open_stages never opens them otherwise) */
+const CRAN_STAGES = ['before-cran', 'after-acceptance'];
+const stageOffered = (row) => (row.key === 'before-public' ? !isPublic() : CRAN_STAGES.includes(row.key) ? release() === 'cran' : true);
 const chosenStages = () => lists.stages.filter((row) => S.checklists[row.key] && stageOffered(row));
 /* the checklists Set up this repository opens on its first run, as cli/R/github.R open_stages does for a new
    repository: the others open when their stage arrives */
 function openNow() {
   const chosen = chosenStages().map((row) => row.stage);
-  const state = release() === 'internal' ? [isPublic() ? 'After public' : 'Before public'] : [isPublic() ? 'After public' : 'Before public', 'Before CRAN'];
-  return [...(chosen.includes(lists.settings.qc_stage) ? [lists.settings.qc_stage] : []), ...state.filter((stage) => chosen.includes(stage))];
+  const visibility = isPublic() ? 'After public' : 'Before public';
+  const state = release() === 'internal' ? [visibility, 'Next release'] : [visibility, 'Before CRAN'];
+  return ['Set up', ...state].filter((stage) => chosen.includes(stage));
 }
 
 /* the checks whose results go in the CI report comment: all but r-cmd-check-extended (.github/pr-report.json) */
@@ -180,7 +181,7 @@ function gitChoices() {
     <div class="ticks nest">${free.map((row) => `<label class="pill" title="${esc(row.description)}"><input type="checkbox" data-label="${esc(row.name)}"${S.labels[row.name] ? ' checked' : ''} /><span><i class="dot" style="--lc:${colour(row.name)}"></i>${esc(row.name)}</span></label>`).join('')}</div>
     <div class="git-head">${head3('Checklists', stages.map((row) => [row.stage, row.opens]))}${peekLink(`cl-${(chosenStages()[0] ?? stages[0] ?? lists.stages[0]).key}`, 'Preview the checklists')}</div>
     <div class="ticks nest">${stages.map((row) => pill(`data-stage="${row.key}"`, row.stage, S.checklists[row.key])).join('')}</div>
-    ${notOffered.length ? `<p class="sw-note nest">${[isPublic() && 'Before public and QC before release are for a private package.', release() !== 'cran' && 'Before CRAN, After acceptance and Next release are for a package going to CRAN.'].filter(Boolean).join(' ')}</p>` : ''}`;
+    ${notOffered.length ? `<p class="sw-note nest">${[isPublic() && 'Before public is for a private package.', release() !== 'cran' && 'Before CRAN and After acceptance are for a package going to CRAN.'].filter(Boolean).join(' ')}</p>` : ''}`;
 }
 
 function summary() {
@@ -216,7 +217,14 @@ body.addEventListener('change', (e) => {
   if (t.dataset.matrix) { touched(() => { S.matrix[t.dataset.matrix] = t.checked; }); return; }
   for (const [data, list] of [['badge', 'badges'], ['nav', 'navbar'], ['form', 'forms'], ['label', 'labels'], ['stage', 'checklists']]) {
     if (t.dataset[data] !== undefined) {
-      touched(() => { S[list][t.dataset[data]] = t.checked; });
+      touched(() => {
+        S[list][t.dataset[data]] = t.checked;
+        // QC is sections of Next release: choosing QC chooses Next release, and leaving Next release out leaves QC out
+        if (data === 'stage' && t.dataset.stage === 'qc' && t.checked) S.checklists['next-release'] = true;
+        if (data === 'stage' && t.dataset.stage === 'next-release' && !t.checked) S.checklists.qc = false;
+      });
+      // show the coupled pill without redrawing the step, so the focus stays on the one just used
+      if (data === 'stage') document.querySelectorAll('[data-stage]').forEach((box) => { box.checked = !!S.checklists[box.dataset.stage]; });
       // a form taken off leaves its label unticked, unless another chosen form still sets it
       if (data === 'form') { if (!t.checked) offLabel(lists.forms.find((row) => row.key === t.dataset.form).label); paint(); }
       return;
@@ -624,10 +632,12 @@ function steps() {
   $('#stepList').innerHTML = list.join('');
   // The checklists Set up this repository opens on its first run (cli/R/github.R open_stages), and the ones that wait.
   const now = openNow();
-  const later = chosenStages().map((row) => row.stage).filter((stage) => !now.includes(stage));
+  /* QC has no stage of its own: it adds its sections to Next release, so it never "arrives" */
+  const qc = chosenStages().some((row) => row.key === 'qc');
+  const later = chosenStages().map((row) => row.stage).filter((stage) => !now.includes(stage) && stage !== lists.settings.qc_stage);
   const email = v('email') ? '' : `Replace the placeholder email in ${code('DESCRIPTION')} before you release. `;
   $('#nextAfter').innerHTML = after([
-    S.github && (now.length || later.length) && ['Your checklists', `${now.length ? `${listWords(now)} ${now.length === 1 ? 'opens' : 'open'} in your repository's issues on the first run of Set up this repository.` : ''}${later.length ? ` ${listWords(later)} ${later.length === 1 ? 'opens' : 'open'} on a later run, once ${later.length === 1 ? 'its' : 'their'} stage arrives.` : ''}`],
+    S.github && (now.length || later.length || qc) && ['Your checklists', `${now.length ? `${listWords(now)} ${now.length === 1 ? 'opens' : 'open'} in your repository's issues on the first run of Set up this repository.` : ''}${later.length ? ` ${listWords(later)} ${later.length === 1 ? 'opens' : 'open'} on a later run, once ${later.length === 1 ? 'its' : 'their'} stage arrives.` : ''}${qc ? ' QC adds its sections to each Next release checklist.' : ''}`],
     S.github && ['Keep them up to date', `Run <em>Set up this repository</em> on GitHub again at any time: it ticks the boxes it can check and opens each checklist when its stage arrives. A few boxes are repository settings you change by hand; each says where. From R instead: with ${gh} installed and signed in, run ${code(setup)}.`],
     running.length && ['Run the checks on your computer', `Before a pull request, follow <em>Run the checks on your computer</em> in ${code('.github/workflows/README.md')}.${S.checks.lint ? ` The style step needs <a href="https://posit-dev.github.io/air/" target="_blank" rel="noopener">Air</a>${S.frontend && mode === 'new' ? ', and <a href="https://biomejs.dev" target="_blank" rel="noopener">Biome</a> for the JS and CSS' : ''}: install ${S.frontend && mode === 'new' ? 'them' : 'it'} once.` : ''}${S.frontend && mode === 'new' ? ' The browser tests need Google Chrome.' : ''}`],
     ['Later', `${email}${codecov()}To add a website or anything else, come back here and choose only that.`],

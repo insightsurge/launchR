@@ -218,11 +218,11 @@ modify_from_flags <- function(args, choices) {
     }
     choices[[name]] <- known[[name]][known[[name]] %in% given]
   }
-  # --qc and --no-qc, from before --checklists, add and remove the QC checklist.
+  # --qc and --no-qc, from before --checklists, add and remove the QC checklist: sections of Next release.
   if (has_flag(args, "qc")) choices$checklists <- union(choices$checklists, "qc")
   if (has_flag(args, "no-qc")) choices$checklists <- setdiff(choices$checklists, "qc")
-  if ("qc" %in% choices$checklists && choices$visibility == "public") {
-    return("The QC checklist is for private packages (plans c and d).")
+  if ("qc" %in% choices$checklists && !"next-release" %in% choices$checklists) {
+    return("QC is sections of Next release, so add next-release to --checklists.")
   }
   choices
 }

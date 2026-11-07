@@ -126,10 +126,31 @@ sequenceDiagram
 
 With the GitHub setup part, your repository gets a **Set up this repository** workflow. Its first run, from your first
 push, only lists what it would make. Run it from the Actions tab to create the labels, a root issue and the stage
-checklists you chose (Before public, After public, Before CRAN, ...; DESCRIPTION's `Config/launchR/checklists` lists them, and a plan starts with its own). It ticks the boxes it can check, such as "CI is green on
+checklists you chose (`lists/stages.tsv`; DESCRIPTION's `Config/launchR/checklists` lists them, and a plan starts with its own). It ticks the boxes it can check, such as "CI is green on
 the default branch", and links each repository setting it can't change. Run it again at any time: it edits only the
 lines it wrote. Labels that aren't launchR's, such as GitHub's own (duplicate, question, ...) and any you made, stay; to
 remove them, tick **Also remove labels that aren't launchR's** when you click Run workflow. Dependabot's labels are kept.
+
+The stage checklists, and when each opens:
+
+| Checklist | Opens | What it covers |
+| --- | --- | --- |
+| Set up | On the first run, for every plan | Your own code in place of the example, DESCRIPTION, the repository files, CI and the settings every package needs |
+| Before public | While the repository is private | Making sure nothing private goes public, and the switch to public |
+| After public | Once the repository is public | The settings that come with being public, Windows and Mac in CI, the website, and making the package easy to find |
+| Before CRAN | For a package going to CRAN, until it is on CRAN | The checks and the points CRAN's reviewers read, then the submission |
+| After acceptance | Once the package is on CRAN | Telling people, the GitHub release and the development version |
+| Next release | From the first run for a package not for CRAN; once the package is on CRAN for one that is | A fresh list for each release: checks, docs, version, NEWS and the GitHub release. A new list opens after each release is shipped. |
+| QC | Not a list of its own: sections of Next release, for teams with a quality process (any plan; on for plan d) | Scope and risk, tests, review, and the evidence to keep for each release |
+
+A checklist can have boxes under a box (one level). A box with others under it ticks when every box under it is ticked.
+A box marked optional does not keep a checklist open: it closes when every other box is ticked. Boxes that name a file
+or a setting tick themselves, and un-tick when they stop being true; the rest are yours to tick.
+
+A package made before Set up was a checklist has no `Config/launchR/checklists` line in DESCRIPTION, so its next run
+opens a Set up list (and a Next release list too, for a package not for CRAN). A package whose line is only
+`QC before release`, the old QC checklist, now gets Next release with the QC sections; add `Set up` to the line to get
+that list as well. An issue called "Checklist: QC before release" that is already open is no longer updated.
 
 The same from R, with the [GitHub CLI](https://cli.github.com) signed in, from your package's folder; this can also
 tick the settings boxes:
@@ -164,8 +185,8 @@ Rscript cli/launchr.R eject                           # copy launchR's checks in
 | `--badges check,lifecycle` | README badges, from `lists/badges.tsv` (`none` for no badges) |
 | `--navbar reference,news,search` | The website's navbar items, from `lists/navbar.tsv` |
 | `--forms bug,docs`, `--labels bug,idea` | Which issue forms (`lists/forms.tsv`) and labels (`lists/labels.tsv`); a form's label, and `epic` (the set-up step's root issue uses it), are always kept |
-| `--checklists before-public,qc` | Which stage checklists the package gets, from `lists/stages.tsv` (`none` for no checklist); the plan's own list is the default, and DESCRIPTION records the choice as `Config/launchR/checklists` |
-| `--qc`, `--no-qc` | Add or remove the QC checklist, for a private package (on for plan d) |
+| `--checklists set-up,before-public,next-release,qc` | Which stage checklists the package gets, from `lists/stages.tsv` (`none` for no checklist); the plan's own list is the default, and DESCRIPTION records the choice as `Config/launchR/checklists`. `qc` needs `next-release` |
+| `--qc`, `--no-qc` | Add or remove the QC sections of Next release (on for plan d, offered to every plan) |
 | `--preset starter` / `everything` | Which parts and checks are on |
 | `--public`, `--internal` | Older spelling of the plan: public, and not going to CRAN |
 | `--path DIR` | Where to write the package (default: a folder named after it) |

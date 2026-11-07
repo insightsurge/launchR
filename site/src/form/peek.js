@@ -21,23 +21,29 @@ const NEEDS = {
   '_pkgdown.yml': 'with a website',
 };
 
+// The QC choice has no issue of its own: its boxes (release qc) are sections of the Next release issue, so its preview
+// shows those, and the Next release preview leaves them out.
 export function checklists() {
   const rows = tsv('checklists.tsv');
   return tsv('stages.tsv').map((stage) => {
+    const qc = stage.key === 'qc';
     const sections = [];
-    for (const row of rows.filter((r) => r.stage === stage.stage)) {
+    const shown = rows.filter((r) => (qc ? r.release === 'qc' : r.stage === stage.stage && r.release !== 'qc'));
+    for (const row of shown) {
       let section = sections.find((s) => s.name === row.section);
       if (!section) sections.push((section = { name: row.section, boxes: [] }));
       section.boxes.push({
         text: row.text,
         where: row.where,
         pick: row.pick,
-        auto: row.kind !== 'manual',
+        auto: !['manual', 'group'].includes(row.kind),
         cran: row.release === 'cran',
+        optional: row.optional === 'yes',
+        sub: shown.some((r) => r.id === row.parent),
         needs: NEEDS[row.needs] ?? '',
       });
     }
-    return { key: stage.key, stage: stage.stage, opens: stage.opens, sections };
+    return { key: stage.key, stage: stage.stage, title: qc ? 'Added to Checklist: Next release' : `Checklist: ${stage.stage}`, opens: stage.opens, sections };
   });
 }
 

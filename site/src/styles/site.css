@@ -869,6 +869,7 @@ dialog.peek::backdrop { background: rgb(0 0 0 / 55%); }
 .peek-pane h4 { margin: 16px 0 6px; font-size: 15px; font-weight: 600; }
 .peek-boxes { margin: 0; padding: 0; list-style: none; display: grid; gap: 7px; }
 .peek-boxes li { display: flex; gap: 9px; font-size: 14.5px; line-height: 1.45; }
+.peek-boxes li.sub { margin-left: 23px; }
 .peek-boxes em { font-style: normal; color: var(--soft); }
 .peek-boxes .tag { margin: 0 0 0 6px; padding: 0 7px; font-size: 11.5px; vertical-align: 1px; }
 .peek-box { flex: none; width: 14px; height: 14px; margin-top: 4px; border: 1.5px solid var(--soft); border-radius: 3px; }

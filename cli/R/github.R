@@ -30,15 +30,19 @@ find_repo <- function(args) {
 }
 
 package_context <- function(args) {
-  description <- read.dcf("DESCRIPTION", fields = c("Package", "Config/quality-gate/target", "Config/launchR/labels", "Config/launchR/checklists", "Config/launchR/checklist"))
+  description <- read.dcf("DESCRIPTION", fields = c("Package", "Version", "Config/quality-gate/target", "Config/launchR/labels", "Config/launchR/checklists", "Config/launchR/checklist"))
   # A package made with some of launchR's labels names them; without the field it gets them all.
   chosen <- unname(description[1, "Config/launchR/labels"])
   labels <- if (is.na(chosen)) NULL else trimws(strsplit(chosen, ",", fixed = TRUE)[[1]])
-  # The stage checklists a package chose; without the field it gets all but QC. A package from before v0.0.18 recorded
-  # only the QC checklist, as Config/launchR/checklist.
+  # The stage checklists a package chose; without the field it gets all but QC (so a package from before Set up was a
+  # checklist gets it on its next run). A package made earlier names the QC choice "QC before release", and
+  # an older one recorded only that, as Config/launchR/checklist.
   chosen_stages <- unname(description[1, "Config/launchR/checklists"])
   stages <- if (is.na(chosen_stages)) NULL else trimws(strsplit(chosen_stages, ",", fixed = TRUE)[[1]])
-  qc_old <- identical(unname(description[1, "Config/launchR/checklist"]), kit_setting("qc_stage"))
+  if (!is.null(stages)) stages[stages == "QC before release"] <- kit_setting("qc_stage")
+  # QC is sections of Next release, so choosing QC opens that list too.
+  if (kit_setting("qc_stage") %in% stages) stages <- union(stages, "Next release")
+  qc_old <- identical(unname(description[1, "Config/launchR/checklist"]), "QC before release")
   found <- find_repo(args)
   repo <- if (found$connected) found$repo else ""
   public <- if (found$connected) found$visibility == "PUBLIC" else has_flag(args, "public")
@@ -49,6 +53,7 @@ package_context <- function(args) {
     owner = sub("/.*", "", repo),
     branch = if (found$connected) found$branch else "main",
     package = description[1, "Package"],
+    version = unname(description[1, "Version"]),
     public = public,
     remove_labels = has_flag(args, "remove-other-labels"),
     internal = identical(unname(description[1, "Config/quality-gate/target"]), "internal"),
@@ -58,47 +63,61 @@ package_context <- function(args) {
   )
 }
 
-# The checklists that should be open now. Internal packages never get the CRAN ones. A package on CRAN moves on to
-# After acceptance and Next release. Only the checklists the package chose (Config/launchR/checklists) open; without
-# the field it gets all of these. A private package with the QC checklist gets it too.
+# The checklists that should be open now. Set up opens for every package, from the first run. Internal packages never
+# get the CRAN ones, and their Next release opens at once. A package for CRAN moves on to After acceptance and Next
+# release once it is on CRAN. Only the checklists the package chose (Config/launchR/checklists) open; without the
+# field it gets all of these. QC has no list of its own: its boxes are sections of Next release (stage_rows).
 open_stages <- function(ctx, on_cran = FALSE) {
-  stages <- if (ctx$internal) {
-    if (ctx$public) "After public" else "Before public"
+  visibility <- if (ctx$public) "After public" else "Before public"
+  stages <- c("Set up", if (ctx$internal) {
+    c(visibility, "Next release")
   } else if (isTRUE(on_cran)) {
     c("After acceptance", "Next release")
   } else {
-    c(if (ctx$public) "After public" else "Before public", "Before CRAN")
-  }
+    c(visibility, "Before CRAN")
+  })
   if (!is.null(ctx$checklists)) {
     stages <- stages[stages %in% ctx$checklists]
   } else if (isTRUE(ctx$qc) && ctx$internal) {
     stages <- setdiff(stages, "Before public") # a package from before v0.0.18: QC took the place of Before public
   }
-  if (isTRUE(ctx$qc) && !ctx$public) stages <- c(kit_setting("qc_stage"), stages)
   stages
 }
 
 # --- A checklist's text -------------------------------------------------------------------------------------------
 
+# The rows of one checklist for this package: cran rows only for a package going to CRAN, qc rows only when it chose
+# QC, rows whose needs path exists, and no box whose parent is left out.
 stage_rows <- function(stage, ctx) {
   rows <- read_list("checklists.tsv")
   keep <- rows$stage == stage &
-    (rows$release == "any" | !ctx$internal) &
+    (rows$release == "any" | (rows$release == "cran" & !ctx$internal) | (rows$release == "qc" & isTRUE(ctx$qc))) &
     (!nzchar(rows$needs) | file.exists(rows$needs))
-  rows[keep, , drop = FALSE]
+  rows <- rows[keep, , drop = FALSE]
+  rows[!nzchar(rows$parent) | rows$parent %in% rows$id, , drop = FALSE]
 }
 
-box_line <- function(row, ticked, ctx) {
+# A box under a parent box is indented by two spaces, which GitHub shows as a sub-box.
+box_line <- function(row, ticked, ctx, nested = FALSE) {
   detail <- c(
     if (nzchar(row$link)) sprintf("[%s](%s)", row$where, fill_in(row$link, ctx)),
     if (nzchar(row$pick)) row$pick
   )
   detail <- if (length(detail) == 2) paste(detail, collapse = ": ") else detail
-  sprintf("- [%s] %s%s %s", if (ticked) "x" else " ", row$text, if (length(detail)) sprintf(" (%s)", detail) else "", marker(row$id))
+  sprintf("%s- [%s] %s%s %s", if (nested) "  " else "", if (ticked) "x" else " ", row$text, if (length(detail)) sprintf(" (%s)", detail) else "", marker(row$id))
 }
 
-# Where a new box goes: after the last line of its section, or in a new section before the closing lines.
-add_line <- function(lines, section, line) {
+# The line number of the box with this id, or NA.
+box_at <- function(lines, id) which(grepl(marker(id), lines, fixed = TRUE))[1]
+
+# Where a new box goes: under its parent box (after the parent's other sub-boxes) when parent_at is the parent's line
+# number, else after the last line of its section, or in a new section before the closing lines.
+add_line <- function(lines, section, line, parent_at = NA_integer_) {
+  if (!is.na(parent_at)) {
+    end <- parent_at
+    while (end < length(lines) && grepl("^\\s+- \\[[ xX]\\]", lines[end + 1L])) end <- end + 1L
+    return(append(lines, line, after = end))
+  }
   heading <- sprintf("### %s", section)
   at <- match(heading, lines)
   if (is.na(at)) {
@@ -118,35 +137,63 @@ checklist_lines <- function(stage, ctx, old_body = "") {
   while (length(lines) > 0 && !nzchar(lines[length(lines)])) lines <- lines[-length(lines)]
   ticked <- character()
   unticked <- character()
+  # The boxes a person decides (manual) keep their line; a group's state comes from its sub-boxes, in the second pass.
+  own <- rows$kind %in% c("manual", "group")
   for (i in seq_len(nrow(rows))) {
     row <- as.list(rows[i, ])
-    at <- which(grepl(marker(row$id), lines, fixed = TRUE))[1]
+    at <- box_at(lines, row$id)
+    parent_at <- if (nzchar(row$parent)) box_at(lines, row$parent) else NA_integer_
+    nested <- !is.na(parent_at)
     if (is.na(at)) {
-      state <- if (row$kind == "manual") FALSE else tick_state(row, ctx)
-      lines <- add_line(lines, row$section, box_line(row, isTRUE(state), ctx))
+      state <- if (own[i]) FALSE else tick_state(row, ctx)
+      lines <- add_line(lines, row$section, box_line(row, isTRUE(state), ctx, nested), parent_at)
       if (isTRUE(state)) ticked <- c(ticked, row$text)
       next
     }
-    if (row$kind == "manual") next
+    if (own[i]) next
     state <- tick_state(row, ctx)
     if (is.na(state)) next
     before <- is_ticked(lines[at])
-    lines[at] <- box_line(row, state, ctx)
+    lines[at] <- box_line(row, state, ctx, nested)
+    if (state && !before) ticked <- c(ticked, row$text)
+    if (!state && before) unticked <- c(unticked, row$text)
+  }
+  # A group is ticked when every sub-box that is still in the list is ticked, and unticked otherwise. A group with no
+  # sub-box left is a box a person ticks.
+  for (i in which(rows$kind == "group")) {
+    row <- as.list(rows[i, ])
+    kids <- vapply(rows$id[rows$parent == row$id], function(id) box_at(lines, id), 1L)
+    kids <- kids[!is.na(kids)]
+    if (length(kids) == 0) next
+    at <- box_at(lines, row$id)
+    state <- all(is_ticked(lines[kids]))
+    before <- is_ticked(lines[at])
+    lines[at] <- box_line(row, state, ctx, nested = grepl("^\\s", lines[at]))
     if (state && !before) ticked <- c(ticked, row$text)
     if (!state && before) unticked <- c(unticked, row$text)
   }
   while (length(lines) > 0 && !nzchar(lines[length(lines)])) lines <- lines[-length(lines)]
+  waiting <- unticked_required(lines, rows)
   lines <- c(
     lines, "",
     if (length(unticked)) c(sprintf("Unticked because they stopped being true: %s. %s", paste(unticked, collapse = "; "), marker("unticked")), ""),
     sprintf("Last checked by launchR on %s. %s", format(Sys.Date()), marker("date"))
   )
-  list(lines = lines, ticked = ticked, unticked = unticked)
+  list(lines = lines, ticked = ticked, unticked = unticked, waiting = waiting)
 }
 
 box_counts <- function(lines) {
   boxes <- lines[is_box(lines)]
   c(done = sum(is_ticked(boxes)), total = length(boxes))
+}
+
+# How many boxes that hold the list open are still unticked: every box except the optional ones (a box with no
+# launchR marker is someone else's and counts).
+unticked_required <- function(lines, rows) {
+  boxes <- lines[is_box(lines)]
+  ids <- ifelse(grepl("<!-- launchr:[^ ]+ -->", boxes), sub("^.*<!-- launchr:([^ ]+) -->.*$", "\\1", boxes), "")
+  optional <- ids %in% rows$id[rows$optional == "yes"]
+  sum(!optional & !is_ticked(boxes))
 }
 
 # --- What is on GitHub now ----------------------------------------------------------------------------------------
@@ -218,7 +265,7 @@ github_plan <- function(ctx) {
     checklists[[stage]] <- list(
       stage = stage, number = if (is_open) found$number else "", action = if (!is_open) "create" else if (changed) "update" else "same",
       lines = built$lines, ticked = built$ticked, unticked = built$unticked, done = counts[["done"]], total = counts[["total"]],
-      close = is_open && counts[["total"]] > 0 && counts[["done"]] == counts[["total"]]
+      close = is_open && counts[["total"]] > 0 && built$waiting == 0
     )
   }
   closed <- unique(issues$title[issues$state == "CLOSED" & startsWith(issues$title, "Checklist: ")])

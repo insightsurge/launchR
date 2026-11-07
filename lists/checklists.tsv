@@ -1,46 +1,108 @@
-# Stage checklists. kind: file (path exists), placeholder (file|text that must be gone), setting (endpoint|jq that prints true or false), ci (latest check runs on the default branch pass), site (website answers), cran (package is on CRAN), platforms (the file's platforms line names windows/ and macos/), description (DESCRIPTION's Description says more than its Title), manual (a person ticks it).
-# id is the box's permanent name in the issue. needs: a path the package must have for the box to appear. release: cran boxes are left out for internal packages. where, link and pick: the settings page, its address ({repo}, {owner}, {branch} are filled in) and the value to choose.
-# Keep every row at 11 tab-separated cells, and no hash sign inside a cell (lists treat it as a comment).
-id	stage	section	kind	target	release	needs	text	where	link	pick
-licence	Before public	Repository	file	LICENSE	any		Licence is in place			
-contributing	Before public	Repository	file	.github/CONTRIBUTING.md	any		Contributor guide is in place			
-example	Before public	Repository	placeholder	R/say_hello.R|say_hello	any		Example function replaced with your own			
-history	Before public	Repository	manual		any		Search the history for secrets before going public			
-ci-main	Before public	CI	ci		any	.github/workflows	CI is green on the default branch			
-squash	Before public	Settings	setting	repos/{repo}|if .allow_squash_merge == null then null else (.allow_squash_merge == true and .allow_merge_commit == false and .allow_rebase_merge == false and .delete_branch_on_merge == true) end	any		Squash merge only, and delete branches after merge	Settings, General	https://github.com/{repo}/settings	under Pull Requests tick Allow squash merging and Automatically delete head branches, and untick Allow merge commits and Allow rebase merging
-secrets	Before public	Settings	setting	repos/{repo}|if .security_and_analysis == null then null else (.security_and_analysis.secret_scanning.status == "enabled" and .security_and_analysis.secret_scanning_push_protection.status == "enabled") end	any		Secret scanning and push protection on	Settings, Advanced Security	https://github.com/{repo}/settings/security_analysis	switch on Secret Protection, then Secret scanning and Push protection
-token	Before public	Settings	setting	repos/{repo}/actions/permissions/workflow|.default_workflow_permissions == "read"	any		Workflow token set to read-only	Settings, Actions, General	https://github.com/{repo}/settings/actions	under Workflow permissions choose Read repository contents and packages permissions
-platforms	After public	CI	platforms	.github/workflows/r-cmd-check.yaml	any	.github/workflows/r-cmd-check.yaml	Add Windows and Mac to `platforms` in `r-cmd-check.yaml`			
-ruleset	After public	CI	setting	repos/{repo}/rules/branches/{branch}|([.[].type] | (index("deletion") != null and index("non_fast_forward") != null))	any		Block force pushes and deleting the default branch with a ruleset	Settings, Rules, New branch ruleset	https://github.com/{repo}/settings/rules/new?target=branch	set enforcement to Active, target the default branch, and tick Restrict deletions and Block force pushes
-vulnerabilities	After public	CI	setting	repos/{repo}/private-vulnerability-reporting|.enabled	any		Private vulnerability reporting on	Settings, Advanced Security	https://github.com/{repo}/settings/security_analysis	switch on Private vulnerability reporting (Enable), so SECURITY.md has somewhere to send reporters
-pages	After public	Launch	setting	repos/{repo}/pages|.build_type == "workflow"	any	_pkgdown.yml	The website is published from GitHub Actions	Settings, Pages	https://github.com/{repo}/settings/pages	under Build and deployment set Source to GitHub Actions
-site	After public	Launch	site		any	_pkgdown.yml	The website is live			
-logo	After public	Launch	manual		any		Hex logo and favicons			
-preview	After public	Launch	manual		any		Link preview image			upload it under Social preview
-topics	After public	Launch	setting	repos/{repo}|if .name == null then null else ((.description // "") != "" and ((.topics // []) | length) > 0) end	any		Repository description and topics	the repository's home page	https://github.com/{repo}	use the gear beside About to add a description and topics
-badges	After public	Launch	manual		any		README badges			
-codecov	After public	Launch	manual		any	.github/workflows/coverage.yaml	Codecov set up	Codecov	https://app.codecov.io/gh/{repo}	add the repository and its upload token as a secret
-ci-main-cran	Before CRAN	CI	ci		cran	.github/workflows	CI is green on the default branch			
-timing	Before CRAN	Checks	manual		cran		Time the tests with CRAN's settings			
-gate-full	Before CRAN	Checks	manual		cran		The quality gate's `full` mode passes (`.github/workflows/README.md`, "Run the checks on your computer")			
-urls	Before CRAN	Checks	manual		cran		urlchecker and spelling report nothing			
-builders	Before CRAN	Checks	manual		cran		win-builder and mac-builder are clean			
-description	Before CRAN	Wording	description	DESCRIPTION	cran		Description says what only this package does			
-cran-comments	Before CRAN	Wording	file	cran-comments.md	cran		cran-comments.md is ready			
-on-cran	Before CRAN	Submission	cran		cran		The package is on CRAN			
-cran-badges	After acceptance	Launch	manual		cran		CRAN status and downloads badges			
-runiverse	After acceptance	Launch	manual		cran		R-universe set up			
-release	After acceptance	Launch	manual		cran		GitHub release published			
-launchr-news	Next release	Release	manual		any		Look at what's new in launchR			
-news	Next release	Release	manual		any		NEWS.md is up to date			
-version	Next release	Release	manual		any		Version set with `usethis::use_version()`			
-qc-purpose	QC before release	Scope	manual		any		README says what the package is for and who uses it			
-qc-returns	QC before release	Scope	manual		any		Every exported function's help page says what it returns			
-qc-ci	QC before release	Tests	ci		any	.github/workflows	CI is green on the default branch			
-qc-tests	QC before release	Tests	manual		any		Every exported function has a test of its documented behaviour			
-qc-coverage	QC before release	Tests	manual		any		Coverage is at or above the limit in DESCRIPTION			
-qc-review	QC before release	Review	manual		any		Each change was reviewed in a pull request by someone other than its author			
-qc-imports	QC before release	Review	manual		any		Each package in Imports is needed, and approved for use where you work			
-qc-news	QC before release	Release	manual		any		NEWS.md lists the changes in this version			
-qc-version	QC before release	Release	manual		any		Version set with `usethis::use_version()`, and the release tagged			
-qc-evidence	QC before release	Release	manual		any		The QC evidence is kept: links to the CI runs and the reviewed pull requests			
+# Stage checklists, one row per box. kind: file (path exists), placeholder (file|text that must be gone; a missing file counts as gone), contains (file|text that must be there), setting (endpoint|jq that prints true or false), ci (latest check runs on the default branch pass), site (website answers), cran (package is on CRAN), platforms (the file's platforms line names windows/ and macos/), description (DESCRIPTION's Description says more than its Title), group (a parent box: ticked when every box under it is ticked), manual (a person ticks it).
+# id is the box's permanent name in the issue. release: any (every package), cran (left out for internal packages) or qc (only when the package chose the QC checklist; these boxes are the QC sections of Next release). needs: a path the package must have for the box to appear. where, link and pick: the settings page, its address ({repo}, {owner}, {branch}, {package}, {version} are filled in) and the value to choose.
+# parent: the id of the box this one sits under (one level; the parent is earlier in the file, in the same stage and section; a box whose parent is left out is left out too). optional: yes for a box that does not hold the list open: the list closes when every other box is ticked.
+# Keep every row at 13 tab-separated cells, and no hash sign inside a cell (lists treat it as a comment).
+id	stage	section	kind	target	release	needs	text	where	link	pick	parent	optional
+own-code	Set up	Your package	group		any		The example is replaced with your own code					
+example	Set up	Your package	placeholder	R/say_hello.R|say_hello	any		`say_hello()`, its tests and its help page are gone				own-code	
+example-readme	Set up	Your package	placeholder	README.md|say_hello	any		The README's example uses your own functions				own-code	
+own-description	Set up	Your package	group		any		DESCRIPTION is yours					
+description	Set up	Your package	description	DESCRIPTION	any		Description says what only this package does				own-description	
+email	Set up	Your package	placeholder	DESCRIPTION|your.email@example.com	any		Your real email, not the placeholder				own-description	
+repo-files	Set up	Your package	group		any		Repository files are in place					
+licence	Set up	Your package	file	LICENSE	any		Licence				repo-files	
+contributing	Set up	Your package	file	.github/CONTRIBUTING.md	any		Contributor guide				repo-files	
+name-free	Set up	Your package	manual		cran		The name isn't taken on CRAN or Bioconductor (`available::available()`)					
+ci-main	Set up	CI	ci		any	.github/workflows	CI is green on the default branch					
+squash	Set up	Settings	setting	repos/{repo}|if .allow_squash_merge == null then null else (.allow_squash_merge == true and .allow_merge_commit == false and .allow_rebase_merge == false and .delete_branch_on_merge == true) end	any		Squash merge only, and delete branches after merge	Settings, General	https://github.com/{repo}/settings	under Pull Requests tick Allow squash merging and Automatically delete head branches, and untick Allow merge commits and Allow rebase merging		
+token	Set up	Settings	setting	repos/{repo}/actions/permissions/workflow|.default_workflow_permissions == "read"	any		Workflow token set to read-only	Settings, Actions, General	https://github.com/{repo}/settings/actions	under Workflow permissions choose Read repository contents and packages permissions		
+private-check	Before public	Nothing private goes public	group		any		Searched everything that turns public with the repository					
+history	Before public	Nothing private goes public	manual		any		The whole history, commit messages and branch names, for secrets (a full-history scan, such as gitleaks)				private-check	
+private-text	Before public	Nothing private goes public	manual		any		Code, comments, tests and examples: no machine paths, private names, emails or confidential data				private-check	
+private-issues	Before public	Nothing private goes public	manual		any		Issues, pull requests and their comments (they turn public too)				private-check	
+ai-files	Before public	Nothing private goes public	manual		any	AGENTS.md	AI instruction files (`AGENTS.md`, `.agents/rules/`): no personal habits or machine paths				private-check	
+data-ok	Before public	Nothing private goes public	manual		any		Example and test data are made up or openly licensed					
+tracked	Before public	Nothing private goes public	manual		any		Only files meant to be shared are tracked (`git ls-files`): no local notes, data or settings					
+public	Before public	Going public	setting	repos/{repo}|if .private == null then null else (.private == false) end	any		The repository is public	Settings, General, Danger Zone	https://github.com/{repo}/settings	choose Change visibility, then Make public		
+secrets	After public	Settings	setting	repos/{repo}|if .security_and_analysis == null then null else (.security_and_analysis.secret_scanning.status == "enabled" and .security_and_analysis.secret_scanning_push_protection.status == "enabled") end	any		Secret scanning and push protection on	Settings, Advanced Security	https://github.com/{repo}/settings/security_analysis	switch on Secret Protection, then Secret scanning and Push protection		
+vulnerabilities	After public	Settings	setting	repos/{repo}/private-vulnerability-reporting|.enabled	any		Private vulnerability reporting on	Settings, Advanced Security	https://github.com/{repo}/settings/security_analysis	switch on Private vulnerability reporting (Enable), so SECURITY.md has somewhere to send reporters		
+ruleset	After public	Settings	setting	repos/{repo}/rules/branches/{branch}|([.[].type] | (index("deletion") != null and index("non_fast_forward") != null))	any		Block force pushes and deleting the default branch with a ruleset	Settings, Rules, New branch ruleset	https://github.com/{repo}/settings/rules/new?target=branch	set enforcement to Active, target the default branch, and tick Restrict deletions and Block force pushes		
+fork-approval	After public	Settings	setting	repos/{repo}/actions/permissions/fork-pr-contributor-approval|if .approval_policy == null then null else (.approval_policy == "first_time_contributors" or .approval_policy == "all_external_contributors") end	any		Workflows from first-time contributors wait for your approval	Settings, Actions, General	https://github.com/{repo}/settings/actions	under the approval for fork pull request workflows choose Require approval for first-time contributors, or for all external contributors		
+immutable	After public	Settings	setting	repos/{repo}/immutable-releases|.enabled	any		Optional: releases can't be changed once published	Settings, General	https://github.com/{repo}/settings	look for Immutable releases and switch it on		yes
+platforms-all	After public	CI	group		any	.github/workflows/r-cmd-check.yaml	Windows and Mac added to CI (free on public repositories)					
+platforms	After public	CI	platforms	.github/workflows/r-cmd-check.yaml	any	.github/workflows/r-cmd-check.yaml	`platforms` in `r-cmd-check.yaml`				platforms-all	
+platforms-extended	After public	CI	platforms	.github/workflows/r-cmd-check-extended.yaml	any	.github/workflows/r-cmd-check-extended.yaml	`platforms` in `r-cmd-check-extended.yaml`				platforms-all	
+site	After public	Website	site		any	_pkgdown.yml	The website is live					
+pages	After public	Website	setting	repos/{repo}/pages|.build_type == "workflow"	any	_pkgdown.yml	It is published from GitHub Actions	Settings, Pages	https://github.com/{repo}/settings/pages	under Build and deployment set Source to GitHub Actions	site	
+topics	After public	Make it findable	setting	repos/{repo}|if .name == null then null else ((.description // "") != "" and ((.topics // []) | length) > 0) end	any		Repository description and topics	the repository's home page	https://github.com/{repo}	use the gear beside About to add a description and topics		
+logo	After public	Make it findable	group		any		Hex logo, with favicons for the website					
+logo-file	After public	Make it findable	file	man/figures/logo.png	any		`man/figures/logo.png` is in place				logo	
+favicons	After public	Make it findable	file	pkgdown/favicon	any	_pkgdown.yml	Favicons built (`pkgdown::build_favicons()`)				logo	
+preview	After public	Make it findable	manual		any		Link preview image	Settings, General	https://github.com/{repo}/settings	upload it under Social preview		
+badges	After public	Make it findable	manual		any		The README's badges show only what is set up					
+runiverse	After public	Make it findable	manual		any		R-universe builds the package, so people can install it without compiling it	R-universe	https://r-universe.dev			
+codecov	After public	Optional	manual		any	.github/workflows/coverage.yaml	Codecov set up	Codecov	https://app.codecov.io/gh/{repo}	add the repository and its upload token as a secret		yes
+demo	After public	Optional	manual		any		The README shows the package at work: its output, a screenshot or a short GIF					yes
+citation	After public	Optional	file	inst/CITATION	any		A CITATION file, if people will cite the package (`usethis::use_citation()`)					yes
+ci-main-cran	Before CRAN	Checks	ci		cran	.github/workflows	CI is green on the default branch					
+gate-full	Before CRAN	Checks	manual		cran		The quality gate's `full` mode passes (`.github/workflows/README.md`, "Run the checks on your computer")					
+builders	Before CRAN	Checks	group		cran		win-builder and mac-builder are clean					
+win-builder	Before CRAN	Checks	manual		cran		win-builder with R-devel (`devtools::check_win_devel()`)				builders	
+mac-builder	Before CRAN	Checks	manual		cran		mac-builder (`devtools::check_mac_release()`)				builders	
+urls	Before CRAN	Checks	manual		cran		`urlchecker::url_check()` reports nothing					
+timing	Before CRAN	Checks	manual		cran		Tests and examples are quick, and use at most two cores					
+cran-style	Before CRAN	What CRAN's reviewers read	group		cran		Title and Description follow CRAN's style					
+cran-title	Before CRAN	What CRAN's reviewers read	manual		cran		Title in Title Case, without "in R", "for R" or "A package for"				cran-style	
+cran-description	Before CRAN	What CRAN's reviewers read	manual		cran		Description doesn't start with the package name or "This package"; other software in 'single quotes', functions with ()				cran-style	
+cran-refs	Before CRAN	What CRAN's reviewers read	manual		cran		Methods from papers cited as authors (year) `<doi:...>`				cran-style	
+help-pages	Before CRAN	What CRAN's reviewers read	manual		cran		Every exported function's help page says what it returns, and has an example that runs					
+dontrun	Before CRAN	What CRAN's reviewers read	manual		cran		`\dontrun{}` only for code that can't run on CRAN; slow examples in `\donttest{}`				help-pages	
+side-effects	Before CRAN	What CRAN's reviewers read	group		cran		Functions leave the user's session as they found it					
+restore	Before CRAN	What CRAN's reviewers read	manual		cran		Options, `par()` and the working directory are restored (`on.exit()`)				side-effects	
+tempdir	Before CRAN	What CRAN's reviewers read	manual		cran		Files are written only to `tempdir()`, never the home folder or the package's folder				side-effects	
+messages	Before CRAN	What CRAN's reviewers read	manual		cran		Messages go through `message()` or `warning()`, not `print()` or `cat()` (print methods aside)				side-effects	
+authors	Before CRAN	What CRAN's reviewers read	manual		cran		Authors@R names everyone who wrote code, and a copyright holder ('cph')					
+copyrights	Before CRAN	What CRAN's reviewers read	manual		cran		Code, fonts or images from others are credited (Authors@R or `inst/COPYRIGHTS`)					
+version-first	Before CRAN	Submission	manual		cran		Version and NEWS.md set for the first release, in the release pull request					
+cran-comments	Before CRAN	Submission	manual		cran		cran-comments.md gives the check results and says it's a new submission					
+submit	Before CRAN	Submission	manual		cran		Submitted with `devtools::submit_cran()`, and the link in CRAN's confirmation email clicked					
+resubmit	Before CRAN	Submission	manual		cran		If CRAN asked for changes: made, described under a "Resubmission" heading in cran-comments.md, and sent again					
+on-cran	Before CRAN	Submission	cran		cran		The package is on CRAN					
+install-cran	After acceptance	Tell people	contains	README.md|install.packages("{package}")	cran		The README installs from CRAN first (`install.packages("pkg")`), then the development version					
+cran-badges	After acceptance	Tell people	contains	README.md|r-pkg.org/badges/version	cran		CRAN status and downloads badges in the README					
+announce	After acceptance	Tell people	manual		cran		Optional: announced (a blog post, R Weekly, social media)					yes
+release	After acceptance	Release record	setting	repos/{repo}/releases?per_page=1|length > 0	cran		GitHub release published from the accepted commit (`usethis::use_github_release()`)	Releases	https://github.com/{repo}/releases/new	choose the tag of the accepted version and click Publish release		
+dev-version	After acceptance	Release record	manual		cran		Development version on the default branch (`usethis::use_dev_version()`), with a new NEWS.md heading					
+cran-checks	After acceptance	A week later	manual		cran		CRAN's check results page shows no errors or warnings on any system					
+launchr-news	Next release	Before you start	manual		any		launchR's update merged (Dependabot opens it), and its notes read					
+deps	Next release	Before you start	manual		any		Each dependency is still needed, with the right minimum version					
+qc-imports	Next release	Before you start	manual		qc		Each package in Imports is approved for use where you work				deps	
+ci-next	Next release	Checks	ci		any	.github/workflows	CI is green on the default branch					
+gate-next	Next release	Checks	manual		any		The quality gate's `full` mode passes					
+cran-results	Next release	Checks	manual		cran		CRAN's check results for the current version are clean, or fixed in this release					
+builders-next	Next release	Checks	manual		cran		win-builder with R-devel is clean					
+revdeps	Next release	Checks	manual		cran		Packages that depend on this one still pass (`revdepcheck::revdep_check()`), and their maintainers know about breaking changes					
+urls-next	Next release	Checks	manual		any		`urlchecker::url_check()` reports nothing					
+docs-match	Next release	Docs	manual		any		README, articles and help pages match the code; a search for old wording finds nothing					
+news	Next release	Docs	manual		any		NEWS.md lists the changes in this version, breaking changes first					
+deprecate	Next release	Docs	manual		any		Optional: functions changed in a breaking way warn first (`lifecycle::deprecate_warn()`)					yes
+version	Next release	Release	manual		any		Version set with `usethis::use_version()`					
+cran-comments-next	Next release	Release	manual		cran		cran-comments.md updated with this release's results and reverse dependencies					
+submit-next	Next release	Release	manual		cran		Submitted, and CRAN has the new version					
+release-next	Next release	Release	setting	repos/{repo}/releases/tags/v{version}|.draft == false	any		GitHub release published for this version	Releases	https://github.com/{repo}/releases/new	choose the tag for this version and click Publish release		
+dev-next	Next release	Release	manual		any		Development version on the default branch, with a new NEWS.md heading					
+qc-purpose	Next release	QC: scope and risk	manual		qc		README says what the package is for and who uses it					
+qc-risk	Next release	QC: scope and risk	manual		qc		Risk judged: what a wrong result would affect, and how much testing that calls for					
+qc-riskmetric	Next release	QC: scope and risk	manual		qc		Optional: riskmetric scores for the package and each new dependency attached here				qc-risk	yes
+qc-returns	Next release	QC: scope and risk	manual		qc		Every exported function's help page says what it returns					
+qc-tests	Next release	QC: tests	manual		qc		Every exported function has a test of its documented behaviour, bad input included					
+qc-coverage	Next release	QC: tests	ci		qc	.github/workflows/coverage.yaml	Coverage meets the limit in DESCRIPTION (the coverage check passes)					
+qc-platforms	Next release	QC: tests	manual		qc		Tested on the systems and R versions your users run (`platforms` in `r-cmd-check.yaml`)					
+qc-review	Next release	QC: review	manual		qc		Each change was reviewed in a pull request by someone other than its author					
+qc-review-rule	Next release	QC: review	setting	repos/{repo}/rules/branches/{branch}|any(.[]; .type == "pull_request" and ((.parameters.required_approving_review_count // 0) >= 1))	qc		A ruleset requires an approving review before merging	Settings, Rules, New branch ruleset	https://github.com/{repo}/settings/rules/new?target=branch	set enforcement to Active, target the default branch, and tick Require a pull request before merging with at least 1 approval	qc-review	
+qc-evidence	Next release	QC: record	manual		qc		The QC evidence is linked from this issue					
+qc-ci-runs	Next release	QC: record	manual		qc		The CI runs for the released commit				qc-evidence	
+qc-prs	Next release	QC: record	manual		qc		The reviewed pull requests in this release				qc-evidence	
+qc-results	Next release	QC: record	manual		qc		The R CMD check and coverage results				qc-evidence	
+qc-signoff	Next release	QC: record	manual		qc		Signed off: a named person comments here with the version, the date and their decision					
+qc-install	Next release	QC: record	manual		qc		Installed from the release tag into your team's package repository or library					
