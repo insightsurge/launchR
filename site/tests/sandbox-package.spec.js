@@ -14,6 +14,9 @@ test('the sandbox package: a public plan with every check, R devel and browser t
   const reject = page.locator('#cookieNo');
   if (await reject.isVisible()) await reject.click();
   await page.locator('#endStart').click();
+  await expect(page.locator('#pkg')).toBeVisible();
+  // The form opens with a short animation; wait for it before clicking.
+  await page.waitForFunction(() => document.querySelector('#setup').getAnimations().every((a) => a.playState !== 'running'));
   await page.locator('#pkg').fill(NAME);
   await page.locator('#what').fill('Tests launchR Checks End To End');
   await page.locator('#first').fill('Sandbox');
@@ -22,12 +25,15 @@ test('the sandbox package: a public plan with every check, R devel and browser t
   await page.locator('#owner').fill(OWNER);
   await page.locator('input[name=plan][value=a]').check();
 
+  // Customise a plan: the settings come as steps (CI checks, Issues and checklists, README and website, Extras).
+  if (!(await page.locator('#custom').isChecked())) await page.locator('#how label', { hasText: 'Customise a plan' }).click();
   await page.locator('#modify').click();
+  await expect(page.locator('#stepTitle')).toHaveText('CI checks');
   // Every check: the public plan starts with all seven on; say so, so a change to the starter set shows up here.
-  await expect(page.locator('#bodyCi .ticks input:checked')).toHaveCount(7);
+  await expect(page.locator('#bodyCi input[data-check]:checked')).toHaveCount(7);
   await page.locator('#bodyCi [data-matrix="ubuntu/devel"]').evaluate((input) => { if (!input.checked) input.click(); });
   await page.locator('label.sw', { hasText: 'Use the same systems for browser and extended tests' }).click();
-  await page.locator('#modifyView summary', { hasText: 'Extras' }).click();
+  await page.locator('#stepBar button', { hasText: 'Extras' }).click();
   await page.locator('label.sw', { hasText: 'JS or CSS' }).click();
 
   const waiting = page.waitForEvent('download', { timeout: 15_000 });
