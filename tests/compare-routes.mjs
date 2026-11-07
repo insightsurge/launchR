@@ -27,9 +27,12 @@ cases.push({ name: 'modify-public', plan: 'a', preset: 'everything',
   extra: { ciReport: false, badges: ['check', 'codecov', 'cran', 'downloads', 'universe', 'launchr'], navbar: ['reference', 'search'], forms: ['bug', 'docs'], labels: ['priority: high'] } });
 cases.push({ name: 'modify-private', plan: 'c', preset: 'everything',
   flags: ['--plan', 'c', '--preset', 'everything', '--licence', 'mit', '--qc', '--badges', 'lifecycle,cran', '--forms', 'none', '--labels', 'none'],
-  extra: { licence: 'mit', checklists: ['before-public', 'after-public', 'before-cran', 'after-acceptance', 'next-release', 'qc'], badges: ['lifecycle', 'cran'], forms: [], labels: [] } });
+  extra: { licence: 'mit', checklists: ['set-up', 'before-public', 'after-public', 'before-cran', 'after-acceptance', 'next-release', 'qc'], badges: ['lifecycle', 'cran'], forms: [], labels: [] } });
 cases.push({ name: 'modify-no-qc', plan: 'd', preset: 'starter', flags: ['--plan', 'd', '--no-qc', '--licence', 'mit', '--badges', 'none'],
-  extra: { checklists: [], licence: 'mit', badges: [] } });
+  extra: { checklists: ['set-up', 'next-release'], licence: 'mit', badges: [] } });
+cases.push({ name: 'qc-public', plan: 'a', preset: 'starter', flags: ['--plan', 'a', '--qc'],
+  extra: { checklists: ['set-up', 'after-public', 'before-cran', 'after-acceptance', 'next-release', 'qc'] } });
+cases.push({ name: 'no-checklists', plan: 'b', preset: 'starter', flags: ['--plan', 'b', '--checklists', 'none'], extra: { checklists: [] } });
 cases.push({ name: 'checklists', plan: 'a', preset: 'everything', flags: ['--plan', 'a', '--preset', 'everything', '--checklists', 'after-public,next-release'],
   extra: { checklists: ['after-public', 'next-release'] } });
 // One case per setup the user journeys use, with the Modify choices that journey makes. Beginner defaults is a-starter
@@ -47,7 +50,7 @@ const journeys = [
     extra: { licence: 'mit', badges: ['check', 'lifecycle', 'universe'], navbar: ['reference', 'news', 'search', 'github', 'lightswitch'] } },
   { name: 'journey-polish-first', plan: 'c', preset: 'starter',
     flags: ['--qc', '--forms', 'bug,feature,docs', '--badges', 'check,lifecycle'],
-    extra: { checklists: ['before-public', 'after-public', 'before-cran', 'after-acceptance', 'next-release', 'qc'], forms: ['bug', 'feature', 'docs'], badges: ['check', 'lifecycle'] } },
+    extra: { checklists: ['set-up', 'before-public', 'after-public', 'before-cran', 'after-acceptance', 'next-release', 'qc'], forms: ['bug', 'feature', 'docs'], badges: ['check', 'lifecycle'] } },
   { name: 'journey-company', plan: 'd', preset: 'starter',
     flags: ['--licence', 'proprietary', '--badges', 'none', '--forms', 'bug,docs', '--labels', 'bug,documentation,chore', '--no-ci-report'],
     extra: { licence: 'proprietary', badges: [], forms: ['bug', 'docs'], labels: ['bug', 'documentation', 'chore'], ciReport: false } },

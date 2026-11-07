@@ -2,7 +2,7 @@
 # Repository settings can't be changed from here: the checklists link to them. Most settings can't be read with this
 # token either, so those boxes are left as they are until you run the same command from your own computer.
 # It also runs by itself, as a dry run that changes nothing, when this file is pushed: GitHub shows the Run workflow button
-# only after a workflow has run once, and the log shows what a real run would do.
+# only after a workflow has run once, and the run summary and log show what a real run would do.
 name: Set up this repository
 
 on:

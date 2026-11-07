@@ -7,10 +7,12 @@ cached <- function(key, compute) {
   get(key, envir = kit_cache, inherits = FALSE)
 }
 
-# Fills {repo}, {owner}, {branch} and {package} in a list cell.
+# Fills {repo}, {owner}, {branch}, {package} and {version} (DESCRIPTION's) in a list cell. A value the context
+# doesn't have leaves its placeholder as it is.
 fill_in <- function(text, ctx) {
-  for (key in c("repo", "owner", "branch", "package")) {
-    text <- gsub(sprintf("{%s}", key), ctx[[key]], text, fixed = TRUE)
+  for (key in c("repo", "owner", "branch", "package", "version")) {
+    value <- ctx[[key]]
+    if (length(value) == 1 && !is.na(value)) text <- gsub(sprintf("{%s}", key), value, text, fixed = TRUE)
   }
   text
 }
@@ -21,9 +23,17 @@ as_state <- function(text) {
 
 tick_file <- function(target) file.exists(target)
 
+# target is "file|text". A placeholder is gone when the text is no longer in the file, and when the file is gone too
+# (deleting the example is the usual way to replace it).
 tick_placeholder <- function(target) {
   parts <- strsplit(target, "|", fixed = TRUE)[[1]]
-  file.exists(parts[1]) && !grepl(parts[2], read_text(parts[1]), fixed = TRUE)
+  !file.exists(parts[1]) || !grepl(parts[2], read_text(parts[1]), fixed = TRUE)
+}
+
+# target is "file|text". The opposite of a placeholder: the text has to be in the file.
+tick_contains <- function(target) {
+  parts <- strsplit(target, "|", fixed = TRUE)[[1]]
+  file.exists(parts[1]) && grepl(parts[2], read_text(parts[1]), fixed = TRUE)
 }
 
 # DESCRIPTION's Description says more than its Title (a new package's Description repeats the Title until it's written).
@@ -128,6 +138,7 @@ tick_state <- function(row, ctx) {
   switch(row$kind,
     file = tick_file(row$target),
     placeholder = tick_placeholder(row$target),
+    contains = tick_contains(fill_in(row$target, ctx)),
     platforms = tick_platforms(row$target),
     description = tick_description(row$target),
     setting = tick_setting(row$target, ctx),

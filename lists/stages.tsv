@@ -1,9 +1,10 @@
-# The stage checklists a package can have. key: the name in --checklists and in lists/plans.tsv. stage: the checklist's name, as in lists/checklists.tsv and its issue title. opens: when the Set up this repository step opens it (shown beside it in the form).
+# The stage checklists a package can have. key: the name in --checklists and in lists/plans.tsv. stage: the checklist's name, as in lists/checklists.tsv and its issue title. opens: when the Set up this repository step opens it (shown beside it in the form). qc has no issue of its own: its boxes are sections of Next release (release qc in lists/checklists.tsv), so choosing it needs next-release too.
 # Keep the columns tab-separated, with no hash sign inside a cell (lists treat it as a comment).
 key	stage	opens
+set-up	Set up	From the first run: your own code, the repository files, CI and the repository settings every package needs.
 before-public	Before public	While the repository is private: what to do before you make it public.
 after-public	After public	Once the repository is public: the settings and extras that come with being public.
 before-cran	Before CRAN	For a package going to CRAN: what to check before you submit it.
 after-acceptance	After acceptance	Once the package is on CRAN: what to do after it is accepted.
-next-release	Next release	Once the package is on CRAN: a fresh list for each new release.
-qc	QC before release	Only for a private package, for teams with a quality process: the scope, tests, review and release evidence to keep.
+next-release	Next release	A fresh list for each release: from the first run for a package not for CRAN, once the package is on CRAN for one that is.
+qc	QC	For teams with a quality process: adds the scope, tests, review and evidence sections to each Next release.

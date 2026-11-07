@@ -144,10 +144,10 @@ export function badgeOffered(row, choices) {
 }
 
 // The stage checklists as DESCRIPTION records them (Config/launchR/checklists): their names in lists/stages.tsv order.
-// The QC checklist is only for a private package, and "none" says no checklist at all. All but QC is what a package without the line gets, so it needs none.
+// "none" says no checklist at all. All but QC is what a package without the line gets, so it needs none.
 // cli/R/choices.R has the same.
-export function checklistLine(choices, lists, isPublic) {
-  const keys = lists.stages.filter((row) => choices.checklists.includes(row.key) && !(isPublic && row.key === 'qc'));
+export function checklistLine(choices, lists) {
+  const keys = lists.stages.filter((row) => choices.checklists.includes(row.key));
   const usual = lists.stages.filter((row) => row.key !== 'qc');
   if (!choices.parts.includes('github') || (keys.length === usual.length && keys.every((row, i) => row.key === usual[i].key))) return '';
   return `Config/launchR/checklists: ${keys.length ? keys.map((row) => row.stage).join(', ') : 'none'}`;
@@ -270,7 +270,7 @@ export function placeholderValues(choices, lists) {
   // DESCRIPTION records a choice of labels and of stage checklists, for the Set up this repository step (cli/R/github.R).
   const labels = chosenLabels(choices, lists);
   values.labels_line = choices.parts.includes('github') && labels.length < lists.labels.length ? `Config/launchR/labels: ${labels.join(', ')}` : '';
-  values.checklist_line = checklistLine(choices, lists, isPublic);
+  values.checklist_line = checklistLine(choices, lists);
   for (const row of lists.checks) {
     const check = choices.checks[row.key];
     for (const event of ['pr', 'push', 'schedule', 'manual']) {

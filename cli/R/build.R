@@ -88,7 +88,7 @@ placeholder_values <- function(choices) {
   labels <- chosen_labels(choices)
   github <- "github" %in% choices$parts
   values$labels_line <- if (github && length(labels) < nrow(read_list("labels.tsv"))) paste0("Config/launchR/labels: ", paste(labels, collapse = ", ")) else ""
-  values$checklist_line <- checklist_line(choices, public)
+  values$checklist_line <- checklist_line(choices)
   for (i in seq_len(nrow(checks))) {
     key <- checks$key[i]
     check <- choices$checks[[key]]

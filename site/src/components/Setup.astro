@@ -160,16 +160,16 @@ const box = (b) => [b.where && b.pick ? `${b.where}: ${b.pick}` : b.where || b.p
         {stages.map((s) => (
           <article class="peek-issue" data-peek={`cl-${s.key}`} hidden>
             <p class="peek-kind">Checklist issue, as GitHub shows it</p>
-            <h3 class="peek-title">Checklist: {s.stage}</h3>
+            <h3 class="peek-title">{s.title}</h3>
             <p class="peek-when">{s.opens}</p>
             {s.sections.map((sec) => (
               <>
                 <h4>{sec.name}</h4>
                 <ul class="peek-boxes">
                   {sec.boxes.map((b) => (
-                    <li>
+                    <li class={b.sub ? 'sub' : undefined}>
                       <span class="peek-box" aria-hidden="true"></span>
-                      <span>{b.text.split('`').map((part, i) => (i % 2 ? <code>{part}</code> : part))}{box(b) && <em> ({box(b)})</em>}{b.auto && <span class="tag">launchR ticks this</span>}{b.cran && <span class="tag">CRAN only</span>}{b.needs && <span class="tag">{b.needs}</span>}</span>
+                      <span>{b.text.split('`').map((part, i) => (i % 2 ? <code>{part}</code> : part))}{box(b) && <em> ({box(b)})</em>}{b.auto && <span class="tag">launchR ticks this</span>}{b.cran && <span class="tag">CRAN only</span>}{b.optional && <span class="tag">optional</span>}{b.needs && <span class="tag">{b.needs}</span>}</span>
                     </li>
                   ))}
                 </ul>

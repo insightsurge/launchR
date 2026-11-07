@@ -187,7 +187,7 @@ test('Customise: the CI report comment, licence, badges, issue forms, labels and
   expect(files['tablePkg/LICENSE']).toContain('All rights reserved');
   expect('tablePkg/LICENSE.md' in files).toBe(false);
   expect(files['tablePkg/DESCRIPTION']).toContain('License: file LICENSE');
-  expect(files['tablePkg/DESCRIPTION']).toContain('Config/launchR/checklists: QC before release');
+  expect(files['tablePkg/DESCRIPTION']).toContain('Config/launchR/checklists: Set up, Next release, QC');
   expect(files['tablePkg/DESCRIPTION']).toMatch(/Config\/launchR\/labels: .*bug/);
   expect(files['tablePkg/DESCRIPTION']).not.toMatch(/Config\/launchR\/labels: .*idea/);
   expect('tablePkg/.github/ISSUE_TEMPLATE/05-idea.yml' in files).toBe(false);
@@ -298,9 +298,14 @@ test("the next steps give both routes, the first commands and an organisation's 
   await expect(steps).toContainText('usethis::use_github(private = FALSE)');
   // The GitHub name may be an organisation: the site can't tell without asking GitHub, so both lines are there.
   await expect(steps).toContainText('usethis::use_github(organisation = "sample-org", private = FALSE)');
+  // Someone who made the repository on GitHub first connects to it, and a saved login is replaced, not kept.
+  await expect(steps).toContainText('usethis::use_git_remote("origin", "https://github.com/sample-org/tablePkg.git")');
+  await expect(steps).toContainText('gert::git_push(set_upstream = TRUE)');
+  await expect(steps).toContainText('Replace these credentials');
   await page.getByText('With GitHub Desktop').click();
   await expect(steps).toContainText('Publish repository');
   await expect(steps).toContainText('If sample-org is an organisation, pick it under Organization.');
+  await expect(steps).toContainText('paste https://github.com/sample-org/tablePkg.git as the remote, save, and click Publish branch');
   // Each step says what to do in a line; the explanations fold away until asked for.
   const more = steps.locator('details.more').first();
   await expect(more).not.toHaveAttribute('open', '');
@@ -404,29 +409,31 @@ test('Use a plan downloads at once; Customise a plan turns Download into Next an
 test('Customise: the checklists chosen reach DESCRIPTION, the preview beside the form and the steps after the download', async ({ page }) => {
   await openForm(page);
   await fillForm(page);
-  await expect(page.locator('#pvLists li')).toHaveText(['After public', 'Before CRAN', 'After acceptance', 'Next release']);
+  await expect(page.locator('#pvLists li')).toHaveText(['Set up', 'After public', 'Before CRAN', 'After acceptance', 'Next release']);
   await customise(page);
   await step(page, 'Issues');
-  // A public plan isn't offered the QC checklist, and says why.
-  await expect(page.locator('[data-stage="qc"]')).toHaveCount(0);
-  await expect(page.locator('#bodyGit')).toContainText('Before public and QC before release are for a private package.');
+  // A public plan is offered QC, but not Before public, and says why.
+  await expect(page.locator('[data-stage="qc"]')).toHaveCount(1);
+  await expect(page.locator('#bodyGit')).toContainText('Before public is for a private package.');
   await page.locator('label.pill', { hasText: 'After acceptance' }).click();
-  await expect(page.locator('#pvLists li')).toHaveText(['After public', 'Before CRAN', 'Next release']);
+  await expect(page.locator('#pvLists li')).toHaveText(['Set up', 'After public', 'Before CRAN', 'Next release']);
   const { files } = await download(page, '#modDownload');
-  expect(files['tablePkg/DESCRIPTION']).toContain('Config/launchR/checklists: After public, Before CRAN, Next release');
+  expect(files['tablePkg/DESCRIPTION']).toContain('Config/launchR/checklists: Set up, After public, Before CRAN, Next release');
   const after = page.locator('#nextAfter');
-  await expect(after).toContainText('After public and Before CRAN open in your repository\'s issues on the first run of Set up this repository.');
+  await expect(after).toContainText('Set up, After public and Before CRAN open in your repository\'s issues on the first run of Set up this repository.');
   await expect(after).toContainText('Next release opens on a later run, once its stage arrives.');
   await expect(after.locator('li')).toHaveCount(4);
 });
 
-test('Customise: plan d starts with the QC checklist, opened first after the download', async ({ page }) => {
+test('Customise: plan d starts with Set up and Next release with the QC sections', async ({ page }) => {
   await openForm(page);
   await fillForm(page);
   await page.locator('input[name=plan][value=d]').check();
-  await expect(page.locator('#pvLists li')).toHaveText(['QC before release']);
+  await expect(page.locator('#pvLists li')).toHaveText(['Set up', 'Next release', 'QC']);
   await download(page, '#download');
-  await expect(page.locator('#nextAfter')).toContainText('QC before release opens in your repository\'s issues on the first run of Set up this repository.');
+  await expect(page.locator('#nextAfter')).toContainText('Set up and Next release open in your repository\'s issues on the first run of Set up this repository.');
+  await expect(page.locator('#nextAfter')).toContainText('QC adds its sections to each Next release checklist.');
+  await expect(page.locator('#nextAfter')).not.toContainText('QC opens on a later run');
 });
 
 test('Customise: the launchR credit is not offered but every README gets it, and a badge that needs something says what', async ({ page }) => {
@@ -452,9 +459,10 @@ test('the preview window shows the checklists, the issue forms and the guide for
   await page.getByRole('button', { name: 'Preview the checklists' }).click();
   const win = page.locator('#peek');
   await expect(win).toBeVisible();
-  await expect(win.locator('article:visible .peek-title')).toHaveText('Checklist: After public');
-  await win.getByRole('button', { name: 'QC before release' }).click();
-  await expect(win.locator('article:visible')).toContainText('Coverage is at or above the limit in DESCRIPTION');
+  await expect(win.locator('article:visible .peek-title')).toHaveText('Checklist: Set up');
+  await win.getByRole('button', { name: 'QC', exact: true }).click();
+  await expect(win.locator('article:visible .peek-title')).toHaveText('Added to Checklist: Next release');
+  await expect(win.locator('article:visible')).toContainText('Coverage meets the limit in DESCRIPTION');
   await win.getByRole('button', { name: 'Bug report' }).click();
   await expect(win.locator('article:visible')).toContainText('Minimal reproducible example (reprex)');
   await expect(win.locator('article:visible')).toContainText('sets the label bug');
@@ -484,20 +492,28 @@ test('Customise: each plan is offered only the checklists it can open', async ({
   await page.locator('input[name=plan][value=c]').check();
   await customise(page);
   await step(page, 'Issues');
-  expect(await offered()).toEqual(['before-public', 'after-public', 'before-cran', 'after-acceptance', 'next-release', 'qc']);
+  expect(await offered()).toEqual(['set-up', 'before-public', 'after-public', 'before-cran', 'after-acceptance', 'next-release', 'qc']);
   await step(page, 'About');
   await page.locator('input[name=plan][value=a]').check();
   await step(page, 'Issues');
-  expect(await offered()).toEqual(['after-public', 'before-cran', 'after-acceptance', 'next-release']);
-  await expect(page.locator('#bodyGit')).toContainText('Before public and QC before release are for a private package.');
+  expect(await offered()).toEqual(['set-up', 'after-public', 'before-cran', 'after-acceptance', 'next-release', 'qc']);
+  await expect(page.locator('#bodyGit')).toContainText('Before public is for a private package.');
   await step(page, 'About');
   await page.locator('input[name=plan][value=d]').check();
   await step(page, 'Issues');
-  expect(await offered()).toEqual(['before-public', 'after-public', 'qc']);
-  await expect(page.locator('#bodyGit')).toContainText('Before CRAN, After acceptance and Next release are for a package going to CRAN.');
-  // Plan d without its QC checklist has none, and the preview says so.
-  await page.locator('label.pill', { hasText: 'QC before release' }).click();
-  await expect(page.locator('#pvLists li')).toHaveText(['None']);
+  expect(await offered()).toEqual(['set-up', 'before-public', 'after-public', 'next-release', 'qc']);
+  await expect(page.locator('#bodyGit')).toContainText('Before CRAN and After acceptance are for a package going to CRAN.');
+  // QC is sections of Next release: without QC, plan d keeps Set up and Next release.
+  await page.locator('label.pill', { hasText: 'QC' }).click();
+  await expect(page.locator('#pvLists li')).toHaveText(['Set up', 'Next release']);
+  // Choosing QC chooses Next release, and leaving Next release out leaves QC out.
+  await page.locator('label.pill', { hasText: 'Next release' }).click();
+  await expect(page.locator('#pvLists li')).toHaveText(['Set up']);
+  await page.locator('label.pill', { hasText: 'QC' }).click();
+  await expect(page.locator('[data-stage="next-release"]')).toBeChecked();
+  await expect(page.locator('#pvLists li')).toHaveText(['Set up', 'Next release', 'QC']);
+  await page.locator('label.pill', { hasText: 'Next release' }).click();
+  await expect(page.locator('[data-stage="qc"]')).not.toBeChecked();
 });
 
 test('Customise: one tooltip explains the AI files, naming every rules file the zip gets', async ({ page }) => {

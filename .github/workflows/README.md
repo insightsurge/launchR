@@ -25,7 +25,7 @@ All start with `on: workflow_call`, and need no secret beyond the caller's token
 | `lint.yaml` | The gate's lint mode: Air, Biome, lintr, docs in sync, `\value`, spelling | Yes |
 | `secret-scan.yaml` | gitleaks over the pushed commits | Yes |
 | `pkgdown.yaml` | Builds the package's site from `main` and publishes it to GitHub Pages | No |
-| `github-setup.yaml` | Labels, the root issue and the stage checklists, started by hand ("Run workflow"); also runs as a dry run, changing nothing, when its caller file is pushed | No |
+| `github-setup.yaml` | Labels, the root issue and the stage checklists, started by hand ("Run workflow"); writes a linked report to the run summary; also runs as a dry run, changing nothing, when its caller file is pushed | No |
 
 The pull request report is one comment that each check adds its part to (`.github/pr-report.json` lists the parts). It
 covers only the checks a package has caller files for. Each check that reports takes a `ci-report` input (default

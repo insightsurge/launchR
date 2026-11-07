@@ -29,7 +29,7 @@ A properly set up R package from a form, with no terminal and nothing to delete 
 
 - The setup asks four things: name, description, author (first and last name) and plan. Email is optional, and nothing should look like signing in. The plan is one of four: public and going to CRAN; public, not going to CRAN; private now, public and CRAN later; private for good.
 - Everything else sits behind one choice, Customise a plan, in four more steps that show only what applies: checks, platforms, schedule, PR report and shared CI or a snapshot; issue forms with their labels, other labels and the stage checklists; README badges and the website; licence, JS or CSS in the package and AI instructions. One preview window shows the checklists, issue forms and the agent guide as they will read.
-- A private-for-good package gets no release features; it starts with the QC checklist.
+- A private-for-good package gets no release features; it starts with Set up, and a Next release checklist with the QC sections.
 - Someone with a package already picks what to add, such as CI, a website or checklists. Nothing in `R/`, `tests/` or `DESCRIPTION` changes.
 - Pasting a public GitHub link shows what is missing and fills in the choices. It reads public files from the visitor's browser, is limited to 60 GitHub calls an hour per visitor, and is designed now but built after the basic setup works. Private repositories use the CLI.
 - The kit supports GitHub only.

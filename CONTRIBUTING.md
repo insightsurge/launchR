@@ -56,6 +56,24 @@ Nothing makes a missing step fail by itself except the tests above, so run them.
 4. Run `node tests/compare-routes.mjs`: it builds every plan both ways and compares every file, so a placeholder only
    one reader knows shows up there. If the file should reach existing packages, check the `existing` route too.
 
+## Change a stage checklist
+
+The boxes are the rows of `lists/checklists.tsv` (its first lines say what each column means); the stages are
+`lists/stages.tsv`, and `lists/plans.tsv` says which ones a plan starts with.
+
+1. **An id is the box's permanent name** in the issues already open. A box that is renamed, moved to another stage or
+   merged leaves its old line in those issues (launchR no longer refreshes it) and adds the new one next to it, so keep
+   an id unless the box really is a new one. A manual box's wording is never rewritten in an open issue either.
+2. **Nesting is one level.** Put the parent first, in the same stage and section, and name it in the `parent` column. Use
+   the kind `group` for a parent that is only the sum of its sub-boxes. A box whose parent is left out (by `needs`
+   or `release`) is left out too.
+3. **`optional` is `yes`** for a box that should not keep the list open: a list closes when every other box is ticked.
+4. **`release`** is `any`, `cran` (left out for a package not for CRAN) or `qc` (only for a package that chose QC; the QC
+   boxes are sections of Next release). Do not rename "After acceptance" or "Next release": launchR finds an
+   issue by its title.
+5. Run `Rscript tests/cli-tests.R`: it checks the lists against each other and the checklists against a stand-in for `gh`.
+   A new check kind goes in `cli/R/ticks.R` (`tick_state()`), and in the first lines of `lists/checklists.tsv`.
+
 ## Release
 
 launchR's version is the tag its users name in their caller files (`@vX.Y.Z`), so a release is a tag.

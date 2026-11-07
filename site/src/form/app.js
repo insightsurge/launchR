@@ -72,17 +72,18 @@ function modifyExtras() {
 
 /* the README badge every package made here carries: a small credit that links to launchR */
 const ALWAYS_BADGE = 'launchr';
-/* the checklists a package can have on its plan: QC and Before public only while private, the CRAN ones only for a
-   package going to CRAN (cli/R/github.R open_stages never opens them otherwise) */
-const CRAN_STAGES = ['before-cran', 'after-acceptance', 'next-release'];
-const stageOffered = (row) => (['qc', 'before-public'].includes(row.key) ? !isPublic() : CRAN_STAGES.includes(row.key) ? release() === 'cran' : true);
+/* the checklists a package can have on its plan: Before public only while private, Before CRAN and After acceptance
+   only for a package going to CRAN (cli/R/github.R open_stages never opens them otherwise) */
+const CRAN_STAGES = ['before-cran', 'after-acceptance'];
+const stageOffered = (row) => (row.key === 'before-public' ? !isPublic() : CRAN_STAGES.includes(row.key) ? release() === 'cran' : true);
 const chosenStages = () => lists.stages.filter((row) => S.checklists[row.key] && stageOffered(row));
 /* the checklists Set up this repository opens on its first run, as cli/R/github.R open_stages does for a new
    repository: the others open when their stage arrives */
 function openNow() {
   const chosen = chosenStages().map((row) => row.stage);
-  const state = release() === 'internal' ? [isPublic() ? 'After public' : 'Before public'] : [isPublic() ? 'After public' : 'Before public', 'Before CRAN'];
-  return [...(chosen.includes(lists.settings.qc_stage) ? [lists.settings.qc_stage] : []), ...state.filter((stage) => chosen.includes(stage))];
+  const visibility = isPublic() ? 'After public' : 'Before public';
+  const state = release() === 'internal' ? [visibility, 'Next release'] : [visibility, 'Before CRAN'];
+  return ['Set up', ...state].filter((stage) => chosen.includes(stage));
 }
 
 /* the checks whose results go in the CI report comment: all but r-cmd-check-extended (.github/pr-report.json) */
@@ -180,7 +181,7 @@ function gitChoices() {
     <div class="ticks nest">${free.map((row) => `<label class="pill" title="${esc(row.description)}"><input type="checkbox" data-label="${esc(row.name)}"${S.labels[row.name] ? ' checked' : ''} /><span><i class="dot" style="--lc:${colour(row.name)}"></i>${esc(row.name)}</span></label>`).join('')}</div>
     <div class="git-head">${head3('Checklists', stages.map((row) => [row.stage, row.opens]))}${peekLink(`cl-${(chosenStages()[0] ?? stages[0] ?? lists.stages[0]).key}`, 'Preview the checklists')}</div>
     <div class="ticks nest">${stages.map((row) => pill(`data-stage="${row.key}"`, row.stage, S.checklists[row.key])).join('')}</div>
-    ${notOffered.length ? `<p class="sw-note nest">${[isPublic() && 'Before public and QC before release are for a private package.', release() !== 'cran' && 'Before CRAN, After acceptance and Next release are for a package going to CRAN.'].filter(Boolean).join(' ')}</p>` : ''}`;
+    ${notOffered.length ? `<p class="sw-note nest">${[isPublic() && 'Before public is for a private package.', release() !== 'cran' && 'Before CRAN and After acceptance are for a package going to CRAN.'].filter(Boolean).join(' ')}</p>` : ''}`;
 }
 
 function summary() {
@@ -216,7 +217,14 @@ body.addEventListener('change', (e) => {
   if (t.dataset.matrix) { touched(() => { S.matrix[t.dataset.matrix] = t.checked; }); return; }
   for (const [data, list] of [['badge', 'badges'], ['nav', 'navbar'], ['form', 'forms'], ['label', 'labels'], ['stage', 'checklists']]) {
     if (t.dataset[data] !== undefined) {
-      touched(() => { S[list][t.dataset[data]] = t.checked; });
+      touched(() => {
+        S[list][t.dataset[data]] = t.checked;
+        // QC is sections of Next release: choosing QC chooses Next release, and leaving Next release out leaves QC out
+        if (data === 'stage' && t.dataset.stage === 'qc' && t.checked) S.checklists['next-release'] = true;
+        if (data === 'stage' && t.dataset.stage === 'next-release' && !t.checked) S.checklists.qc = false;
+      });
+      // show the coupled pill without redrawing the step, so the focus stays on the one just used
+      if (data === 'stage') document.querySelectorAll('[data-stage]').forEach((box) => { box.checked = !!S.checklists[box.dataset.stage]; });
       // a form taken off leaves its label unticked, unless another chosen form still sets it
       if (data === 'form') { if (!t.checked) offLabel(lists.forms.find((row) => row.key === t.dataset.form).label); paint(); }
       return;
@@ -605,7 +613,7 @@ function steps() {
     step(`${unzip} Then, in RStudio, choose Build, then Test Package, to see your first test pass; in Positron, run ${code('devtools::test()')} in the console.`, '', `The first time, install the tools: in RStudio choose Tools, then Install Packages, and install ${code('devtools')}; in Positron, run ${code('install.packages("devtools")')}. Skip this if you already have it.`),
     step('Install <a href="https://desktop.github.com" target="_blank" rel="noopener">GitHub Desktop</a> and sign in with your GitHub account.', '', 'It brings Git with it. Skip this if you already use it.'),
     step(`In GitHub Desktop, choose File, then Add local repository, pick the ${code(name)} folder, and accept when it offers to create the repository.`),
-    step(`Click Publish repository. ${priv ? 'Leave Keep this code private ticked.' : 'Untick Keep this code private.'} If ${code(owner)} is an organisation, pick it under Organization.`),
+    step(`Click Publish repository. ${priv ? 'Leave Keep this code private ticked.' : 'Untick Keep this code private.'} If ${code(owner)} is an organisation, pick it under Organization.`, '', `Already made the repository on GitHub? Keep it empty (no README or licence) and, in place of Publish repository, choose Repository, then Repository settings, paste ${code(`https://github.com/${owner}/${name}.git`)} as the remote, save, and click Publish branch. If it already has files, delete it on GitHub first, or come back and press <em>Already have a package?</em>.`),
     ...running,
     ...(S.github ? [step(setupButton, '', setupMore)] : []),
   ] : [
@@ -614,20 +622,22 @@ function steps() {
       'devtools brings usethis and testthat. The second line installs the packages your package uses. In RStudio, Build, then Test Package, does the same as the third line.'),
     step('Let R talk to GitHub, once. Skip this if R already can.',
       `${copy('usethis::create_github_token()')}${copy('gitcreds::gitcreds_set()')}`,
-      `The first line opens a GitHub page with the right boxes already ticked: scroll down, click Generate token, and copy the token. The second asks for it: paste it there. It is kept in your computer's password store (Keychain on a Mac, Credential Manager on Windows), where usethis and pak find it. Don't save it in a file such as ${code('.Renviron')}: that is plain text.`),
+      `The first line opens a GitHub page with the right boxes already ticked: scroll down, click Generate token, and copy the token. The second asks for it: paste it there. It is kept in your computer's password store (Keychain on a Mac, Credential Manager on Windows), where usethis and pak find it. Don't save it in a file such as ${code('.Renviron')}: that is plain text. If it says a login is already saved, choose <em>Replace these credentials</em>.`),
     step('Put the package on GitHub: run the first line and answer yes to each question; after RStudio restarts, run the line for your account.',
       `${copy('usethis::use_git()')}${label('Your own account:')}${copy(`usethis::use_github(private = ${privArg})`)}${label('An organisation, such as a company\'s:')}${copy(`usethis::use_github(organisation = "${owner}", private = ${privArg})`)}`,
-      `The first line asks to commit your files and then to restart RStudio; the yes answer moves around, so read each one. ${code('DESCRIPTION')} already links to ${code(`github.com/${owner}/${name}`)}, so the repository should be made there.`),
+      `The first line asks to commit your files and then to restart RStudio; the yes answer moves around, so read each one. ${code('DESCRIPTION')} already links to ${code(`github.com/${owner}/${name}`)}, so the repository should be made there. Already made the repository on GitHub? Keep it empty (no README or licence) and, in place of ${code('use_github()')}, run ${code(`usethis::use_git_remote("origin", "https://github.com/${owner}/${name}.git")`)} and then ${code('gert::git_push(set_upstream = TRUE)')}. If it already has files, delete it on GitHub first, or come back and press <em>Already have a package?</em>.`),
     ...running,
     ...(S.github ? [step(setupButton, '', setupMore)] : []),
   ];
   $('#stepList').innerHTML = list.join('');
   // The checklists Set up this repository opens on its first run (cli/R/github.R open_stages), and the ones that wait.
   const now = openNow();
-  const later = chosenStages().map((row) => row.stage).filter((stage) => !now.includes(stage));
+  /* QC has no stage of its own: it adds its sections to Next release, so it never "arrives" */
+  const qc = chosenStages().some((row) => row.key === 'qc');
+  const later = chosenStages().map((row) => row.stage).filter((stage) => !now.includes(stage) && stage !== lists.settings.qc_stage);
   const email = v('email') ? '' : `Replace the placeholder email in ${code('DESCRIPTION')} before you release. `;
   $('#nextAfter').innerHTML = after([
-    S.github && (now.length || later.length) && ['Your checklists', `${now.length ? `${listWords(now)} ${now.length === 1 ? 'opens' : 'open'} in your repository's issues on the first run of Set up this repository.` : ''}${later.length ? ` ${listWords(later)} ${later.length === 1 ? 'opens' : 'open'} on a later run, once ${later.length === 1 ? 'its' : 'their'} stage arrives.` : ''}`],
+    S.github && (now.length || later.length || qc) && ['Your checklists', `${now.length ? `${listWords(now)} ${now.length === 1 ? 'opens' : 'open'} in your repository's issues on the first run of Set up this repository.` : ''}${later.length ? ` ${listWords(later)} ${later.length === 1 ? 'opens' : 'open'} on a later run, once ${later.length === 1 ? 'its' : 'their'} stage arrives.` : ''}${qc ? ' QC adds its sections to each Next release checklist.' : ''}`],
     S.github && ['Keep them up to date', `Run <em>Set up this repository</em> on GitHub again at any time: it ticks the boxes it can check and opens each checklist when its stage arrives. A few boxes are repository settings you change by hand; each says where. From R instead: with ${gh} installed and signed in, run ${code(setup)}.`],
     running.length && ['Run the checks on your computer', `Before a pull request, follow <em>Run the checks on your computer</em> in ${code('.github/workflows/README.md')}.${S.checks.lint ? ` The style step needs <a href="https://posit-dev.github.io/air/" target="_blank" rel="noopener">Air</a>${S.frontend && mode === 'new' ? ', and <a href="https://biomejs.dev" target="_blank" rel="noopener">Biome</a> for the JS and CSS' : ''}: install ${S.frontend && mode === 'new' ? 'them' : 'it'} once.` : ''}${S.frontend && mode === 'new' ? ' The browser tests need Google Chrome.' : ''}`],
     ['Later', `${email}${codecov()}To add a website or anything else, come back here and choose only that.`],

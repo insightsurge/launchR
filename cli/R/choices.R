@@ -65,12 +65,12 @@ chosen_labels <- function(choices) {
   labels$name[labels$name %in% c(choices$labels, forms$label) | nzchar(labels$kept)]
 }
 
-# The stage checklists as DESCRIPTION records them (Config/launchR/checklists): their names in lists/stages.tsv order. The
-# QC checklist is only for a private package, and "none" says no checklist at all. All but QC is what a package without the line gets, so it needs none.
+# The stage checklists as DESCRIPTION records them (Config/launchR/checklists): their names in lists/stages.tsv order.
+# "none" says no checklist at all. All but QC is what a package without the line gets, so it needs none.
 # site/src/form/engine.js has the same.
-checklist_line <- function(choices, public) {
+checklist_line <- function(choices) {
   stages <- read_list("stages.tsv")
-  keys <- stages$key[stages$key %in% choices$checklists & !(public & stages$key == "qc")]
+  keys <- stages$key[stages$key %in% choices$checklists]
   if (!"github" %in% choices$parts || identical(keys, stages$key[stages$key != "qc"])) return("")
   paste0("Config/launchR/checklists: ", if (length(keys) == 0) "none" else paste(stages$stage[match(keys, stages$key)], collapse = ", "))
 }
