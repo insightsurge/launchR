@@ -228,7 +228,7 @@ issue_body <- function(number, ctx) {
 existing_labels <- function(ctx) {
   out <- gh_must(c("label", "list", "-R", ctx$repo, "--limit", "200", "--json", "name,color,description",
     "--jq", ".[] | [.name, .color, .description] | join(\"|\")"))
-  parts <- strsplit(out, "|", fixed = TRUE)
+  parts <- strsplit(out[nzchar(out)], "|", fixed = TRUE)
   stats::setNames(lapply(parts, function(p) c(color = tolower(p[2]), description = if (length(p) >= 3) p[3] else "")), vapply(parts, `[`, "", 1))
 }
 
@@ -353,6 +353,7 @@ apply_plan <- function(ctx, plan) {
     plan$root$number
   }
   linked <- gh(c("api", sprintf("repos/%s/issues/%s/sub_issues", ctx$repo, root), "--paginate", "--jq", ".[].number"))$out
+  numbers <- character()
   for (item in plan$checklists) {
     number <- item$number
     if (item$action == "create") {
@@ -360,13 +361,14 @@ apply_plan <- function(ctx, plan) {
     } else if (item$action == "update") {
       edit_issue(ctx, number, item$lines)
     }
+    numbers[[item$stage]] <- as.character(number)
     link_sub_issue(ctx, root, number, linked)
     if (item$close) {
       gh_must(c("issue", "close", number, "-R", ctx$repo, "--reason", "completed"))
       kit_pause(1)
     }
   }
-  invisible(root)
+  invisible(list(root = as.character(root), numbers = numbers))
 }
 
 cmd_github <- function(args) {
@@ -389,16 +391,19 @@ cmd_github <- function(args) {
       plan <- github_plan(ctx)
       print_plan(ctx, plan)
       if (has_flag(args, "dry-run") || !ctx$connected) {
+        report_setup(ctx, plan, dry_run = TRUE)
         cat("Nothing was changed.\n")
         return(0L)
       }
       if (!has_flag(args, "yes")) {
         if (ask_choice("Go ahead", c("no", "yes")) != "yes") {
+          report_setup(ctx, plan, dry_run = TRUE)
           cat("Nothing was changed.\n")
           return(0L)
         }
       }
-      apply_plan(ctx, plan)
+      created <- apply_plan(ctx, plan)
+      report_setup(ctx, plan, created = created, dry_run = FALSE)
       cat("Done.\n")
       0L
     },

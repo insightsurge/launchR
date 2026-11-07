@@ -125,10 +125,15 @@ sequenceDiagram
 ## Set up GitHub
 
 With the GitHub setup part, your repository gets a **Set up this repository** workflow. Its first run, from your first
-push, only lists what it would make. Run it from the Actions tab to create the labels, a root issue and the stage
-checklists you chose (`lists/stages.tsv`; DESCRIPTION's `Config/launchR/checklists` lists them, and a plan starts with its own). It ticks the boxes it can check, such as "CI is green on
-the default branch", and links each repository setting it can't change. Run it again at any time: it edits only the
-lines it wrote. Labels that aren't launchR's, such as GitHub's own (duplicate, question, ...) and any you made, stay; to
+push, only lists what it would make, in the run summary and the job log. Run it from the Actions tab to create the
+labels, a root issue and the stage checklists you chose (`lists/stages.tsv`; DESCRIPTION's `Config/launchR/checklists`
+lists them, and a plan starts with its own). It ticks the boxes it can check, such as "CI is green on the default
+branch", and links each repository setting it can't change. Each run ends with a report of what changed, or what a
+dry run would change: the labels made or removed, the root issue and each checklist with its link, the boxes ticked
+and unticked, and what is still to do. On GitHub it is the run's summary page; in R and the command line it is printed
+with full addresses. The first real run also says why to keep the workflow: later runs tick boxes and open the
+next checklist (or use the R line below and delete the workflow). Run it again at any time: it edits only the lines it wrote. Labels that aren't launchR's, such as
+GitHub's own (duplicate, question, ...) and any you made, stay; to
 remove them, tick **Also remove labels that aren't launchR's** when you click Run workflow. Dependabot's labels are kept.
 
 The stage checklists, and when each opens:
