@@ -125,10 +125,13 @@ sequenceDiagram
 ## Set up GitHub
 
 With the GitHub setup part, your repository gets a **Set up this repository** workflow. Its first run, from your first
-push, only lists what it would make. Run it from the Actions tab to create the labels, a root issue and the stage
+push, only lists what it would make, in the run summary and the job log. Run it from the Actions tab to create the labels, a root issue and the stage
 checklists you chose (Before public, After public, Before CRAN, ...; DESCRIPTION's `Config/launchR/checklists` lists them, and a plan starts with its own). It ticks the boxes it can check, such as "CI is green on
-the default branch", and links each repository setting it can't change. Run it again at any time: it edits only the
-lines it wrote. Labels that aren't launchR's, such as GitHub's own (duplicate, question, ...) and any you made, stay; to
+the default branch", and links each repository setting it can't change. Each run finishes with a linked report of what
+changed (or what a dry run would change): labels created, updated or removed with a link to the labels page; the root
+issue and each checklist with its link, boxes ticked and unticked by name, and whether any list was closed; and what is
+still to do. On GitHub the report is appended to the run summary; in R and the command line, addresses are full and clickable.
+Run it again at any time: it edits only the lines it wrote. Labels that aren't launchR's, such as GitHub's own (duplicate, question, ...) and any you made, stay; to
 remove them, tick **Also remove labels that aren't launchR's** when you click Run workflow. Dependabot's labels are kept.
 
 The same from R, with the [GitHub CLI](https://cli.github.com) signed in, from your package's folder; this can also
