@@ -260,7 +260,7 @@ function timeProblem() {
   return !ok;
 }
 
-/* the steps: About (the questions and the plan), then the four groups of settings. A package that exists already gets
+/* the steps: Your package (the questions and the plan), then the four groups of settings. A package that exists already gets
    Checks and Website only. */
 const STEP_TITLES = { 2: 'CI checks', 3: 'Issues and checklists', 4: 'README and website', 5: 'Extras' };
 const stepList = () => (mode === 'new' ? [1, 2, 3, 4, 5] : [2, 4]);
@@ -275,7 +275,22 @@ function view(name, focus) {
   paintSteps();
   dialog.scrollTop = 0;
   focus?.focus({ preventScroll: true });
+  alignPreview();
 }
+
+/* the preview card's top sits level with the end of the view's subtitle, so it starts at the same height on every view */
+function alignPreview() {
+  const card = $('#setup .setup-grid > .preview');
+  const sub = [...dialog.querySelectorAll('.setup-grid .sub')].find((el) => el.offsetParent);
+  if (!card || !sub || !card.offsetParent || dialog.scrollTop > 0) return;
+  // where the card would start with no margin, then the margin that moves it to the subtitle's end
+  const natural = card.getBoundingClientRect().top - (parseFloat(getComputedStyle(card).marginTop) || 0);
+  card.style.setProperty('--pv-top', `${Math.max(0, Math.round(sub.getBoundingClientRect().bottom - natural))}px`);
+}
+// realign when the dialog opens (once its opening motion has settled), when the grid changes size, and on resize
+new MutationObserver(() => { if (dialog.open) [60, 700].forEach((ms) => setTimeout(alignPreview, ms)); }).observe(dialog, { attributes: true, attributeFilter: ['open'] });
+new ResizeObserver(() => alignPreview()).observe($('#setup .setup-grid'));
+window.addEventListener('resize', alignPreview);
 
 function paintSteps() {
   const name = dialog.dataset.view;
@@ -562,7 +577,12 @@ const code = (t) => `<code>${esc(t)}</code>`;
 const finderNote = 'On a Mac, Finder hides folders whose name starts with a dot, such as .github: press Cmd+Shift+. to see them.';
 const setupButton = 'On GitHub, go to Actions, open <em>Set up this repository</em>, click Run workflow, untick <em>Only show what would change</em>, and run it.';
 const setupMore = "Its first run, from your push, only listed what it would make. This run makes your labels and checklists. Labels that aren't launchR's, such as GitHub's own and any you made, stay. To remove them, also tick <em>Also remove labels that aren't launchR's</em>; Dependabot's labels are kept.";
-const actions = 'Open the repository on GitHub and go to Actions: your checks are running.';
+/* the step on GitHub's Actions page: the checks that run on the push, then Set up this repository; one step when both apply */
+const actionsStep = (checksRun, github) => {
+  if (checksRun && github) return [step('Open the repository on GitHub and go to Actions: your checks are running. Then open <em>Set up this repository</em>, click Run workflow, untick <em>Only show what would change</em>, and run it.', '', setupMore)];
+  if (checksRun) return [step('Open the repository on GitHub and go to Actions: your checks are running.')];
+  return github ? [step(setupButton, '', setupMore)] : [];
+};
 // Optional, and only with the coverage check: the check works without Codecov.
 const codecov = () => (S.checks.coverage ? `Optional: to show coverage on Codecov too, follow <em>Codecov</em> in ${code('.github/workflows/README.md')}. ` : '');
 // One step: what to do in a line, the commands, and the explanations folded away.
@@ -584,8 +604,7 @@ function existingSteps() {
   if (add.ci) list.push(step(`Delete any old files in ${code('.github/workflows')} that do the same job.`, '', `If your package already has ${code('.github/workflows/README.md')}, keep yours and copy in only the new rows from the one in the zip.`));
   if (add.ci && release() === 'internal') list.push(step(`Add this line to ${code('DESCRIPTION')}.`, copy('Config/quality-gate/target: internal'), "Your package won't go to CRAN, so the checks then leave out what only CRAN asks for."));
   list.push(step("Commit and push, from RStudio's Git pane or GitHub Desktop."));
-  if (add.ci && CHECKS.some(([k]) => S.checks[k])) list.push(step(actions));
-  if (add.github) list.push(step(setupButton, '', setupMore));
+  list.push(...actionsStep(add.ci && CHECKS.some(([k]) => S.checks[k]), add.github));
   $('#stepList').innerHTML = list.join('');
   $('#nextAfter').innerHTML = after([
     add.ci && ['Run the checks on your computer', `Before a pull request, follow <em>Run the checks on your computer</em> in ${code('.github/workflows/README.md')}.${S.checks.lint ? ` The style step needs <a href="https://posit-dev.github.io/air/" target="_blank" rel="noopener">Air</a>${S.frontend && mode === 'new' ? ', and <a href="https://biomejs.dev" target="_blank" rel="noopener">Biome</a> for the JS and CSS' : ''}: install ${S.frontend && mode === 'new' ? 'them' : 'it'} once.` : ''}${S.frontend && mode === 'new' ? ' The browser tests need Google Chrome.' : ''}`],
@@ -607,15 +626,14 @@ function steps() {
   const gh = '<a href="https://cli.github.com" target="_blank" rel="noopener">GitHub CLI</a>';
   const route = $('input[name=route]:checked').value;
   const setup = `source("https://raw.githubusercontent.com/insightsurge/launchR/v${lists.settings.kit_version}/cli/github-setup.R")`;
-  const running = CHECKS.some(([k]) => S.checks[k]) ? [step(actions)] : [];
+  const checksRun = CHECKS.some(([k]) => S.checks[k]);
   const label = (text) => `<p class="cmd-label">${text}</p>`;
   const list = route === 'desktop' ? [
     step(`${unzip} Then, in RStudio, choose Build, then Test Package, to see your first test pass; in Positron, run ${code('devtools::test()')} in the console.`, '', `The first time, install the tools: in RStudio choose Tools, then Install Packages, and install ${code('devtools')}; in Positron, run ${code('install.packages("devtools")')}. Skip this if you already have it.`),
     step('Install <a href="https://desktop.github.com" target="_blank" rel="noopener">GitHub Desktop</a> and sign in with your GitHub account.', '', 'It brings Git with it. Skip this if you already use it.'),
     step(`In GitHub Desktop, choose File, then Add local repository, pick the ${code(name)} folder, and accept when it offers to create the repository.`),
     step(`Click Publish repository. ${priv ? 'Leave Keep this code private ticked.' : 'Untick Keep this code private.'} If ${code(owner)} is an organisation, pick it under Organization.`, '', `Already made the repository on GitHub? Keep it empty (no README or licence) and, in place of Publish repository, choose Repository, then Repository settings, paste ${code(`https://github.com/${owner}/${name}.git`)} as the remote, save, and click Publish branch. If it already has files, delete it on GitHub first, or come back and press <em>Already have a package?</em>.`),
-    ...running,
-    ...(S.github ? [step(setupButton, '', setupMore)] : []),
+    ...actionsStep(checksRun, S.github),
   ] : [
     step(`${unzip} Then, in the R console, install the tools (skip any you already have) and run your first test.`,
       `${copy('install.packages(c("devtools", "gitcreds", "pak"))')}${copy('pak::local_install_dev_deps()')}${copy('devtools::test()')}`,
@@ -626,8 +644,7 @@ function steps() {
     step('Put the package on GitHub: run the first line and answer yes to each question; after RStudio restarts, run the line for your account.',
       `${copy('usethis::use_git()')}${label('Your own account:')}${copy(`usethis::use_github(private = ${privArg})`)}${label('An organisation, such as a company\'s:')}${copy(`usethis::use_github(organisation = "${owner}", private = ${privArg})`)}`,
       `The first line asks to commit your files and then to restart RStudio; the yes answer moves around, so read each one. ${code('DESCRIPTION')} already links to ${code(`github.com/${owner}/${name}`)}, so the repository should be made there. Already made the repository on GitHub? Keep it empty (no README or licence) and, in place of ${code('use_github()')}, run ${code(`usethis::use_git_remote("origin", "https://github.com/${owner}/${name}.git")`)} and then ${code('gert::git_push(set_upstream = TRUE)')}. If it already has files, delete it on GitHub first, or come back and press <em>Already have a package?</em>.`),
-    ...running,
-    ...(S.github ? [step(setupButton, '', setupMore)] : []),
+    ...actionsStep(checksRun, S.github),
   ];
   $('#stepList').innerHTML = list.join('');
   // The checklists Set up this repository opens on its first run (cli/R/github.R open_stages), and the ones that wait.
@@ -639,7 +656,7 @@ function steps() {
   $('#nextAfter').innerHTML = after([
     S.github && (now.length || later.length || qc) && ['Your checklists', `${now.length ? `${listWords(now)} ${now.length === 1 ? 'opens' : 'open'} in your repository's issues on the first run of Set up this repository.` : ''}${later.length ? ` ${listWords(later)} ${later.length === 1 ? 'opens' : 'open'} on a later run, once ${later.length === 1 ? 'its' : 'their'} stage arrives.` : ''}${qc ? ' QC adds its sections to each Next release checklist.' : ''}`],
     S.github && ['Keep them up to date', `Run <em>Set up this repository</em> on GitHub again at any time: it ticks the boxes it can check and opens each checklist when its stage arrives. A few boxes are repository settings you change by hand; each says where. From R instead: with ${gh} installed and signed in, run ${code(setup)}.`],
-    running.length && ['Run the checks on your computer', `Before a pull request, follow <em>Run the checks on your computer</em> in ${code('.github/workflows/README.md')}.${S.checks.lint ? ` The style step needs <a href="https://posit-dev.github.io/air/" target="_blank" rel="noopener">Air</a>${S.frontend && mode === 'new' ? ', and <a href="https://biomejs.dev" target="_blank" rel="noopener">Biome</a> for the JS and CSS' : ''}: install ${S.frontend && mode === 'new' ? 'them' : 'it'} once.` : ''}${S.frontend && mode === 'new' ? ' The browser tests need Google Chrome.' : ''}`],
+    checksRun && ['Run the checks on your computer', `Before a pull request, follow <em>Run the checks on your computer</em> in ${code('.github/workflows/README.md')}.${S.checks.lint ? ` The style step needs <a href="https://posit-dev.github.io/air/" target="_blank" rel="noopener">Air</a>${S.frontend && mode === 'new' ? ', and <a href="https://biomejs.dev" target="_blank" rel="noopener">Biome</a> for the JS and CSS' : ''}: install ${S.frontend && mode === 'new' ? 'them' : 'it'} once.` : ''}${S.frontend && mode === 'new' ? ' The browser tests need Google Chrome.' : ''}`],
     ['Later', `${email}${codecov()}To add a website or anything else, come back here and choose only that.`],
   ]);
 }
