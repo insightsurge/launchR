@@ -1,4 +1,4 @@
-// The form: five questions and a plan, or every setting in four more steps; someone with a package already; and what to
+// The form: the first screen's questions and a plan, or every setting in four more steps; someone with a package already; and what to
 // do after the download.
 // Choices live here; engine.js turns them into files, the same way the CLI does.
 import JSZip from 'jszip';
@@ -330,7 +330,7 @@ function paintMain() {
   missing();
 }
 
-/* what the five questions still need, said under the button; the button looks off until then and, when pressed,
+/* what the first screen still needs, said under the button; the button looks off until then and, when pressed,
    shows each message beside its field */
 function missing() {
   if (!lists) return;
@@ -597,7 +597,7 @@ function ignoreLines() {
 }
 
 function existingSteps() {
-  const list = [step(`Unzip ${code('launchR-files.zip')} and copy what's inside into your package folder. ${finderNote}`, '', `Nothing in ${code('R/')}, ${code('tests/')} or ${code('DESCRIPTION')} changes.`)];
+  const list = [step(`Unzip ${code('launchR-files.zip')} and copy what's inside into your package folder. ${finderNote}`, '', `Nothing in ${code('R/')} or ${code('tests/')} changes; ${code('DESCRIPTION')} gets only the line below, if one is shown.`)];
   list.push(step(`Add these lines to ${code('.Rbuildignore')}, if they aren't there yet.`, copy(ignoreLines().join('\n'), true), 'They keep these files out of the built package, so R CMD check does not note them as unexpected hidden files or folders.'));
   const settings = ['.lintr', 'air.toml', 'codecov.yml'].filter((file) => file in buildPackage(choices(), bundle));
   if (settings.length) list.push(step(`If your package already has ${settings.map(code).join(', ')}, keep yours instead of the copy in the zip.`, '', 'The checks read these settings files. Copying over yours would replace your own lint, formatting or coverage settings; merge in only the lines you want.'));

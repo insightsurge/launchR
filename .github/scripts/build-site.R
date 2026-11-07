@@ -1,5 +1,5 @@
 #!/usr/bin/env Rscript
-# Builds the pkgdown site into site/ (see _pkgdown.yml): Rscript tools/build-site.R
+# Builds the pkgdown site into site/ (see _pkgdown.yml): Rscript .launchr/.github/scripts/build-site.R (in a package)
 #
 # pkgdown renders every top-level Markdown file and has no way to leave one out, so CLAUDE.md and AGENTS.md
 # (instructions for coding tools, not user docs) are moved aside for the build and always put back.

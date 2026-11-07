@@ -19,8 +19,9 @@ short file that calls a check kept here, so fixes reach you as a one-line update
 3. Follow the next steps on the site to put it on GitHub, from the R console or with GitHub Desktop. The checks start on
    your first push.
 
-Already have a package? Choose **Already have a package?** on the form to add only the checks. Rather use R? In a clone
-of this repository, `Rscript cli/launchr.R new mypkg` asks the same questions ([The command line](#the-command-line)).
+Already have a package? Choose **Already have a package?** on the form to add the checks, and if you want a website or
+the GitHub setup. To make a new package from R instead: in a clone of this repository, `Rscript cli/launchr.R new mypkg`
+asks the same questions ([The command line](#the-command-line)).
 
 <img src=".github/readme/01-your-package.png" alt="The first screen of the form: package name, what it does, author, GitHub name, a choice of four plans, and a summary card of what the package gets" width="720" />
 
@@ -51,7 +52,7 @@ of this repository, `Rscript cli/launchr.R new mypkg` asks the same questions ([
 
 <img src=".github/readme/07-next-steps.png" alt="The next steps page: numbered steps with commands to copy" width="720" />
 
-**An existing package.** Only the checks and the files they read; `R/`, `tests/` and `DESCRIPTION` are left alone.
+**An existing package.** The parts you choose (the checks by default, a website, issue forms, labels and checklists); `R/` and `tests/` are left alone.
 
 <img src=".github/readme/08-existing-package.png" alt="The existing package view: package name, GitHub name and which parts to add" width="720" />
 
@@ -98,8 +99,9 @@ change it, and `tests/README.md` explains the test file kinds.
 ## Add CI to an existing package
 
 To add launchR's checks to a package you already have, choose **Set up an existing package** on the site
-(<https://launch-r.web.app/#yours>). The zip holds only the CI files and the settings files the chosen checks read,
-and the site says what to do with each; `R/`, `tests/` and `DESCRIPTION` are left alone.
+(<https://launch-r.web.app/#yours>). The zip holds the CI files and the settings files the chosen checks read, and, if you choose
+them, a website and the GitHub setup; the site says what to do with each. `R/` and `tests/` are left alone, and a package
+not going to CRAN adds one line to DESCRIPTION by hand.
 
 ## Set up GitHub
 
@@ -128,12 +130,12 @@ The stage checklists, and when each opens:
 | QC | Not a list of its own: sections of Next release, for teams with a quality process (any plan; on for plan d) | Scope and risk, tests, review, and the evidence to keep for each release |
 
 A checklist can have boxes under a box (one level). A box with others under it ticks when every box under it is ticked.
-A box marked optional does not keep a checklist open: it closes when every other box is ticked. Boxes that name a file
-or a setting tick themselves, and un-tick when they stop being true; the rest are yours to tick.
+A box marked optional does not keep a checklist open: it closes when every other box is ticked. Boxes that can be checked (a
+file, a setting, CI results, the website, CRAN status) tick themselves, and un-tick when they stop being true; the rest are yours to tick.
 
 A package made before Set up was a checklist has no `Config/launchR/checklists` line in DESCRIPTION, so its next run
 opens a Set up list (and a Next release list too, for a package not for CRAN). A package whose line is only
-`QC before release`, the old QC checklist, now gets Next release with the QC sections; add `Set up` to the line to get
+`QC before release`, the old QC checklist, now gets Next release with the QC sections (a package going to CRAN: once it is on CRAN); add `Set up` to the line to get
 that list as well. An issue called "Checklist: QC before release" that is already open is no longer updated.
 
 The same from R, with the [GitHub CLI](https://cli.github.com) signed in, from your package's folder; this can also
@@ -218,14 +220,14 @@ sequenceDiagram
   participant Caller as Your caller file
   participant Shared as launchR's check (at vX.Y.Z)
   participant PR as Your pull request
-  Dev->>GH: push, or open a pull request
+  Dev->>GH: push, open a pull request, or Run workflow (weekly runs start on their own)
   GH->>Caller: start the check (a newer push to the same pull request stops the older run)
   Caller->>Shared: uses ...@vX.Y.Z, with your settings
   Shared->>Shared: check out your package, and launchR's scripts at the same version into .launchr/
-  Shared->>Shared: skip the R work when only documentation changed
+  Shared->>Shared: on a pull request that changes only documentation, skip the R work
   Shared->>Shared: install R and packages, run the check (one job per system and R version)
   Shared-->>GH: pass or fail, and a job summary
-  Shared->>PR: update one report comment that covers every check
+  Shared->>PR: on a pull request, update one report comment that covers every check (unless ci-report is false)
 ```
 
 - **Permissions:** each check reads your code; only the report job can write a pull request comment. Pull requests
@@ -273,7 +275,7 @@ flowchart LR
 | `.github/actions/`, `.github/scripts/` | Shared steps the checks use: the PR report, baselines, change detection |
 | `.github/readme/` | The README's screenshots of the form; retake them when the form changes |
 | `quality-gate/` | The quality gate |
-| `tests/` | Tests for the command line, the two routes, the zip, the PR report builder, generated packages against the gate, and the sandbox test's steps |
+| `tests/` | Tests for the command line, the two routes, the zip, the PR report builder, caller compatibility, generated packages against the gate, and the sandbox test's steps |
 | `CONTRIBUTING.md` | For maintainers: add a check or a template file, make a release, run the tests, how the shared workflows are secured |
 
 ## Develop and test
@@ -294,14 +296,14 @@ npm --prefix site run build
 ```
 
 Every pull request runs the browser tests, the route comparison, the zip check, the command line's tests, the report
-builder's tests, and two linters for the workflows in `.github/` (actionlint for mistakes, zizmor for security
-problems) in `.github/workflows/site-tests.yaml`. `CONTRIBUTING.md` says what each test covers and how to run the
+builder's tests, and three checks of the workflows in `.github/` (actionlint for mistakes, the caller compatibility
+check, zizmor for security problems) in `.github/workflows/site-tests.yaml`. `CONTRIBUTING.md` says what each test covers and how to run the
 linters.
 
 **Before a release, the sandbox test.** Local tests can't show what only GitHub's runners do, such as a step that
 hangs on Windows. `.github/workflows/sandbox-e2e.yaml`, started by hand (Actions, sandbox-e2e, Run workflow, on `main`
-or the release branch), makes a package on the site with every check, R devel and browser tests on Linux, Mac and
-Windows, points its checks at the launchR commit under test, and runs them in the public repository
+or the release branch), makes a package on the site with every check, R devel on Linux and browser tests on Linux, Mac
+and Windows, points its checks at the launchR commit under test, and runs them in the public repository
 `insightsurge/launchr-sandbox`: a push to its default branch, and a pull request with a planted fake secret that
 secret-scan must catch. It fails when any other check fails, with a link to each failed job, or when the pull request
 gets other than one report comment. A passing run takes about 35 minutes (it waits for the default branch's coverage and full-tests runs before it opens its pull request); given the release pull request's number,

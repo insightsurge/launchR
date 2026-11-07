@@ -27,10 +27,10 @@ A properly set up R package from a form, with no terminal and nothing to delete 
 
 ## Capabilities and Constraints
 
-- The setup asks four things: name, description, author (first and last name) and plan. Email is optional, and nothing should look like signing in. The plan is one of four: public and going to CRAN; public, not going to CRAN; private now, public and CRAN later; private for good.
+- The setup asks for a package name, a one-line title, an optional description, the author (first and last name), a GitHub username or organisation, and a plan. Email is optional, and nothing should look like signing in. The plan is one of four: public and going to CRAN; public, not going to CRAN; private now, public and CRAN later; private for good.
 - Everything else sits behind one choice, Customise a plan, in four more steps that show only what applies: checks, platforms, schedule, PR report and shared CI or a snapshot; issue forms with their labels, other labels and the stage checklists; README badges and the website; licence, JS or CSS in the package and AI instructions. One preview window shows the checklists, issue forms and the agent guide as they will read.
 - A private-for-good package gets no release features; it starts with Set up, and a Next release checklist with the QC sections.
-- Someone with a package already picks what to add, such as CI, a website or checklists. Nothing in `R/`, `tests/` or `DESCRIPTION` changes.
+- Someone with a package already picks what to add, such as CI, a website or checklists. The zip never touches `R/` or `tests/`, and a package not going to CRAN adds one DESCRIPTION line by hand.
 - Pasting a public GitHub link shows what is missing and fills in the choices. It reads public files from the visitor's browser, is limited to 60 GitHub calls an hour per visitor, and is designed now but built after the basic setup works. Private repositories use the CLI.
 - The kit supports GitHub only.
 - The zip is built in the browser. Nothing typed leaves the browser, and there is no server.
@@ -45,7 +45,7 @@ A properly set up R package from a form, with no terminal and nothing to delete 
 - Space Grotesk is the only typeface, apart from monospace for file names.
 - Two themes, Paper (light) and Ember (dark), with a light and dark switch in the navbar that follows the system setting until the visitor chooses.
 - The page wording is approved. Change it only when the owner asks.
-- InsightSurge is named as the maker, with an author section. No data is collected, and the site says so.
+- InsightSurge is named as the maker, with an author section. Nothing typed is collected; with consent, visits and zips built are counted, and the site says so.
 - launchR is MIT licensed.
 - "Coming soon" appears on only a few items. Nothing is marked paid.
 

@@ -71,7 +71,7 @@ jobs:
     # Runs only launchR's script, with the sandbox's token (secret SANDBOX_TOKEN, scoped to that repository alone).
     needs: package
     runs-on: ubuntu-26.04
-    timeout-minutes: 240  # the wait gives up at 200 minutes and cancels what is still running
+    timeout-minutes: 270  # up to 60 minutes for the baselines, then the wait gives up at 200 and cancels what is still running
     env:
       LAUNCHR_SHA: ${{ github.sha }}
       RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}

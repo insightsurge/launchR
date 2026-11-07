@@ -15,7 +15,7 @@ launchR starts an R package with tests, CI and GitHub files in place, or adds re
 
 ## How it works
 
-1. Answer five questions on the site: package name, a one-line title (plus an optional longer description), author, GitHub user or organisation, and plan.
+1. Fill in the form's first screen: package name, a one-line title (plus an optional longer description), author, GitHub user or organisation, and plan.
 2. Download a zip named after the package. It is built in the browser, with no account and no server, and nothing typed into the form leaves the browser.
 3. Follow the next-steps page to put the package on GitHub. Only GitHub is supported.
 
@@ -47,7 +47,7 @@ Each check is a short workflow file in the package that calls a shared workflow 
 
 ## Customise a plan
 
-Each plan sets defaults. On the site, pick a plan and download, or choose Customise a plan and go through four more steps (Checks, Issues and checklists, README and website, Extras); on the command line, a flag changes them:
+Each plan sets defaults. On the site, pick a plan and download, or choose Customise a plan and go through four more steps (CI checks, Issues and checklists, README and website, Extras); on the command line, a flag changes them:
 
 - The checks, their R versions and systems, the minimum R version, and the weekly time.
 - The CI report comment: one comment on each pull request with the results of the chosen checks. On by default.
@@ -58,7 +58,7 @@ Each plan sets defaults. On the site, pick a plan and download, or choose Custom
 
 ## Existing packages
 
-launchR can supply the CI files only. `R/`, `tests/` and `DESCRIPTION` are left alone.
+launchR can add the CI files, and if you want a website or issue forms, labels and checklists. `R/` and `tests/` are left alone; a package not going to CRAN adds one line to DESCRIPTION by hand.
 
 ## Coming soon
 

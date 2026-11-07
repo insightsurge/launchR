@@ -2,7 +2,8 @@
 
 - **The pass mark is CRAN's:** R CMD check with 0 errors, 0 warnings and 0 notes. On top of that: style (Air, lintr,
   and Biome when there is a `biome.json`), help pages in sync with roxygen, a documented return value for every export,
-  spelling, tests, coverage, a test for every new R line, a check without the `Suggests` packages, and a secret scan.
+  spelling, tests, coverage, a test for every new R line, a check without the `Suggests` packages, and, in CI, a secret
+  scan.
 - **Tools on your computer:** the R packages the checks need are listed in `.github/workflows/README.md` (when the package has CI; otherwise in
   the quality gate's own header). Air (R
   formatting) and Biome (JS and CSS, only with a `biome.json`) are separate programs, not R packages: install them from
