@@ -11,31 +11,51 @@ short file that calls a check kept here, so fixes reach you as a one-line update
 - **The same checks on your computer:** one quality-gate script prints a PASS or FAIL line per step.
 - **No lock-in:** the files you get carry no conditions, and `eject` copies the checks into your repository.
 
-## How a package is made
+## Get started
 
-The website and the command line read the same template and lists, and build the same files.
+1. Open <https://launch-r.web.app>, click **Start your package** and answer a few questions. Nothing you type leaves
+   your browser.
+2. Download the zip named after your package, unzip it and open it in RStudio or Positron.
+3. Follow the next steps on the site to put it on GitHub, from the R console or with GitHub Desktop. The checks start on
+   your first push.
 
-```mermaid
-flowchart LR
-  you([You]) -->|form| site["Website<br/>launch-r.web.app"]
-  you -->|"Rscript cli/launchr.R new"| cli["Command line<br/>(R)"]
-  subgraph repo["This repository"]
-    lists["lists/*.tsv<br/>plans, parts, checks, files, settings"]
-    template["template/<br/>files with {{placeholders}}"]
-  end
-  lists --> site
-  template --> site
-  lists --> cli
-  template --> cli
-  site -->|zip, built in your browser| pkg[["Your package"]]
-  cli -->|folder and first git commit| pkg
-```
+Already have a package? Choose **Already have a package?** on the form to add only the checks. Rather use R? In a clone
+of this repository, `Rscript cli/launchr.R new mypkg` asks the same questions ([The command line](#the-command-line)).
 
-- The lists hold every choice and default: the four plans, the parts, the checks with their schedules and systems,
-  which template file belongs to which part, and the rules for names.
-- The site's engine (`site/src/form/engine.js`) and the command line (`cli/R/`) fill the placeholders the same way.
-  `tests/compare-routes.mjs` builds every plan through both and compares every file.
-- Your answers stay in your browser: the site builds the zip there.
+<img src=".github/readme/01-your-package.png" alt="The first screen of the form: package name, what it does, author, GitHub name, a choice of four plans, and a summary card of what the package gets" width="720" />
+
+<details>
+<summary>The rest of the form, screen by screen</summary>
+
+**Customise a plan, step 2: CI checks.** Which checks run, on which systems and R versions, and when.
+
+<img src=".github/readme/02-ci-checks.png" alt="The CI checks step: check chips, the R versions by systems matrix, and the summary card" width="720" />
+
+**Step 3: Issues and checklists.** Issue forms, labels and the stage checklists.
+
+<img src=".github/readme/03-issues-and-checklists.png" alt="The issues and checklists step: issue form cards, labels and checklist chips" width="720" />
+
+**Step 4: README and website.** Badges and a pkgdown site.
+
+<img src=".github/readme/04-readme-and-website.png" alt="The README and website step: badge choices and the website switch" width="720" />
+
+**Step 5: Extras.** Licence, JS or CSS in the package, and instructions for AI assistants.
+
+<img src=".github/readme/05-extras.png" alt="The extras step: licence, front-end files and AI instructions" width="720" />
+
+**The preview window.** Each checklist and issue form as GitHub will show it.
+
+<img src=".github/readme/06-preview-window.png" alt="The preview window showing the Set up checklist as a GitHub issue" width="720" />
+
+**After the download.** The next steps, from the R console or with GitHub Desktop.
+
+<img src=".github/readme/07-next-steps.png" alt="The next steps page: numbered steps with commands to copy" width="720" />
+
+**An existing package.** Only the checks and the files they read; `R/`, `tests/` and `DESCRIPTION` are left alone.
+
+<img src=".github/readme/08-existing-package.png" alt="The existing package view: package name, GitHub name and which parts to add" width="720" />
+
+</details>
 
 ## Your plan decides the defaults
 
@@ -80,47 +100,6 @@ change it, and `tests/README.md` explains the test file kinds.
 To add launchR's checks to a package you already have, choose **Set up an existing package** on the site
 (<https://launch-r.web.app/#yours>). The zip holds only the CI files and the settings files the chosen checks read,
 and the site says what to do with each; `R/`, `tests/` and `DESCRIPTION` are left alone.
-
-## How your checks reach launchR
-
-Your package holds only short caller files. Each one names a check here and a launchR release:
-
-```yaml
-# .github/workflows/r-cmd-check.yaml in your package (shortened)
-on:
-  pull_request:
-    branches: [main, master]
-jobs:
-  check:
-    uses: insightsurge/launchR/.github/workflows/r-cmd-check.yaml@vX.Y.Z
-    with:
-      platforms: ubuntu/release, windows/release, macos/release
-```
-
-```mermaid
-sequenceDiagram
-  autonumber
-  actor Dev as You
-  participant GH as GitHub Actions
-  participant Caller as Your caller file
-  participant Shared as launchR's check (at vX.Y.Z)
-  participant PR as Your pull request
-  Dev->>GH: push, or open a pull request
-  GH->>Caller: start the check (a newer push to the same pull request stops the older run)
-  Caller->>Shared: uses ...@vX.Y.Z, with your settings
-  Shared->>Shared: check out your package, and launchR's scripts at the same version into .launchr/
-  Shared->>Shared: skip the R work when only documentation changed
-  Shared->>Shared: install R and packages, run the check (one job per system and R version)
-  Shared-->>GH: pass or fail, and a job summary
-  Shared->>PR: update one report comment that covers every check
-```
-
-- **Permissions:** each check reads your code; only the report job can write a pull request comment. Pull requests
-  from forks and from Dependabot get the job summary instead.
-- **Updates:** `.github/dependabot.yml` opens a pull request when launchR has a new minor or major release. It changes
-  only the `@v...` part of the caller files. Close it to stay where you are.
-- **Leaving:** `eject` copies the checks, their scripts and the quality gate into your repository (`.launchr/` and
-  `.github/workflows/launchr-*.yaml`), so nothing calls launchR any more.
 
 ## Set up GitHub
 
@@ -215,6 +194,73 @@ It prints one PASS, FAIL or SKIP line per step and exits 0 (all passed), 1 (a st
 package) or 3 (only flaky tests failed). `Rscript quality-gate/quality-gate.R --help` lists the options. A generated
 package's `.github/workflows/README.md` shows how to run it without cloning launchR.
 
+## How your checks reach launchR
+
+Your package holds only short caller files. Each one names a check here and a launchR release:
+
+```yaml
+# .github/workflows/r-cmd-check.yaml in your package (shortened)
+on:
+  pull_request:
+    branches: [main, master]
+jobs:
+  check:
+    uses: insightsurge/launchR/.github/workflows/r-cmd-check.yaml@vX.Y.Z
+    with:
+      platforms: ubuntu/release, windows/release, macos/release
+```
+
+```mermaid
+sequenceDiagram
+  autonumber
+  actor Dev as You
+  participant GH as GitHub Actions
+  participant Caller as Your caller file
+  participant Shared as launchR's check (at vX.Y.Z)
+  participant PR as Your pull request
+  Dev->>GH: push, or open a pull request
+  GH->>Caller: start the check (a newer push to the same pull request stops the older run)
+  Caller->>Shared: uses ...@vX.Y.Z, with your settings
+  Shared->>Shared: check out your package, and launchR's scripts at the same version into .launchr/
+  Shared->>Shared: skip the R work when only documentation changed
+  Shared->>Shared: install R and packages, run the check (one job per system and R version)
+  Shared-->>GH: pass or fail, and a job summary
+  Shared->>PR: update one report comment that covers every check
+```
+
+- **Permissions:** each check reads your code; only the report job can write a pull request comment. Pull requests
+  from forks and from Dependabot get the job summary instead.
+- **Updates:** `.github/dependabot.yml` opens a pull request when launchR has a new minor or major release. It changes
+  only the `@v...` part of the caller files. Close it to stay where you are.
+- **Leaving:** `eject` copies the checks, their scripts and the quality gate into your repository (`.launchr/` and
+  `.github/workflows/launchr-*.yaml`), so nothing calls launchR any more.
+
+## How a package is made
+
+The website and the command line read the same template and lists, and build the same files.
+
+```mermaid
+flowchart LR
+  you([You]) -->|form| site["Website<br/>launch-r.web.app"]
+  you -->|"Rscript cli/launchr.R new"| cli["Command line<br/>(R)"]
+  subgraph repo["This repository"]
+    lists["lists/*.tsv<br/>plans, parts, checks, files, settings"]
+    template["template/<br/>files with {{placeholders}}"]
+  end
+  lists --> site
+  template --> site
+  lists --> cli
+  template --> cli
+  site -->|zip, built in your browser| pkg[["Your package"]]
+  cli -->|folder and first git commit| pkg
+```
+
+- The lists hold every choice and default: the four plans, the parts, the checks with their schedules and systems,
+  which template file belongs to which part, and the rules for names.
+- The site's engine (`site/src/form/engine.js`) and the command line (`cli/R/`) fill the placeholders the same way.
+  `tests/compare-routes.mjs` builds every plan through both and compares every file.
+- Your answers stay in your browser: the site builds the zip there.
+
 ## In this repository
 
 | Folder | What it holds |
@@ -225,6 +271,7 @@ package's `.github/workflows/README.md` shows how to run it without cloning laun
 | `lists/` | Tab-separated lists read by both the site and the command line |
 | `.github/workflows/` | The reusable checks that packages call, and this repository's own site deploy, site tests and sandbox test. Overview, with what starts each and where its result shows: its `README.md` |
 | `.github/actions/`, `.github/scripts/` | Shared steps the checks use: the PR report, baselines, change detection |
+| `.github/readme/` | The README's screenshots of the form; retake them when the form changes |
 | `quality-gate/` | The quality gate |
 | `tests/` | Tests for the command line, the two routes, the zip, the PR report builder, generated packages against the gate, and the sandbox test's steps |
 | `CONTRIBUTING.md` | For maintainers: add a check or a template file, make a release, run the tests, how the shared workflows are secured |
