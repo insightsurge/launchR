@@ -621,15 +621,18 @@ test('the first screen fits a 1440 by 900 window, with the sign-up hint in the G
   await expect(page.locator('#tip-owner')).toContainText('Sign up free at github.com/signup');
 });
 
-test('on the settings steps the preview card stays at one height', async ({ page }) => {
+test('the preview card starts where the subtitle ends, on the first screen and every settings step', async ({ page }) => {
   await openForm(page);
   await fillForm(page);
+  const gap = async () => page.evaluate(() => {
+    const sub = [...document.querySelectorAll('#setup .setup-grid .sub')].find((el) => el.offsetParent);
+    return Math.abs(document.querySelector('#setup .preview').getBoundingClientRect().top - sub.getBoundingClientRect().bottom);
+  });
+  await expect.poll(gap, { message: 'first screen' }).toBeLessThan(2);
   await customise(page);
-  const top = async () => (await page.locator('.preview').boundingBox()).y;
-  const first = await top();
-  for (const name of ['Issues', 'README', 'Extras']) {
+  for (const name of ['CI checks', 'Issues', 'README', 'Extras']) {
     await step(page, name);
-    expect(Math.round(await top()), name).toBe(Math.round(first));
+    await expect.poll(gap, { message: name }).toBeLessThan(2);
   }
 });
 

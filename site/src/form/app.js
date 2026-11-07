@@ -275,7 +275,22 @@ function view(name, focus) {
   paintSteps();
   dialog.scrollTop = 0;
   focus?.focus({ preventScroll: true });
+  alignPreview();
 }
+
+/* the preview card's top sits level with the end of the view's subtitle, so it starts at the same height on every view */
+function alignPreview() {
+  const card = $('#setup .setup-grid > .preview');
+  const sub = [...dialog.querySelectorAll('.setup-grid .sub')].find((el) => el.offsetParent);
+  if (!card || !sub || !card.offsetParent || dialog.scrollTop > 0) return;
+  // where the card would start with no margin, then the margin that moves it to the subtitle's end
+  const natural = card.getBoundingClientRect().top - (parseFloat(getComputedStyle(card).marginTop) || 0);
+  card.style.setProperty('--pv-top', `${Math.max(0, Math.round(sub.getBoundingClientRect().bottom - natural))}px`);
+}
+// realign when the dialog opens (once its opening motion has settled), when the grid changes size, and on resize
+new MutationObserver(() => { if (dialog.open) [60, 700].forEach((ms) => setTimeout(alignPreview, ms)); }).observe(dialog, { attributes: true, attributeFilter: ['open'] });
+new ResizeObserver(() => alignPreview()).observe($('#setup .setup-grid'));
+window.addEventListener('resize', alignPreview);
 
 function paintSteps() {
   const name = dialog.dataset.view;

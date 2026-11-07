@@ -1031,12 +1031,9 @@ dialog#setup { scrollbar-gutter: stable; }
   #form .actions { margin-top: 14px; flex-wrap: nowrap; }
   #form #missing { margin: -44px 0 0; max-width: calc(100% - 260px); min-height: 44px; display: flex; align-items: center; text-align: left; }
 }
-/* the preview card sits level with the middle of the form beside it on the first screen; on the settings steps it
-   stays at one height from the top, so it does not move when Next changes the step */
-@media (min-width: 861px) {
-  #setup .setup-grid > .preview { align-self: center; }
-  #setup[data-view='modify'] .setup-grid > .preview { align-self: start; }
-}
+/* the preview card starts where the view's subtitle ends (--pv-top, set by alignPreview in app.js) and grows down,
+   so it starts at one height on every view and does not move when Next changes the step */
+@media (min-width: 861px) { #setup .setup-grid > .preview { align-self: start; margin-top: var(--pv-top, 0px); } }
 
 /* the step bar is the dialog's progress line: one centred row above the form and the preview card */
 .setup-grid > .stepbar { grid-column: 1 / -1; justify-self: center; margin: 0 0 28px; }
