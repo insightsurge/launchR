@@ -284,7 +284,7 @@ flowchart LR
 npm --prefix site install
 npm --prefix site run dev          # the site, with the template bundled in
 
-Rscript tests/cli-tests.R          # the command line, against a stand-in for gh (about 90 s; needs jq and git)
+Rscript tests/cli-tests.R          # the command line, against a stand-in for gh (about 90 s; needs jq and git; --verbose lists every check)
 node tests/compare-routes.mjs      # the site and the command line build the same files, for every plan
 node tests/check-zip.mjs           # the zip is sound
 bash tests/build-comment-tests.sh  # the pull request report builder, against a fake gh (needs jq, perl, unzip, zip)

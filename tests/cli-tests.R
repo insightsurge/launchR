@@ -5,13 +5,17 @@ kit_root <- dirname(here)
 for (file in list.files(file.path(kit_root, "cli", "R"), pattern = "[.]R$", full.names = TRUE)) sys.source(file, envir = globalenv())
 options(kit.root = kit_root, kit.pause = 0, kit.retry_wait = 0)
 
+# Quiet by default: failures and the totals. `--verbose` prints a line per check and each section's title.
+verbose <- "--verbose" %in% commandArgs(trailingOnly = TRUE)
 failures <- character()
+checks_run <- 0L
 expect <- function(ok, label) {
   ok <- isTRUE(ok)
-  cat(if (ok) "  ok    " else "  FAIL  ", label, "\n", sep = "")
+  checks_run <<- checks_run + 1L
+  if (verbose || !ok) cat(if (ok) "  ok    " else "  FAIL  ", label, "\n", sep = "")
   if (!ok) failures <<- c(failures, label)
 }
-section <- function(title) cat("\n", title, "\n", sep = "")
+section <- function(title) if (verbose) cat("\n", title, "\n", sep = "")
 # Runs code, keeping what it prints and the messages it sends.
 quiet <- function(code) {
   messages <- character()
@@ -704,7 +708,7 @@ expect(any(grepl("Commands: new, gate, github-setup, eject", help_out)), "launch
 
 cat("\n")
 if (length(failures)) {
-  cat(length(failures), "failed:\n", paste0("  - ", failures, "\n"), sep = "")
+  cat(length(failures), "of", checks_run, "checks failed:\n", paste0("  - ", failures, "\n"), sep = "")
   quit(status = 1L)
 }
-cat("All tests passed.\n")
+cat("All ", checks_run, " checks passed.\n", sep = "")
