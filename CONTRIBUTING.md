@@ -102,7 +102,7 @@ launchR's version is the tag its users name in their caller files (`@vX.Y.Z`), s
 | Test | What it covers | Run it |
 | --- | --- | --- |
 | `tests/compare-routes.mjs` | The site and the command line build the same files for every plan | `node tests/compare-routes.mjs` |
-| `tests/cli-tests.R` | The command line against a stand-in for `gh` (about 90 s; needs `jq` and `git`), the lists' consistency, the version in three places | `Rscript tests/cli-tests.R` |
+| `tests/cli-tests.R` | The command line against a stand-in for `gh` (about 90 s; needs `jq` and `git`), the lists' consistency, the version in three places | `Rscript tests/cli-tests.R` (failures and totals only; add `--verbose` for every check) |
 | `tests/build-comment-tests.sh` | The pull request report builder (`.github/actions/pr-report-comment/build-comment.sh`) with a fake `gh`: states, ordering, cutting long parts, matrix races. Needs `jq`, `perl`, `unzip`, `zip`, `iconv` | `bash tests/build-comment-tests.sh` |
 | `tests/caller-compat.sh` | Caller compatibility with actionlint: previous release callers against this commit's workflows, and this commit's callers against the tag in `lists/settings.tsv` (or this commit if untagged) | `bash tests/caller-compat.sh` |
 | `tests/gate-matrix.sh` | Generated packages for the main sets of choices pass the quality gate (slow, needs R packages; runs in CI on template, list, CLI and gate changes) | `bash tests/gate-matrix.sh` |
