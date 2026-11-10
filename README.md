@@ -187,7 +187,7 @@ When it has written the package, `new` prints a few next steps: open the folder,
 | Mode | Steps |
 | --- | --- |
 | `fast` (default) | Tools, style, docs in sync, `\value` sections, spelling, pkgdown, R CMD check without tests |
-| `tests` | The tests once under covr, coverage, and a check that new lines are tested |
+| `tests` | The tests once under covr, coverage, and a check that the lines the branch adds in `R/` are tested (JS and CSS lines are not counted) |
 | `full` | Everything above, plus R CMD check with tests, the built tarball, and the no-Suggests check |
 | `lint` | The quick static steps only |
 | `nosuggests` | R CMD check with only the hard dependencies installed |

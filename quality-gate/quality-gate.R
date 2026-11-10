@@ -366,9 +366,10 @@ step_value <- function(log) {
   result("PASS", paste(length(exports), "exported functions"))
 }
 
-step_spelling <- function(update, log) {
+step_spelling <- function(update, log, command = "the gate with --update-wordlist") {
   checkmate::assert_flag(update)
   checkmate::assert_string(log)
+  checkmate::assert_string(command)
   words <- run_logged(function() spelling::spell_check_package("."), log)
   if (nrow(words) == 0) {
     return(result("PASS"))
@@ -378,7 +379,13 @@ step_spelling <- function(update, log) {
     run_logged(function() spelling::update_wordlist(".", confirm = FALSE), log)
     return(result("PASS", paste0("added to inst/WORDLIST (review before committing): ", toString(words$word))))
   }
-  result("FAIL", paste0("unknown words: ", toString(words$word), "; fix them, or add with --update-wordlist"))
+  result(
+    "FAIL",
+    paste0(
+      "unknown words: ", toString(words$word), "; fix them, or accept them as written with `", command,
+      " --update-wordlist` (or spelling::update_wordlist() in R), then review inst/WORDLIST"
+    )
+  )
 }
 
 # The failing tests named in testthat's check output (testthat.Rout.fail under R CMD check or covr): lines such as
@@ -1250,7 +1257,7 @@ run_step <- function(step, mode, update, uses, settings, run_dir, log, state) {
       docs = step_docs(uses, log),
       lintr = step_lintr(uses, settings, log),
       value = step_value(log),
-      spelling = step_spelling(update, log),
+      spelling = step_spelling(update, log, gate_command(mode)),
       pkgdown = step_pkgdown(uses, log),
       check_fast = step_check(tests = FALSE, log),
       tests = step_tests(uses, run_dir, log, state),
@@ -1485,6 +1492,13 @@ list_steps <- function(uses) {
   out
 }
 
+# How to call this gate again, for the messages that tell the maintainer what to run.
+gate_command <- function(mode) {
+  file <- sub("^--file=", "", grep("^--file=", commandArgs(FALSE), value = TRUE)[1])
+  if (is.na(file)) file <- "quality-gate.R"
+  paste("Rscript", shQuote(file), mode)
+}
+
 main <- function(args) {
   checkmate::assert_character(args, any.missing = FALSE)
   opts <- parse_args(args)
@@ -1568,6 +1582,13 @@ main <- function(args) {
     note <- if (code == 3L) " (every failing test passed on the re-run: a probable flake, exit code 3)" else ""
     cli::cat_line("FAILED: ", paste(failed, collapse = ", "), note)
     quit(status = code)
+  }
+  if (!"nosuggests" %in% ran && length(description_packages("Suggests")) > 0) {
+    cli::cat_line(
+      "NOTE nosuggests: not run in mode '", mode, "'. An example or vignette that uses a Suggests package without ",
+      "guarding it passes here and fails in CI's no-suggests job; run `", gate_command("nosuggests"), "` where ",
+      "Suggests are not in R's own library, or treat CI as the proof."
+    )
   }
   cli::cat_line("All steps passed (", sum(statuses == "SKIP"), " skipped)", if (partial) "; partial run." else ".")
   invisible(statuses)
