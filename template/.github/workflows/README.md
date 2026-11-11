@@ -87,6 +87,11 @@ install.packages(c(
 
 The style step also needs [Air](https://posit-dev.github.io/air/), and [Biome](https://biomejs.dev) when the package
 has JS or CSS. A missing one is named in the first FAIL line; without pkgdown, the website step is skipped.
+
+The new-lines check counts the lines a branch adds in `R/` only, not JS or CSS. The default `fast` mode does not run the
+no-Suggests check, so an example that uses a Suggests package without guarding it passes there and fails in CI: when a
+mode leaves it out, the run ends with a note saying so. When the spelling step fails, it prints the command that adds
+the unknown words.
 {{#is_private}}
 
 The snippet below downloads a script from the internet and runs it: check your organisation's policy first. It is the
