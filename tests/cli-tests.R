@@ -526,6 +526,8 @@ expect(any(grepl("https://github.com/sample-org/samplepkg/issues/1", real_run$ou
   any(grepl("epic", real_run$out)), "report after a real (fake-gh) run names a created label and links an issue")
 expect(file.exists(summary_file) && any(grepl("\\[About this repository\\]\\(https://github.com/sample-org/samplepkg/issues/1\\)", readLines(summary_file))),
   "the run summary file gets Markdown when GITHUB_STEP_SUMMARY points to a temp file")
+expect(any(grepl("^- \u2705 ", readLines(summary_file))) && any(grepl("^- \u2B1C ", readLines(summary_file))) && !any(grepl("^- \\[[ x]\\] ", readLines(summary_file))),
+  "the run summary shows ticked boxes as a green tick and open ones as a white square, not as checkboxes GitHub greys out")
 expect(any(grepl("Keep the Set up this repository workflow", real_run$out, fixed = TRUE)) &&
   any(grepl("Keep the Set up this repository workflow", readLines(summary_file), fixed = TRUE)), "the first real run says why to keep the workflow")
 again_run <- run_github(pkg, fake_rep, "--yes")

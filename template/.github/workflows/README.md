@@ -119,7 +119,8 @@ or `MASS` ship with R and don't count.
 Dependabot opens a pull request when launchR has a new minor or major version (`0.6.0`, `1.0.0`), and changes only
 the `@v...` part of these files. Patch versions (`0.6.1`) arrive with the next minor version; to take one sooner,
 change the `@v...` part yourself. Updates to other actions you add come in their own pull requests. Dependabot
-waits 3 days after a release by default; a `cooldown` block in `.github/dependabot.yml` changes that.
+opens the pull request as soon as it sees the release; to make it wait some days first, add a `cooldown` block to
+`.github/dependabot.yml`.
 
 - To decline one version, close the pull request.
 - To stop for good, comment `@dependabot ignore this dependency` on it, or delete `.github/dependabot.yml`.
