@@ -86,7 +86,7 @@ report_markdown <- function(data) {
   changed <- Filter(function(x) length(x$ticked) + length(x$unticked) > 0, data$issues)
   for (issue in changed) {
     out <- c(out, "", sprintf("<details><summary>%s: boxes ticked or unticked</summary>", issue$title), "",
-      if (length(issue$ticked)) paste0("- [x] ", issue$ticked), if (length(issue$unticked)) paste0("- [ ] ", issue$unticked, " (unticked)"),
+      if (length(issue$ticked)) paste0("✅ ", issue$ticked), if (length(issue$unticked)) paste0("⬜ ", issue$unticked, " (open)"),
       "", "</details>")
   }
   todo <- Filter(function(x) length(x$todo) > 0, data$issues)

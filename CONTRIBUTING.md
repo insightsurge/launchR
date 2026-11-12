@@ -85,7 +85,7 @@ launchR's version is the tag its users name in their caller files (`@vX.Y.Z`), s
    the previous release's callers against this commit's workflows, and this commit's callers against its own workflows
    because the new tag does not exist yet). **Run the sandbox test on its branch** (Actions, sandbox-e2e, Run
    workflow, pick the branch, and give the pull request's number; below): it runs a site-made package's checks on
-   GitHub's Linux, Mac and Windows runners against this commit, takes about 35 minutes when it passes, and posts its
+   GitHub's Linux, Mac and Windows runners against this commit, takes 10 to 35 minutes when it passes, and posts its
    report on the pull request. Merge when it passes.
 3. **Tag the merge commit right after the merge**, `vX.Y.Z` on `main`, and push the tag. Until the tag exists, a new
    package made from `main` points at a version that does not exist yet and its checks fail.
