@@ -1,7 +1,7 @@
 # launchR's own test before a release (not a check that packages call): a package made on the site runs its own checks
 # in a public sandbox repository, the way a user gets them, but pointed at the launchR commit under test instead of the
 # release tag. It finds what only GitHub's runners show, such as a step that hangs on Windows or runs bash in
-# PowerShell. Started by hand ("Run workflow", on main or a branch); a passing run takes about 35 minutes (it waits for the default
+# PowerShell. Started by hand ("Run workflow", on main or a branch); a passing run takes 10 to 35 minutes (it waits for the default
 # branch's coverage and full-tests runs before it opens its pull request, and gives up at 200), and the sandbox is public, so its minutes are free. With a release pull request's number, the report is also
 # posted on that pull request as one comment. The steps are in tests/sandbox-e2e.sh; what it needs is in CONTRIBUTING.md.
 on:
