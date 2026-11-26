@@ -705,6 +705,35 @@ expect(identical(gate_env$check_log_unavailable("Package suggested but not avail
   "no-Suggests: and from the one-line form")
 expect(identical(gate_env$missing_package_skips(c("• {shiny} is not installed. (2): 'a.R:1:1'", "• {zz} is not installed. (1): 'b.R:2:1'", "[ FAIL 0 | SKIP 3 ]")),
   c(shiny = 2L, zz = 1L)), "no-Suggests: tests skipped for a missing package are counted")
+# The tests step runs the suite once under covr when tests/ is the standard layout; plain *.md files don't change that.
+layout_of <- function(files = character(), dirs = character()) {
+  root <- tempfile("tests-layout-")
+  tests <- file.path(root, "tests")
+  dir.create(file.path(tests, "testthat"), recursive = TRUE)
+  file.create(file.path(tests, "testthat.R"))
+  for (d in dirs) dir.create(file.path(tests, d))
+  for (f in files) file.create(file.path(tests, f))
+  tests
+}
+expect(gate_env$standard_tests_layout(layout_of()), "single run: testthat/ and testthat.R alone is the standard layout")
+expect(gate_env$standard_tests_layout(layout_of("README.md")), "single run: a tests/README.md is ignored")
+expect(gate_env$standard_tests_layout(layout_of(c("README.md", "notes.MD"))), "single run: any other .md file is ignored too")
+expect(!gate_env$standard_tests_layout(layout_of(dirs = "fixtures")), "single run: a stray folder switches it off")
+expect(!gate_env$standard_tests_layout(layout_of(dirs = "README.md")), "single run: a folder named like a .md file switches it off")
+expect(!gate_env$standard_tests_layout(layout_of(c("README.md", "extra.R"))), "single run: an .R file switches it off, README.md or not")
+expect(!gate_env$standard_tests_layout(layout_of("data.csv")), "single run: a non-.md file switches it off")
+if (requireNamespace("covr", quietly = TRUE) && requireNamespace("checkmate", quietly = TRUE)) {
+  # single_run_ok() reads tests/ from the working directory.
+  single_run_in <- function(tests) {
+    old <- setwd(dirname(tests))
+    on.exit(setwd(old))
+    st <- new.env()
+    st$mode <- "tests"
+    gate_env$single_run_ok(st)
+  }
+  expect(isTRUE(single_run_in(layout_of("README.md"))), "single run: single_run_ok() is TRUE with a tests/README.md")
+  expect(!isTRUE(single_run_in(layout_of(dirs = "snapshots"))), "single run: single_run_ok() is FALSE with a stray folder")
+}
 help_out <- system2(rscript, c(quote_arg(file.path(kit_root, "cli", "launchr.R"))), stdout = TRUE)
 expect(any(grepl("Commands: new, gate, github-setup, eject", help_out)), "launchr.R with no command prints the commands")
 
