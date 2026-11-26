@@ -14,7 +14,8 @@
 #                   can't be hidden, so the step skips
 #
 # In `tests` and `full` the suite runs ONCE, under covr, and the same run gives the test results and the coverage
-# (a package whose tests/ is not the standard testthat layout falls back to a plain run plus a separate covr run). If
+# (a package whose tests/ is not the standard testthat layout falls back to a plain run plus a separate covr run; plain
+# *.md files in tests/, such as a README.md, don't count against the layout). If
 # covr itself fails after that run, the coverage step FAILs with covr's message; the suite is not run a second time.
 # --no-coverage runs the suite plainly, without covr (quicker, no coverage); --no-retry skips the re-run below.
 # When tests fail, the failing files are re-run once in a fresh R process without covr: if every one then passes, the
@@ -676,17 +677,27 @@ tests_result <- function(summary, txt) {
   result("FAIL", paste0(counts, ": ", paste(named, collapse = "; "), more, "; details: ", txt))
 }
 
+# Whether tests/ is the standard testthat layout: testthat/ and testthat.R, plus any plain documentation files (a
+# tests/README.md, say). A top-level *.md file is ignored because neither R CMD check nor covr's own tests run executes
+# it, so it cannot make the two runs differ. Everything else still counts as non-standard: another folder (a snapshot
+# folder outside testthat/, fixtures), or any .R file (covr's own run would execute it, the single run would not).
+standard_tests_layout <- function(dir = "tests") {
+  checkmate::assert_string(dir)
+  entries <- list.files(dir, all.files = FALSE, full.names = TRUE)
+  docs <- grepl("\\.md$", entries, ignore.case = TRUE) & !dir.exists(entries)
+  setequal(basename(entries[!docs]), c("testthat", "testthat.R"))
+}
+
 # Whether the tests step can run the suite once under covr and take the results from that run: the gate is going to
 # measure coverage (tests or full mode, no --no-coverage), covr is installed, and tests/ is the standard testthat
-# layout (only testthat.R beside testthat/), which is what covr's own `tests` run would execute.
+# layout (see standard_tests_layout()), which is what covr's own `tests` run would execute.
 single_run_ok <- function(state) {
   checkmate::assert_environment(state)
-  tests_dir <- list.files("tests", all.files = FALSE)
   isTRUE(state$mode %in% c("tests", "full")) &&
     !isTRUE(state$no_coverage) &&
     requireNamespace("covr", quietly = TRUE) &&
     file.exists("tests/testthat.R") &&
-    setequal(tests_dir, c("testthat", "testthat.R"))
+    standard_tests_layout("tests")
 }
 
 # One covr run that executes the suite against the installed package and saves testthat's results. Returns them;

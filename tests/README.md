@@ -5,7 +5,7 @@ What each file checks. How to run them all, and the workflow linters, is in [CON
 | File | What it checks |
 | --- | --- |
 | `compare-routes.mjs` | The site's engine and the command line build the same files for every plan |
-| `cli-tests.R` | The command line against a stand-in for `gh` (`fake-gh/`); the lists agree with each other; the version is the same in `lists/settings.tsv`, `cli/DESCRIPTION` and `cli/github-setup.R` |
+| `cli-tests.R` | The command line against a stand-in for `gh` (`fake-gh/`); the lists agree with each other; the version is the same in `lists/settings.tsv`, `cli/DESCRIPTION` and `cli/github-setup.R`; the gate's no-Suggests helpers and its rule for when the tests step runs the suite once under covr (`tests/` layout) |
 | `build-comment-tests.sh` | `.github/actions/pr-report-comment/build-comment.sh` with a fake `gh`: a run's state (running, failed, cancelled), the matrix race, section order, cutting long parts without breaking a character or leaving `<details>` open |
 | `caller-compat.sh` | Caller compatibility with actionlint: previous release callers against this commit's reusable workflows, and this commit's callers against the tag in `lists/settings.tsv` |
 | `check-zip.mjs` | The zip the site builds is sound (run after building the site) |
