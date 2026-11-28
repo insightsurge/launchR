@@ -76,6 +76,12 @@ jobs:
         with:
           use-public-rspm: true
 
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        # tests/cli-tests.R runs quality-gate.R functions, which call checkmate; launchR has no DESCRIPTION, so the
+        # package is listed here.
+        with:
+          packages: any::checkmate
+
       - name: Compare the site and the command line
         run: node tests/compare-routes.mjs
 
