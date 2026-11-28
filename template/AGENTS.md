@@ -19,7 +19,7 @@ How launchR's checks, CI report and upgrades work: <https://launch-r.web.app/SKI
 - Change only what the task needs. Ask before adding a dependency, changing a check or deleting a file.
 - `man/` and `NAMESPACE` come from `devtools::document()`, never from hand edits.
 - Add a test for every change, and a `NEWS.md` bullet for anything users notice.
-- Never push to the default branch (`main` or `master`), force-push or skip a check. When a check fails, fix the
-  cause; don't loosen the check.
+- Never push to the default branch (`main` or `master`), force-push, rewrite history that is already pushed, or skip
+  a check (`--no-verify` too). When a check fails, fix the cause; don't loosen the check.
 - Keep secrets, private data and machine paths out of code, tests, examples and commits.
 - Report what you ran and what it printed, failures and skipped steps included.

@@ -8,5 +8,4 @@
 - **Pull requests** use the template. The title is a Conventional Commit, since squash merging makes it the commit
   on the default branch. List the checks you ran and what they printed.
 - Don't commit build output (`*.Rcheck/`, `*.tar.gz`, `docs/`) or local settings (`.Renviron`, `.Rhistory`).
-- Never force-push, rewrite history that is already pushed, or use `--no-verify`.
 - The maintainer merges, once CI is green.
